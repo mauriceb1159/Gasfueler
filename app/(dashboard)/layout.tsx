@@ -33,12 +33,6 @@ function UserMenu() {
     return (
       <>
         <Link
-          href="/book"
-          className="text-sm font-medium text-gray-700 hover:text-gray-900"
-        >
-          Schedule
-        </Link>
-        <Link
           href="/pricing"
           className="text-sm font-medium text-gray-700 hover:text-gray-900"
         >
@@ -106,7 +100,7 @@ function Header() {
             href="/book"
             className="text-sm font-medium text-gray-700 hover:text-gray-900"
           >
-            Schedule
+            Book
           </Link>
           <Suspense fallback={<div className="h-9" />}>
             <UserMenu />
