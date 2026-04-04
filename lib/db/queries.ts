@@ -1,6 +1,15 @@
-import { desc, and, eq, isNull } from 'drizzle-orm';
+import { desc, and, eq, isNull, asc, gt } from 'drizzle-orm';
 import { db } from './drizzle';
-import { activityLogs, teamMembers, teams, users } from './schema';
+import {
+  activityLogs,
+  fuelRequests,
+  serviceSlots,
+  stations,
+  teamMembers,
+  teams,
+  users,
+  vehicles
+} from './schema';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth/session';
 
@@ -127,4 +136,41 @@ export async function getTeamForUser() {
   });
 
   return result?.team || null;
+}
+
+export async function getVehiclesForUser(userId: number) {
+  return db
+    .select()
+    .from(vehicles)
+    .where(eq(vehicles.userId, userId))
+    .orderBy(desc(vehicles.updatedAt));
+}
+
+export async function getBookableStations() {
+  return db.query.stations.findMany({
+    where: eq(stations.active, true),
+    with: {
+      serviceSlots: {
+        where: and(
+          eq(serviceSlots.status, 'open'),
+          gt(serviceSlots.startAt, new Date())
+        ),
+        orderBy: asc(serviceSlots.startAt)
+      }
+    },
+    orderBy: asc(stations.name)
+  });
+}
+
+export async function getFuelRequestsForUser(userId: number) {
+  return db.query.fuelRequests.findMany({
+    where: eq(fuelRequests.userId, userId),
+    with: {
+      station: true,
+      vehicle: true,
+      slot: true,
+      items: true
+    },
+    orderBy: desc(fuelRequests.createdAt)
+  });
 }

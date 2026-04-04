@@ -136,7 +136,7 @@ export function GasFuelerHomePage({
             </p>
 
             <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-              <a href="/sign-up">
+              <a href="/book">
                 <Button
                   size="lg"
                   className="h-12 rounded-full bg-slate-950 px-7 text-base text-white shadow-[0_18px_40px_-18px_rgba(15,23,42,0.9)] hover:bg-slate-800"
