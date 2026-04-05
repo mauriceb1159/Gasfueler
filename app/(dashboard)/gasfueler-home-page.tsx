@@ -111,52 +111,52 @@ export function GasFuelerHomePage({
 }: HomePageProps = {}) {
   return (
     <main className="overflow-hidden">
-      <section className="relative isolate px-4 pb-16 pt-10 sm:px-6 lg:px-8">
+      <section className="relative isolate px-4 pb-16 pt-8 sm:px-6 sm:pt-10 lg:px-8">
         <div className="absolute left-[-12rem] top-16 -z-10 h-72 w-72 rounded-full bg-orange-400/20 blur-3xl" />
         <div className="absolute right-[-8rem] top-28 -z-10 h-80 w-80 rounded-full bg-cyan-300/20 blur-3xl" />
 
-        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:items-center">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-12">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-orange-600 shadow-sm backdrop-blur">
+            <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/80 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-600 shadow-sm backdrop-blur sm:px-4 sm:text-xs sm:tracking-[0.24em]">
               <Sparkles className="h-4 w-4" />
               GasFueler
             </div>
 
-            <h1 className="mt-8 text-5xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-6xl lg:text-7xl">
+            <h1 className="mt-6 text-4xl font-semibold tracking-[-0.05em] text-slate-950 sm:mt-8 sm:text-5xl lg:text-7xl">
               Full-service fueling,
               <span className="block bg-gradient-to-r from-orange-500 via-amber-500 to-cyan-500 bg-clip-text text-transparent">
                 rebuilt for modern drivers.
               </span>
             </h1>
 
-            <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600 sm:text-xl">
+            <p className="mt-5 max-w-xl text-base leading-7 text-slate-600 sm:mt-6 sm:text-xl sm:leading-8">
               GasFueler brings back the ease of full-service gas with booking,
               in-app snack ordering, and a polished drive-through experience
               that keeps customers in motion.
             </p>
 
-            <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-              <a href="/book">
+            <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:gap-4">
+              <a href="/book" className="w-full sm:w-auto">
                 <Button
                   size="lg"
-                  className="h-12 rounded-full bg-slate-950 px-7 text-base text-white shadow-[0_18px_40px_-18px_rgba(15,23,42,0.9)] hover:bg-slate-800"
+                  className="h-12 w-full rounded-full bg-slate-950 px-7 text-base text-white shadow-[0_18px_40px_-18px_rgba(15,23,42,0.9)] hover:bg-slate-800 sm:w-auto"
                 >
                   Book a GasFueler stop
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </a>
-              <a href="/pricing">
+              <a href="/pricing" className="w-full sm:w-auto">
                 <Button
                   size="lg"
                   variant="outline"
-                  className="h-12 rounded-full border-white/80 bg-white/70 px-7 text-base text-slate-800 shadow-sm backdrop-blur hover:bg-white"
+                  className="h-12 w-full rounded-full border-white/80 bg-white/70 px-7 text-base text-slate-800 shadow-sm backdrop-blur hover:bg-white sm:w-auto"
                 >
                   Explore pricing
                 </Button>
               </a>
             </div>
 
-            <div className="mt-12 grid gap-4 sm:grid-cols-3">
+            <div className="mt-10 grid gap-4 sm:mt-12 sm:grid-cols-3">
               {stats.map((stat) => (
                 <div
                   key={stat.label}
@@ -174,32 +174,32 @@ export function GasFuelerHomePage({
           </div>
 
           <div className="relative">
-            <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-orange-400/25 via-transparent to-cyan-400/20 blur-2xl" />
-            <div className="relative rounded-[2rem] border border-white/60 bg-white/82 p-4 shadow-[0_28px_80px_-28px_rgba(15,23,42,0.85)] backdrop-blur-xl">
+            <div className="absolute -inset-2 rounded-[2rem] bg-gradient-to-br from-orange-400/25 via-transparent to-cyan-400/20 blur-2xl sm:-inset-4" />
+            <div className="relative rounded-[1.75rem] border border-white/60 bg-white/82 p-3 shadow-[0_28px_80px_-28px_rgba(15,23,42,0.85)] backdrop-blur-xl sm:rounded-[2rem] sm:p-4">
               <div className="grid gap-4">
                 <div className="relative overflow-hidden rounded-[1.6rem] bg-slate-950">
                   <img
                     src="https://images.pexels.com/photos/32601672/pexels-photo-32601672.jpeg?cs=srgb&dl=pexels-kostiantyn-zavhorodnii-637657209-32601672.jpg&fm=jpg"
                     alt="A man fueling a car at a gas station"
-                    className="h-[420px] w-full object-cover object-center"
+                    className="h-[300px] w-full object-cover object-center sm:h-[420px]"
                   />
-                  <div className="absolute inset-x-0 top-0 flex items-center justify-between p-5">
-                    <div className="rounded-full border border-white/25 bg-slate-950/35 px-4 py-2 text-xs font-medium uppercase tracking-[0.22em] text-white/90 backdrop-blur-md">
+                  <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3 sm:items-center sm:p-5">
+                    <div className="rounded-full border border-white/25 bg-slate-950/35 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-white/90 backdrop-blur-md sm:px-4 sm:py-2 sm:text-xs sm:tracking-[0.22em]">
                       Attendant Service
                     </div>
-                    <div className="rounded-full border border-white/20 bg-white/15 px-4 py-2 text-sm text-white backdrop-blur-md">
+                    <div className="rounded-full border border-white/20 bg-white/15 px-3 py-1.5 text-xs text-white backdrop-blur-md sm:px-4 sm:py-2 sm:text-sm">
                       GasFueler Stop
                     </div>
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-transparent" />
                 </div>
 
-                <div className="rounded-[1.6rem] bg-slate-950 p-5 text-white">
+                <div className="rounded-[1.4rem] bg-slate-950 p-4 text-white sm:rounded-[1.6rem] sm:p-5">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-xs uppercase tracking-[0.24em] text-cyan-200">
                       GasFueler Service
                     </p>
-                    <div className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/70">
+                    <div className="hidden rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/70 sm:block">
                       Static Hero
                     </div>
                   </div>
