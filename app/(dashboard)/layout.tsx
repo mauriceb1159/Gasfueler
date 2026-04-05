@@ -34,11 +34,14 @@ function UserMenu() {
       <>
         <Link
           href="/pricing"
-          className="text-sm font-medium text-gray-700 hover:text-gray-900"
+          className="hidden text-sm font-medium text-gray-700 hover:text-gray-900 sm:inline"
         >
           Pricing
         </Link>
-        <Button asChild className="rounded-full">
+        <Button
+          asChild
+          className="h-9 rounded-full px-3 text-xs sm:h-10 sm:px-4 sm:text-sm"
+        >
           <Link href="/sign-up">Sign Up</Link>
         </Button>
       </>
@@ -81,21 +84,21 @@ function UserMenu() {
 function Header() {
   return (
     <header className="sticky top-0 z-40">
-      <div className="mx-auto mt-4 flex max-w-7xl items-center justify-between rounded-full border border-white/60 bg-white/75 px-4 py-3 shadow-[0_18px_60px_-28px_rgba(15,23,42,0.55)] backdrop-blur-xl sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 via-amber-400 to-cyan-400 text-white shadow-lg shadow-orange-500/30">
-            <CircleIcon className="h-5 w-5 fill-current" />
+      <div className="mx-auto mt-4 flex max-w-7xl items-center justify-between rounded-full border border-white/60 bg-white/75 px-3 py-3 shadow-[0_18px_60px_-28px_rgba(15,23,42,0.55)] backdrop-blur-xl sm:px-6 lg:px-8">
+        <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 via-amber-400 to-cyan-400 text-white shadow-lg shadow-orange-500/30 sm:h-10 sm:w-10">
+            <CircleIcon className="h-4 w-4 fill-current sm:h-5 sm:w-5" />
           </div>
-          <div>
-            <span className="block text-lg font-semibold tracking-tight text-slate-950">
+          <div className="min-w-0">
+            <span className="block truncate text-base font-semibold tracking-tight text-slate-950 sm:text-lg">
               GasFueler
             </span>
-            <span className="block text-[11px] uppercase tracking-[0.26em] text-slate-500">
+            <span className="hidden text-[11px] uppercase tracking-[0.26em] text-slate-500 sm:block">
               Full-Service Fueling
             </span>
           </div>
         </Link>
-        <div className="flex items-center space-x-4">
+        <div className="ml-3 flex shrink-0 items-center space-x-3 sm:space-x-4">
           <Link
             href="/book"
             className="text-sm font-medium text-gray-700 hover:text-gray-900"
