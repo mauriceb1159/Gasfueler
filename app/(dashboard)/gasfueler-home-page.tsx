@@ -177,7 +177,7 @@ export function GasFuelerHomePage({
             <div className="absolute -inset-2 rounded-[2rem] bg-gradient-to-br from-orange-400/25 via-transparent to-cyan-400/20 blur-2xl sm:-inset-4" />
             <div className="relative rounded-[1.75rem] border border-white/60 bg-white/82 p-3 shadow-[0_28px_80px_-28px_rgba(15,23,42,0.85)] backdrop-blur-xl sm:rounded-[2rem] sm:p-4">
               <div className="grid gap-4">
-                <div className="relative overflow-hidden rounded-[1.6rem] bg-slate-950">
+                <div className="relative hidden overflow-hidden rounded-[1.6rem] bg-slate-950 sm:block">
                   <img
                     src="https://images.pexels.com/photos/32601672/pexels-photo-32601672.jpeg?cs=srgb&dl=pexels-kostiantyn-zavhorodnii-637657209-32601672.jpg&fm=jpg"
                     alt="A man fueling a car at a gas station"
