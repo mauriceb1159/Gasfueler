@@ -105,6 +105,37 @@ type HomePageProps = {
   compareLabel?: string;
 };
 
+function HeroServiceCard({ className = '' }: { className?: string }) {
+  return (
+    <div
+      className={`rounded-[1.4rem] bg-slate-950 p-4 text-white sm:rounded-[1.6rem] sm:p-5 ${className}`.trim()}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs uppercase tracking-[0.24em] text-cyan-200">
+          GasFueler Service
+        </p>
+        <div className="hidden rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/70 sm:block">
+          Static Hero
+        </div>
+      </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl bg-white/10 px-4 py-3">
+          <p className="text-sm text-white/65">Arrival</p>
+          <p className="text-base font-semibold">Drive in and stay comfortable</p>
+        </div>
+        <div className="rounded-2xl bg-white/10 px-4 py-3">
+          <p className="text-sm text-white/65">Fueling</p>
+          <p className="text-base font-semibold">Attendant handles the pump</p>
+        </div>
+        <div className="rounded-2xl bg-white/10 px-4 py-3">
+          <p className="text-sm text-white/65">Departure</p>
+          <p className="text-base font-semibold">Pick up your order and drive off</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function GasFuelerHomePage({
   compactHeroCards = true,
   compareLabel,
@@ -156,6 +187,8 @@ export function GasFuelerHomePage({
               </a>
             </div>
 
+            <HeroServiceCard className="mt-4 sm:hidden" />
+
             <div className="mt-10 grid gap-4 sm:mt-12 sm:grid-cols-3">
               {stats.map((stat) => (
                 <div
@@ -194,30 +227,7 @@ export function GasFuelerHomePage({
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-transparent" />
                 </div>
 
-                <div className="rounded-[1.4rem] bg-slate-950 p-4 text-white sm:rounded-[1.6rem] sm:p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-xs uppercase tracking-[0.24em] text-cyan-200">
-                      GasFueler Service
-                    </p>
-                    <div className="hidden rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/70 sm:block">
-                      Static Hero
-                    </div>
-                  </div>
-                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-2xl bg-white/10 px-4 py-3">
-                      <p className="text-sm text-white/65">Arrival</p>
-                      <p className="text-base font-semibold">Drive in and stay comfortable</p>
-                    </div>
-                    <div className="rounded-2xl bg-white/10 px-4 py-3">
-                      <p className="text-sm text-white/65">Fueling</p>
-                      <p className="text-base font-semibold">Attendant handles the pump</p>
-                    </div>
-                    <div className="rounded-2xl bg-white/10 px-4 py-3">
-                      <p className="text-sm text-white/65">Departure</p>
-                      <p className="text-base font-semibold">Pick up your order and drive off</p>
-                    </div>
-                  </div>
-                </div>
+                <HeroServiceCard className="hidden sm:block" />
               </div>
             </div>
 
