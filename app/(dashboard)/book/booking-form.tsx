@@ -34,6 +34,15 @@ type VehicleRecord = {
   licensePlate: string;
 };
 
+type NearbyGasStation = {
+  id: string;
+  name: string;
+  address: string;
+  googleMapsUri: string | null;
+  latitude: number | null;
+  longitude: number | null;
+};
+
 export function BookingForm({
   stations,
   vehicles,
@@ -51,6 +60,10 @@ export function BookingForm({
   const [selectedStationId, setSelectedStationId] = useState<number | null>(
     stations[0]?.id ?? null
   );
+  const [nearbyStations, setNearbyStations] = useState<NearbyGasStation[]>([]);
+  const [nearbyStatus, setNearbyStatus] = useState<
+    'idle' | 'loading' | 'ready' | 'error' | 'unconfigured'
+  >('idle');
 
   const visibleStations = useMemo(() => {
     const baseStations = stations
@@ -86,6 +99,58 @@ export function BookingForm({
       setSelectedStationId(visibleStations[0]?.id ?? null);
     }
   }, [selectedStationId, visibleStations]);
+
+  useEffect(() => {
+    if (!coords) {
+      return;
+    }
+
+    const activeCoords = coords;
+    let cancelled = false;
+
+    async function loadNearbyGasStations() {
+      setNearbyStatus('loading');
+
+      try {
+        const response = await fetch(
+          `/api/places/nearby-gas-stations?lat=${activeCoords.lat}&lng=${activeCoords.lng}`,
+          { cache: 'no-store' }
+        );
+
+        const payload = await response.json();
+
+        if (cancelled) {
+          return;
+        }
+
+        if (!response.ok) {
+          setNearbyStations([]);
+          setNearbyStatus('error');
+          return;
+        }
+
+        if (!payload.configured) {
+          setNearbyStations([]);
+          setNearbyStatus('unconfigured');
+          return;
+        }
+
+        setNearbyStations(payload.places ?? []);
+        setNearbyStatus('ready');
+      } catch {
+        if (!cancelled) {
+          setNearbyStations([]);
+          setNearbyStatus('error');
+        }
+      }
+    }
+
+    loadNearbyGasStations();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [coords]);
 
   const selectedStation =
     visibleStations.find((station) => station.id === selectedStationId) ?? null;
@@ -158,6 +223,75 @@ export function BookingForm({
                 ? 'This browser does not support location access. Use ZIP code instead.'
                 : 'Use location for nearest stations, or enter a ZIP code manually.'}
             </p>
+            {locationStatus === 'granted' ? (
+              <div className="rounded-[1.25rem] border border-slate-200 bg-white/90 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-950">
+                      Nearby gas stations
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      Real stations are discovered with Google Places. Booking still
+                      works only with GasFueler partner stations below.
+                    </p>
+                  </div>
+                  {nearbyStatus === 'loading' ? (
+                    <span className="text-xs font-medium text-orange-600">
+                      Loading...
+                    </span>
+                  ) : null}
+                </div>
+
+                {nearbyStatus === 'ready' && nearbyStations.length > 0 ? (
+                  <div className="mt-4 space-y-3">
+                    {nearbyStations.map((station) => (
+                      <div
+                        key={station.id}
+                        className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+                      >
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <p className="font-medium text-slate-950">{station.name}</p>
+                            <p className="mt-1 text-sm leading-6 text-slate-600">
+                              {station.address}
+                            </p>
+                          </div>
+                          {station.googleMapsUri ? (
+                            <a
+                              href={station.googleMapsUri}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-sm font-medium text-orange-700 underline-offset-4 hover:underline"
+                            >
+                              Open in Maps
+                            </a>
+                          ) : null}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+
+                {nearbyStatus === 'ready' && nearbyStations.length === 0 ? (
+                  <p className="mt-4 text-sm text-slate-600">
+                    No nearby gas stations were returned for this location yet.
+                  </p>
+                ) : null}
+
+                {nearbyStatus === 'unconfigured' ? (
+                  <p className="mt-4 text-sm text-slate-600">
+                    Nearby real-world station search will appear once
+                    `GOOGLE_MAPS_API_KEY` is added.
+                  </p>
+                ) : null}
+
+                {nearbyStatus === 'error' ? (
+                  <p className="mt-4 text-sm text-red-700">
+                    We couldn&apos;t load nearby gas stations right now.
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
             <div className="space-y-3">
               {visibleStations.map((station) => (
                 <button
