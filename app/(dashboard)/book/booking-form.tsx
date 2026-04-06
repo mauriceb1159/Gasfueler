@@ -118,7 +118,7 @@ export function BookingForm({
   }
 
   return (
-    <form action={submitFuelRequest} className="space-y-6">
+    <form action={submitFuelRequest} className="space-y-6 sm:space-y-7">
       {initialError ? (
         <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {initialError}
@@ -128,24 +128,24 @@ export function BookingForm({
       <section className="space-y-4">
         <SectionTitle icon={MapPinned} title="1. Choose a station and time window" />
         <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
-          <div className="space-y-4 rounded-[1.5rem] border border-orange-100 bg-orange-50/70 p-4">
-            <div className="flex flex-wrap gap-3">
+          <div className="space-y-4 rounded-[1.25rem] border border-orange-100 bg-orange-50/70 p-4 sm:rounded-[1.5rem]">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Button
                 type="button"
                 variant="outline"
-                className="rounded-full bg-white"
+                className="h-11 w-full rounded-full bg-white sm:w-auto"
                 onClick={handleUseLocation}
               >
                 <Navigation className="mr-2 h-4 w-4" />
                 Use my location
               </Button>
-              <div className="relative flex-1 min-w-[180px]">
+              <div className="relative min-w-[180px] flex-1">
                 <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   value={zipFilter}
                   onChange={(event) => setZipFilter(event.target.value)}
                   placeholder="Filter by ZIP"
-                  className="rounded-full bg-white pl-10"
+                  className="h-11 rounded-full bg-white pl-10"
                 />
               </div>
             </div>
@@ -164,21 +164,21 @@ export function BookingForm({
                   key={station.id}
                   type="button"
                   onClick={() => setSelectedStationId(station.id)}
-                  className={`w-full rounded-[1.25rem] border p-4 text-left transition ${
+                  className={`w-full rounded-[1.25rem] border p-4 text-left transition sm:p-5 ${
                     selectedStationId === station.id
                       ? 'border-slate-950 bg-white shadow-sm'
                       : 'border-orange-100 bg-white/80 hover:border-orange-200'
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
                       <p className="font-semibold text-slate-950">{station.name}</p>
                       <p className="mt-1 text-sm text-slate-600">
                         {station.address}, {station.city}, {station.state}
                       </p>
                     </div>
                     {station.distanceMiles !== null ? (
-                      <span className="rounded-full bg-slate-950 px-3 py-1 text-xs font-semibold text-white">
+                      <span className="inline-flex w-fit rounded-full bg-slate-950 px-3 py-1 text-xs font-semibold text-white">
                         {station.distanceMiles.toFixed(1)} mi
                       </span>
                     ) : null}
@@ -210,7 +210,7 @@ export function BookingForm({
                     : ''
                 }
                 readOnly
-                className="rounded-full bg-slate-50"
+                className="h-11 rounded-full bg-slate-50"
               />
             </Field>
             <Field label="Service slot" htmlFor="slotId">
@@ -218,7 +218,7 @@ export function BookingForm({
                 id="slotId"
                 name="slotId"
                 defaultValue={String(selectedSlots[0]?.id ?? '')}
-                className="flex h-12 w-full rounded-full border border-input bg-white px-4 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                className="flex h-12 w-full rounded-2xl border border-input bg-white px-4 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:rounded-full"
               >
                 {selectedSlots.map((slot) => (
                   <option key={slot.id} value={slot.id}>
@@ -357,7 +357,7 @@ export function BookingForm({
 
       <Button
         type="submit"
-        className="rounded-full bg-slate-950 px-6 text-white hover:bg-slate-800"
+        className="h-12 w-full rounded-full bg-slate-950 px-6 text-white hover:bg-slate-800 sm:w-auto"
       >
         Save Fuel Request
       </Button>
@@ -393,10 +393,10 @@ function SectionTitle({
 }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-100 text-orange-600">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-orange-100 text-orange-600">
         <Icon className="h-5 w-5" />
       </div>
-      <h2 className="text-xl font-semibold text-slate-950">{title}</h2>
+      <h2 className="text-lg font-semibold text-slate-950 sm:text-xl">{title}</h2>
     </div>
   );
 }
