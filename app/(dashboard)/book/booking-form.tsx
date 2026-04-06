@@ -61,6 +61,8 @@ export function BookingForm({
     stations[0]?.id ?? null
   );
   const [nearbyStations, setNearbyStations] = useState<NearbyGasStation[]>([]);
+  const [selectedNearbyStation, setSelectedNearbyStation] =
+    useState<NearbyGasStation | null>(null);
   const [nearbyStatus, setNearbyStatus] = useState<
     'idle' | 'loading' | 'ready' | 'error' | 'unconfigured'
   >('idle');
@@ -169,6 +171,7 @@ export function BookingForm({
           lat: position.coords.latitude,
           lng: position.coords.longitude
         });
+        setSelectedNearbyStation(null);
         setLocationStatus('granted');
       },
       () => {
@@ -245,9 +248,15 @@ export function BookingForm({
                 {nearbyStatus === 'ready' && nearbyStations.length > 0 ? (
                   <div className="mt-4 space-y-3">
                     {nearbyStations.map((station) => (
-                      <div
+                      <button
                         key={station.id}
-                        className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+                        type="button"
+                        onClick={() => setSelectedNearbyStation(station)}
+                        className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
+                          selectedNearbyStation?.id === station.id
+                            ? 'border-slate-950 bg-white shadow-sm'
+                            : 'border-slate-200 bg-slate-50 hover:border-orange-200'
+                        }`}
                       >
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                           <div>
@@ -267,7 +276,7 @@ export function BookingForm({
                             </a>
                           ) : null}
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 ) : null}
@@ -297,7 +306,10 @@ export function BookingForm({
                 <button
                   key={station.id}
                   type="button"
-                  onClick={() => setSelectedStationId(station.id)}
+                  onClick={() => {
+                    setSelectedStationId(station.id);
+                    setSelectedNearbyStation(null);
+                  }}
                   className={`w-full rounded-[1.25rem] border p-4 text-left transition sm:p-5 ${
                     selectedStationId === station.id
                       ? 'border-slate-950 bg-white shadow-sm'
@@ -341,7 +353,9 @@ export function BookingForm({
               <Input
                 id="selectedStation"
                 value={
-                  selectedStation
+                  selectedNearbyStation
+                    ? `${selectedNearbyStation.name} - discovery only`
+                    : selectedStation
                     ? `${selectedStation.name} - ${selectedStation.city}, ${selectedStation.state}`
                     : ''
                 }
@@ -349,11 +363,20 @@ export function BookingForm({
                 className="h-11 rounded-full bg-slate-50"
               />
             </Field>
+            {selectedNearbyStation ? (
+              <p className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
+                {selectedNearbyStation.name} was selected from nearby Google
+                results. Booking is still limited to GasFueler partner stations
+                with live service slots, so choose one of the partner stations
+                below to continue.
+              </p>
+            ) : null}
             <Field label="Service slot" htmlFor="slotId">
               <select
                 id="slotId"
                 name="slotId"
                 defaultValue={String(selectedSlots[0]?.id ?? '')}
+                disabled={Boolean(selectedNearbyStation)}
                 className="flex h-12 w-full rounded-2xl border border-input bg-white px-4 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:rounded-full"
               >
                 {selectedSlots.map((slot) => (
