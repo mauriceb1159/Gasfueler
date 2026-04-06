@@ -226,16 +226,82 @@ export function BookingForm({
                 ? 'This browser does not support location access. Use ZIP code instead.'
                 : 'Use location for nearest stations, or enter a ZIP code manually.'}
             </p>
+            <div>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-950">
+                    GasFueler partner stations
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    These are the stations you can book right now with live
+                    service slots.
+                  </p>
+                </div>
+                {locationStatus === 'granted' ? (
+                  <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                    Sorted by distance
+                  </span>
+                ) : null}
+              </div>
+              <div className="space-y-3">
+                {visibleStations.map((station) => (
+                  <button
+                    key={station.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedStationId(station.id);
+                      setSelectedNearbyStation(null);
+                    }}
+                    className={`w-full rounded-[1.25rem] border p-4 text-left transition sm:p-5 ${
+                      selectedStationId === station.id
+                        ? 'border-slate-950 bg-white shadow-sm'
+                        : 'border-orange-100 bg-white/80 hover:border-orange-200'
+                    }`}
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-950">{station.name}</p>
+                        <p className="mt-1 text-sm text-slate-600">
+                          {station.address}, {station.city}, {station.state}
+                        </p>
+                      </div>
+                      {station.distanceMiles !== null ? (
+                        <span className="inline-flex w-fit rounded-full bg-slate-950 px-3 py-1 text-xs font-semibold text-white">
+                          {station.distanceMiles.toFixed(1)} mi
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
+                      <span className="rounded-full bg-slate-100 px-3 py-1 font-medium">
+                        ZIP {station.zip}
+                      </span>
+                      <span className="rounded-full bg-orange-100 px-3 py-1 font-medium text-orange-700">
+                        {station.serviceSlots.length} open slots
+                      </span>
+                      <span className="rounded-full bg-slate-950 px-3 py-1 font-medium text-white">
+                        Bookable now
+                      </span>
+                      {station.supportsSnacks ? (
+                        <span className="rounded-full bg-emerald-100 px-3 py-1 font-medium text-emerald-700">
+                          Snack pickup available
+                        </span>
+                      ) : null}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {locationStatus === 'granted' ? (
               <div className="rounded-[1.25rem] border border-slate-200 bg-white/90 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-slate-950">
-                      Nearby gas stations
+                      More nearby gas stations
                     </p>
                     <p className="mt-1 text-xs leading-5 text-slate-500">
-                      Real stations are discovered with Google Places. Booking still
-                      works only with GasFueler partner stations below.
+                      Real stations discovered with Google Places. These are for
+                      discovery today, not direct booking yet.
                     </p>
                   </div>
                   {nearbyStatus === 'loading' ? (
@@ -301,50 +367,6 @@ export function BookingForm({
                 ) : null}
               </div>
             ) : null}
-            <div className="space-y-3">
-              {visibleStations.map((station) => (
-                <button
-                  key={station.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedStationId(station.id);
-                    setSelectedNearbyStation(null);
-                  }}
-                  className={`w-full rounded-[1.25rem] border p-4 text-left transition sm:p-5 ${
-                    selectedStationId === station.id
-                      ? 'border-slate-950 bg-white shadow-sm'
-                      : 'border-orange-100 bg-white/80 hover:border-orange-200'
-                  }`}
-                >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="min-w-0">
-                      <p className="font-semibold text-slate-950">{station.name}</p>
-                      <p className="mt-1 text-sm text-slate-600">
-                        {station.address}, {station.city}, {station.state}
-                      </p>
-                    </div>
-                    {station.distanceMiles !== null ? (
-                      <span className="inline-flex w-fit rounded-full bg-slate-950 px-3 py-1 text-xs font-semibold text-white">
-                        {station.distanceMiles.toFixed(1)} mi
-                      </span>
-                    ) : null}
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
-                    <span className="rounded-full bg-slate-100 px-3 py-1 font-medium">
-                      ZIP {station.zip}
-                    </span>
-                    <span className="rounded-full bg-orange-100 px-3 py-1 font-medium text-orange-700">
-                      {station.serviceSlots.length} open slots
-                    </span>
-                    {station.supportsSnacks ? (
-                      <span className="rounded-full bg-emerald-100 px-3 py-1 font-medium text-emerald-700">
-                        Snack pickup available
-                      </span>
-                    ) : null}
-                  </div>
-                </button>
-              ))}
-            </div>
           </div>
 
           <div className="space-y-4">
