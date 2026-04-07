@@ -148,34 +148,75 @@ export async function getVehiclesForUser(userId: number) {
 }
 
 export async function getBookableStations() {
-  return db.query.stations.findMany({
-    where: eq(stations.active, true),
-    with: {
-      fuelPrices: {
-        orderBy: (fuelPrices, { desc }) => [desc(fuelPrices.recordedAt)]
+  try {
+    return await db.query.stations.findMany({
+      where: eq(stations.active, true),
+      with: {
+        fuelPrices: {
+          orderBy: (fuelPrices, { desc }) => [desc(fuelPrices.recordedAt)]
+        },
+        serviceSlots: {
+          where: and(
+            eq(serviceSlots.status, 'open'),
+            gt(serviceSlots.startAt, new Date())
+          ),
+          orderBy: asc(serviceSlots.startAt)
+        }
       },
-      serviceSlots: {
-        where: and(
-          eq(serviceSlots.status, 'open'),
-          gt(serviceSlots.startAt, new Date())
-        ),
-        orderBy: asc(serviceSlots.startAt)
-      }
-    },
-    orderBy: asc(stations.name)
-  });
+      orderBy: asc(stations.name)
+    });
+  } catch (error) {
+    if (!isMissingFuelPricesTableError(error)) {
+      throw error;
+    }
+
+    const fallbackStations = await db.query.stations.findMany({
+      where: eq(stations.active, true),
+      with: {
+        serviceSlots: {
+          where: and(
+            eq(serviceSlots.status, 'open'),
+            gt(serviceSlots.startAt, new Date())
+          ),
+          orderBy: asc(serviceSlots.startAt)
+        }
+      },
+      orderBy: asc(stations.name)
+    });
+
+    return fallbackStations.map((station) => ({
+      ...station,
+      fuelPrices: []
+    }));
+  }
 }
 
 export async function getStationsForPricing() {
-  return db.query.stations.findMany({
-    where: eq(stations.active, true),
-    with: {
-      fuelPrices: {
-        orderBy: (fuelPrices, { desc }) => [desc(fuelPrices.recordedAt)]
-      }
-    },
-    orderBy: asc(stations.name)
-  });
+  try {
+    return await db.query.stations.findMany({
+      where: eq(stations.active, true),
+      with: {
+        fuelPrices: {
+          orderBy: (fuelPrices, { desc }) => [desc(fuelPrices.recordedAt)]
+        }
+      },
+      orderBy: asc(stations.name)
+    });
+  } catch (error) {
+    if (!isMissingFuelPricesTableError(error)) {
+      throw error;
+    }
+
+    const fallbackStations = await db.query.stations.findMany({
+      where: eq(stations.active, true),
+      orderBy: asc(stations.name)
+    });
+
+    return fallbackStations.map((station) => ({
+      ...station,
+      fuelPrices: []
+    }));
+  }
 }
 
 export async function getFuelRequestsForUser(userId: number) {
@@ -189,4 +230,11 @@ export async function getFuelRequestsForUser(userId: number) {
     },
     orderBy: desc(fuelRequests.createdAt)
   });
+}
+
+function isMissingFuelPricesTableError(error: unknown) {
+  return (
+    error instanceof Error &&
+    error.message.toLowerCase().includes('station_fuel_prices')
+  );
 }

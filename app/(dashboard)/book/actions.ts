@@ -138,19 +138,34 @@ export const createFuelRequest = validatedActionWithUser(
         : null;
 
     const serviceFee = 500;
-    const [latestPrice] = await db
-      .select({
-        priceCents: stationFuelPrices.priceCents
-      })
-      .from(stationFuelPrices)
-      .where(
-        and(
-          eq(stationFuelPrices.stationId, station.id),
-          eq(stationFuelPrices.fuelGrade, data.fuelGrade)
+    let latestPrice:
+      | {
+          priceCents: number;
+        }
+      | undefined;
+
+    try {
+      [latestPrice] = await db
+        .select({
+          priceCents: stationFuelPrices.priceCents
+        })
+        .from(stationFuelPrices)
+        .where(
+          and(
+            eq(stationFuelPrices.stationId, station.id),
+            eq(stationFuelPrices.fuelGrade, data.fuelGrade)
+          )
         )
-      )
-      .orderBy(desc(stationFuelPrices.recordedAt))
-      .limit(1);
+        .orderBy(desc(stationFuelPrices.recordedAt))
+        .limit(1);
+    } catch (error) {
+      if (
+        !(error instanceof Error) ||
+        !error.message.toLowerCase().includes('station_fuel_prices')
+      ) {
+        throw error;
+      }
+    }
 
     const fuelEstimate =
       data.requestType === FuelRequestType.DOLLAR_AMOUNT
