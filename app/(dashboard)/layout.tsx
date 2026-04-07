@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { use, useState, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { CircleIcon, Home, LogOut } from 'lucide-react';
+import { CircleIcon, LogOut, Settings, TicketPlus } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,9 +63,15 @@ function UserMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="flex flex-col gap-1">
         <DropdownMenuItem className="cursor-pointer">
+          <Link href="/book" className="flex w-full items-center">
+            <TicketPlus className="mr-2 h-4 w-4" />
+            <span>Book</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer">
           <Link href="/dashboard" className="flex w-full items-center">
-            <Home className="mr-2 h-4 w-4" />
-            <span>Dashboard</span>
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Account</span>
           </Link>
         </DropdownMenuItem>
         <form action={handleSignOut} className="w-full">
