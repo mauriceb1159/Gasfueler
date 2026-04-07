@@ -555,7 +555,7 @@ export function BookingForm({
           </Field>
         </div>
         <div className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-4 text-sm text-slate-700">
-          <p className="font-semibold text-slate-950">Live estimate preview</p>
+          <p className="font-semibold text-slate-950">Order summary</p>
           <p className="mt-2">
             {selectedFuelPrice
               ? `${formatFuelGrade(fuelGrade)} is currently ${formatCentsPerGallon(
@@ -563,20 +563,46 @@ export function BookingForm({
                 )} at ${selectedStation?.name}.`
               : 'Add a current station fuel price to unlock gallon-based estimates.'}
           </p>
-          <p className="mt-2">
-            Vehicle type:{' '}
-            <span className="font-semibold">
-              {formatVehicleClass(effectiveVehicleClass)}
-            </span>
-          </p>
-          <p className="mt-1">
-            Service fee: <span className="font-semibold">{formatCurrency(serviceFee)}</span>
-          </p>
-          <p className="mt-1">
-            Estimated fuel: <span className="font-semibold">{formatEstimate(estimatedFuelCost)}</span>
-          </p>
-          <p className="mt-1">
-            Estimated total: <span className="font-semibold">{formatEstimate(estimatedTotal)}</span>
+          <div className="mt-4 rounded-2xl border border-white/70 bg-white/80 p-4">
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-slate-600">Vehicle type</span>
+              <span className="font-semibold text-slate-950">
+                {formatVehicleClass(effectiveVehicleClass)}
+              </span>
+            </div>
+            <div className="mt-2 flex items-center justify-between gap-4">
+              <span className="text-slate-600">Fuel subtotal</span>
+              <span className="font-semibold text-slate-950">
+                {formatEstimate(estimatedFuelCost)}
+              </span>
+            </div>
+            <div className="mt-2 flex items-center justify-between gap-4">
+              <span className="text-slate-600">Service fee</span>
+              <span className="font-semibold text-slate-950">
+                {formatCurrency(serviceFee)}
+              </span>
+            </div>
+            <div className="mt-2 flex items-center justify-between gap-4">
+              <span className="text-slate-600">Estimated tax</span>
+              <span className="font-semibold text-slate-950">
+                {formatTaxLabel(estimatedFuelCost)}
+              </span>
+            </div>
+            <div className="mt-3 border-t border-orange-100 pt-3">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-base font-semibold text-slate-950">
+                  Estimated total
+                </span>
+                <span className="text-base font-semibold text-slate-950">
+                  {formatEstimate(estimatedTotal)}
+                </span>
+              </div>
+            </div>
+          </div>
+          <p className="mt-3 text-xs leading-5 text-slate-500">
+            Fuel pump prices already reflect the station&apos;s posted fuel taxes.
+            Any additional taxes on service fees or add-ons can be added later at
+            checkout once we finalize that flow.
           </p>
         </div>
       </section>
@@ -827,4 +853,8 @@ function getServiceFeeForVehicleClass(vehicleClass: string) {
     default:
       return 899;
   }
+}
+
+function formatTaxLabel(estimatedFuelCost: number | null) {
+  return estimatedFuelCost === null ? 'TBD' : 'Included in fuel price';
 }
