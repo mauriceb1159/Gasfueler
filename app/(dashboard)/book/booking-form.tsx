@@ -236,14 +236,15 @@ export function BookingForm({
   }
 
   return (
-    <form action={submitFuelRequest} className="space-y-6 sm:space-y-7">
-      {initialError ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {initialError}
-        </div>
-      ) : null}
+    <form action={submitFuelRequest} className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6">
+      <div className="space-y-6 sm:space-y-7">
+        {initialError ? (
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {initialError}
+          </div>
+        ) : null}
 
-      <section className="space-y-4">
+        <section className="space-y-4">
         <SectionTitle icon={MapPinned} title="1. Choose a station and time window" />
         <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
           <div className="space-y-4 rounded-[1.25rem] border border-orange-100 bg-orange-50/70 p-4 sm:rounded-[1.5rem]">
@@ -497,9 +498,9 @@ export function BookingForm({
             </p>
           </div>
         </div>
-      </section>
+        </section>
 
-      <section className="space-y-4">
+        <section className="space-y-4">
         <SectionTitle icon={Fuel} title="2. Fuel details" />
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Fuel grade" htmlFor="fuelGrade">
@@ -554,60 +555,9 @@ export function BookingForm({
             />
           </Field>
         </div>
-        <div className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-4 text-sm text-slate-700">
-          <p className="font-semibold text-slate-950">Order summary</p>
-          <p className="mt-2">
-            {selectedFuelPrice
-              ? `${formatFuelGrade(fuelGrade)} is currently ${formatCentsPerGallon(
-                  selectedFuelPrice.priceCents
-                )} at ${selectedStation?.name}.`
-              : 'Add a current station fuel price to unlock gallon-based estimates.'}
-          </p>
-          <div className="mt-4 rounded-2xl border border-white/70 bg-white/80 p-4">
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-slate-600">Vehicle type</span>
-              <span className="font-semibold text-slate-950">
-                {formatVehicleClass(effectiveVehicleClass)}
-              </span>
-            </div>
-            <div className="mt-2 flex items-center justify-between gap-4">
-              <span className="text-slate-600">Fuel subtotal</span>
-              <span className="font-semibold text-slate-950">
-                {formatEstimate(estimatedFuelCost)}
-              </span>
-            </div>
-            <div className="mt-2 flex items-center justify-between gap-4">
-              <span className="text-slate-600">Service fee</span>
-              <span className="font-semibold text-slate-950">
-                {formatCurrency(serviceFee)}
-              </span>
-            </div>
-            <div className="mt-2 flex items-center justify-between gap-4">
-              <span className="text-slate-600">Estimated tax</span>
-              <span className="font-semibold text-slate-950">
-                {formatTaxLabel(estimatedFuelCost)}
-              </span>
-            </div>
-            <div className="mt-3 border-t border-orange-100 pt-3">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-base font-semibold text-slate-950">
-                  Estimated total
-                </span>
-                <span className="text-base font-semibold text-slate-950">
-                  {formatEstimate(estimatedTotal)}
-                </span>
-              </div>
-            </div>
-          </div>
-          <p className="mt-3 text-xs leading-5 text-slate-500">
-            Fuel pump prices already reflect the station&apos;s posted fuel taxes.
-            Any additional taxes on service fees or add-ons can be added later at
-            checkout once we finalize that flow.
-          </p>
-        </div>
-      </section>
+        </section>
 
-      <section className="space-y-4">
+        <section className="space-y-4">
         <SectionTitle icon={Navigation} title="3. Vehicle details" />
         <Field label="Saved vehicle" htmlFor="vehicleId">
           <select
@@ -686,9 +636,9 @@ export function BookingForm({
             placeholder="Anything that helps the attendant find or identify your vehicle"
           />
         </Field>
-      </section>
+        </section>
 
-      <Field label="Arrival or special instructions" htmlFor="specialInstructions">
+        <Field label="Arrival or special instructions" htmlFor="specialInstructions">
         <textarea
           id="specialInstructions"
           name="specialInstructions"
@@ -696,14 +646,69 @@ export function BookingForm({
           className="flex w-full rounded-3xl border border-input bg-transparent px-4 py-3 text-base shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
           placeholder="Parking lot notes, pump side preferences, or instructions for the attendant"
         />
-      </Field>
+        </Field>
 
-      <Button
-        type="submit"
-        className="h-12 w-full rounded-full bg-slate-950 px-6 text-white hover:bg-slate-800 sm:w-auto"
-      >
-        Save Fuel Request
-      </Button>
+        <Button
+          type="submit"
+          className="h-12 w-full rounded-full bg-slate-950 px-6 text-white hover:bg-slate-800 sm:w-auto"
+        >
+          Save Fuel Request
+        </Button>
+      </div>
+
+      <aside className="mt-6 lg:mt-0">
+        <div className="rounded-[1.5rem] border border-orange-200 bg-orange-50 p-4 text-sm text-slate-700 lg:sticky lg:top-6">
+          <p className="font-semibold text-slate-950">Order summary</p>
+          <p className="mt-2">
+            {selectedFuelPrice
+              ? `${formatFuelGrade(fuelGrade)} is currently ${formatCentsPerGallon(
+                  selectedFuelPrice.priceCents
+                )} at ${selectedStation?.name}.`
+              : 'Add a current station fuel price to unlock gallon-based estimates.'}
+          </p>
+          <div className="mt-4 rounded-2xl border border-white/70 bg-white/80 p-4">
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-slate-600">Vehicle type</span>
+              <span className="font-semibold text-slate-950">
+                {formatVehicleClass(effectiveVehicleClass)}
+              </span>
+            </div>
+            <div className="mt-2 flex items-center justify-between gap-4">
+              <span className="text-slate-600">Fuel subtotal</span>
+              <span className="font-semibold text-slate-950">
+                {formatEstimate(estimatedFuelCost)}
+              </span>
+            </div>
+            <div className="mt-2 flex items-center justify-between gap-4">
+              <span className="text-slate-600">Service fee</span>
+              <span className="font-semibold text-slate-950">
+                {formatCurrency(serviceFee)}
+              </span>
+            </div>
+            <div className="mt-2 flex items-center justify-between gap-4">
+              <span className="text-slate-600">Estimated tax</span>
+              <span className="font-semibold text-slate-950">
+                {formatTaxLabel(estimatedFuelCost)}
+              </span>
+            </div>
+            <div className="mt-3 border-t border-orange-100 pt-3">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-base font-semibold text-slate-950">
+                  Estimated total
+                </span>
+                <span className="text-base font-semibold text-slate-950">
+                  {formatEstimate(estimatedTotal)}
+                </span>
+              </div>
+            </div>
+          </div>
+          <p className="mt-3 text-xs leading-5 text-slate-500">
+            Fuel pump prices already reflect the station&apos;s posted fuel taxes.
+            Any additional taxes on service fees or add-ons can be added later at
+            checkout once we finalize that flow.
+          </p>
+        </div>
+      </aside>
     </form>
   );
 }
