@@ -1,9 +1,7 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Clock3, Fuel, ShieldCheck } from 'lucide-react';
+import { Fuel } from 'lucide-react';
 
 import { BookingForm, EmptyBookingState } from './booking-form';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getBookableStations, getUser, getVehiclesForUser } from '@/lib/db/queries';
 
@@ -42,7 +40,7 @@ export default async function BookPage({
           </p>
         </div>
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="mt-10">
           <Card className="rounded-[1.5rem] border-orange-100 shadow-[0_25px_70px_-40px_rgba(15,23,42,0.32)] sm:rounded-[2rem]">
             <CardHeader>
               <CardTitle className="text-2xl text-slate-950 sm:text-3xl">
@@ -61,49 +59,6 @@ export default async function BookPage({
               )}
             </CardContent>
           </Card>
-
-          <div className="space-y-6">
-            <Card className="rounded-[1.5rem] border-slate-200 bg-slate-950 text-white shadow-[0_28px_80px_-36px_rgba(15,23,42,0.8)] sm:rounded-[2rem]">
-              <CardHeader>
-                <CardTitle className="text-xl sm:text-2xl">How this MVP works</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 text-sm leading-7 text-slate-300">
-                <p>
-                  This first booking flow is intentionally slot-based. Customers
-                  choose from actual station capacity instead of requesting
-                  vague ASAP fulfillment.
-                </p>
-                <div className="rounded-[1.25rem] border border-white/10 bg-white/5 p-4 sm:rounded-[1.5rem] sm:p-5">
-                  <div className="flex items-center gap-3">
-                    <Clock3 className="h-5 w-5 text-orange-300" />
-                    <p className="font-semibold text-white">Simple operating rule</p>
-                  </div>
-                  <p className="mt-3">
-                    One slot, one attendant-capacity check, one saved request.
-                    That keeps the first pilot realistic for operators.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-[1.5rem] border-orange-100 sm:rounded-[2rem]">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-xl text-slate-950 sm:text-2xl">
-                  <ShieldCheck className="h-5 w-5 text-orange-600" />
-                  Next build step
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 text-slate-600">
-                <p>
-                  After this form, the natural next step is an attendant
-                  dashboard that shows upcoming requests by station and status.
-                </p>
-                <Button asChild variant="outline" className="w-full rounded-full sm:w-auto">
-                  <Link href="/dashboard">Return to dashboard</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </div>
     </main>
