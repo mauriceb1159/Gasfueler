@@ -168,6 +168,20 @@ export function BookingForm({
     };
   }, [coords]);
 
+  useEffect(() => {
+    if (!selectedVehicleId) {
+      return;
+    }
+
+    const vehicle = vehicles.find(
+      (currentVehicle) => String(currentVehicle.id) === selectedVehicleId
+    );
+
+    if (vehicle?.vehicleClass) {
+      setVehicleClass(vehicle.vehicleClass);
+    }
+  }, [selectedVehicleId, vehicles]);
+
   const selectedStation =
     visibleStations.find((station) => station.id === selectedStationId) ?? null;
   const selectedSlots = selectedStation?.serviceSlots ?? [];
@@ -178,8 +192,7 @@ export function BookingForm({
   const requestedDollarAmountNumber = Number(requestedDollarAmount);
   const selectedVehicleRecord =
     vehicles.find((vehicle) => String(vehicle.id) === selectedVehicleId) ?? null;
-  const effectiveVehicleClass =
-    selectedVehicleRecord?.vehicleClass || vehicleClass || 'suv';
+  const effectiveVehicleClass = vehicleClass || 'suv';
   const serviceFee = getServiceFeeForVehicleClass(effectiveVehicleClass);
   const estimatedFuelCost =
     requestType === 'gallons' &&
@@ -606,8 +619,7 @@ export function BookingForm({
               name="vehicleClass"
               value={vehicleClass}
               onChange={(event) => setVehicleClass(event.target.value)}
-              disabled={Boolean(selectedVehicleId)}
-              className="flex h-12 w-full rounded-full border border-input bg-white px-4 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-60"
+              className="flex h-12 w-full rounded-full border border-input bg-white px-4 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
             >
               <option value="car">Car</option>
               <option value="suv">SUV</option>
@@ -615,6 +627,12 @@ export function BookingForm({
             </select>
           </Field>
         </div>
+        {selectedVehicleRecord ? (
+          <p className="text-sm text-slate-500">
+            Changing the vehicle type here will also update that saved vehicle for
+            future bookings.
+          </p>
+        ) : null}
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Make" htmlFor="make">
             <Input id="make" name="make" placeholder="Toyota" />

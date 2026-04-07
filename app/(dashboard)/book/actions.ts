@@ -146,8 +146,19 @@ export const createFuelRequest = validatedActionWithUser(
         .where(eq(vehicles.id, vehicleId))
         .limit(1);
 
-      vehicleClass =
-        (vehicleRecord?.vehicleClass as VehicleClass | null) || VehicleClass.SUV;
+      const requestedVehicleClass = data.vehicleClass || VehicleClass.SUV;
+
+      if (vehicleRecord?.vehicleClass !== requestedVehicleClass) {
+        await db
+          .update(vehicles)
+          .set({
+            vehicleClass: requestedVehicleClass,
+            updatedAt: new Date()
+          })
+          .where(eq(vehicles.id, vehicleId));
+      }
+
+      vehicleClass = requestedVehicleClass;
     }
 
     const requestedGallons =
