@@ -93,14 +93,14 @@ function Header() {
     <header className="sticky top-0 z-40">
       <div className="mx-auto mt-4 flex max-w-7xl items-center justify-between rounded-full border border-white/60 bg-white/75 px-3 py-3 shadow-[0_18px_60px_-28px_rgba(15,23,42,0.55)] backdrop-blur-xl sm:px-6 lg:px-8">
         <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <div className="relative h-11 w-[180px] shrink-0 sm:h-14 sm:w-[240px] lg:h-16 lg:w-[290px]">
+          <div className="relative h-10 w-[170px] shrink-0 sm:h-13 sm:w-[220px] lg:h-14 lg:w-[260px]">
             <Image
               src="/logos/gasfueler-logo-header.png"
               alt="GasFueler logo"
               fill
               className="object-contain object-left"
               priority
-              sizes="(max-width: 640px) 180px, (max-width: 1024px) 240px, 290px"
+              sizes="(max-width: 640px) 170px, (max-width: 1024px) 220px, 260px"
             />
           </div>
         </Link>
