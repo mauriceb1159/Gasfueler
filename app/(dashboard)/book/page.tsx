@@ -15,7 +15,7 @@ export default async function BookPage({
   const user = await getUser();
 
   if (!user) {
-    redirect('/sign-up?redirect=book');
+    redirect('/sign-in?redirect=book');
   }
 
   const params = searchParams ? await searchParams : undefined;
