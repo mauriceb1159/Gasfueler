@@ -1,6 +1,6 @@
 'use server';
 
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
@@ -13,6 +13,7 @@ import {
   type NewFuelRequest,
   serviceSlots,
   ServiceSlotStatus,
+  stationFuelPrices,
   stations,
   vehicles,
   type NewVehicle
@@ -137,9 +138,29 @@ export const createFuelRequest = validatedActionWithUser(
         : null;
 
     const serviceFee = 500;
+    const [latestPrice] = await db
+      .select({
+        priceCents: stationFuelPrices.priceCents
+      })
+      .from(stationFuelPrices)
+      .where(
+        and(
+          eq(stationFuelPrices.stationId, station.id),
+          eq(stationFuelPrices.fuelGrade, data.fuelGrade)
+        )
+      )
+      .orderBy(desc(stationFuelPrices.recordedAt))
+      .limit(1);
+
     const fuelEstimate =
       data.requestType === FuelRequestType.DOLLAR_AMOUNT
         ? requestedDollarAmount
+          ? requestedDollarAmount * 100
+          : null
+        : data.requestType === FuelRequestType.GALLONS &&
+          requestedGallons &&
+          latestPrice?.priceCents
+        ? requestedGallons * latestPrice.priceCents
         : null;
 
     const newRequest: NewFuelRequest = {

@@ -4,6 +4,7 @@ import {
   activityLogs,
   fuelRequests,
   serviceSlots,
+  stationFuelPrices,
   stations,
   teamMembers,
   teams,
@@ -150,12 +151,27 @@ export async function getBookableStations() {
   return db.query.stations.findMany({
     where: eq(stations.active, true),
     with: {
+      fuelPrices: {
+        orderBy: (fuelPrices, { desc }) => [desc(fuelPrices.recordedAt)]
+      },
       serviceSlots: {
         where: and(
           eq(serviceSlots.status, 'open'),
           gt(serviceSlots.startAt, new Date())
         ),
         orderBy: asc(serviceSlots.startAt)
+      }
+    },
+    orderBy: asc(stations.name)
+  });
+}
+
+export async function getStationsForPricing() {
+  return db.query.stations.findMany({
+    where: eq(stations.active, true),
+    with: {
+      fuelPrices: {
+        orderBy: (fuelPrices, { desc }) => [desc(fuelPrices.recordedAt)]
       }
     },
     orderBy: asc(stations.name)

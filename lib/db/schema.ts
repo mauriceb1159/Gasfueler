@@ -118,6 +118,18 @@ export const serviceSlots = pgTable('service_slots', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+export const stationFuelPrices = pgTable('station_fuel_prices', {
+  id: serial('id').primaryKey(),
+  stationId: integer('station_id')
+    .notNull()
+    .references(() => stations.id),
+  fuelGrade: varchar('fuel_grade', { length: 30 }).notNull(),
+  priceCents: integer('price_cents').notNull(),
+  source: varchar('source', { length: 30 }).notNull().default('manual'),
+  recordedAt: timestamp('recorded_at').notNull().defaultNow(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
 export const vehicles = pgTable('vehicles', {
   id: serial('id').primaryKey(),
   userId: integer('user_id')
@@ -200,6 +212,7 @@ export const usersRelations = relations(users, ({ many }) => ({
 export const stationsRelations = relations(stations, ({ many }) => ({
   stationHours: many(stationHours),
   serviceSlots: many(serviceSlots),
+  fuelPrices: many(stationFuelPrices),
   fuelRequests: many(fuelRequests),
 }));
 
@@ -217,6 +230,16 @@ export const serviceSlotsRelations = relations(serviceSlots, ({ one, many }) => 
   }),
   fuelRequests: many(fuelRequests),
 }));
+
+export const stationFuelPricesRelations = relations(
+  stationFuelPrices,
+  ({ one }) => ({
+    station: one(stations, {
+      fields: [stationFuelPrices.stationId],
+      references: [stations.id],
+    }),
+  })
+);
 
 export const invitationsRelations = relations(invitations, ({ one }) => ({
   team: one(teams, {
@@ -319,6 +342,8 @@ export type StationHour = typeof stationHours.$inferSelect;
 export type NewStationHour = typeof stationHours.$inferInsert;
 export type ServiceSlot = typeof serviceSlots.$inferSelect;
 export type NewServiceSlot = typeof serviceSlots.$inferInsert;
+export type StationFuelPrice = typeof stationFuelPrices.$inferSelect;
+export type NewStationFuelPrice = typeof stationFuelPrices.$inferInsert;
 export type Vehicle = typeof vehicles.$inferSelect;
 export type NewVehicle = typeof vehicles.$inferInsert;
 export type FuelRequest = typeof fuelRequests.$inferSelect;

@@ -25,6 +25,13 @@ type BookableStation = {
   latitude: string | null;
   longitude: string | null;
   supportsSnacks: boolean;
+  fuelPrices: {
+    id: number;
+    fuelGrade: string;
+    priceCents: number;
+    source: string;
+    recordedAt: Date | string;
+  }[];
   serviceSlots: StationSlot[];
 };
 
@@ -63,6 +70,10 @@ export function BookingForm({
   const [nearbyStations, setNearbyStations] = useState<NearbyGasStation[]>([]);
   const [selectedNearbyStation, setSelectedNearbyStation] =
     useState<NearbyGasStation | null>(null);
+  const [fuelGrade, setFuelGrade] = useState('regular');
+  const [requestType, setRequestType] = useState('fill_tank');
+  const [requestedGallons, setRequestedGallons] = useState('');
+  const [requestedDollarAmount, setRequestedDollarAmount] = useState('');
   const [nearbyStatus, setNearbyStatus] = useState<
     'idle' | 'loading' | 'ready' | 'error' | 'unconfigured'
   >('idle');
@@ -157,6 +168,23 @@ export function BookingForm({
   const selectedStation =
     visibleStations.find((station) => station.id === selectedStationId) ?? null;
   const selectedSlots = selectedStation?.serviceSlots ?? [];
+  const selectedFuelPrice = selectedStation?.fuelPrices.find(
+    (price) => price.fuelGrade === fuelGrade
+  );
+  const requestedGallonsNumber = Number(requestedGallons);
+  const requestedDollarAmountNumber = Number(requestedDollarAmount);
+  const estimatedFuelCost =
+    requestType === 'gallons' &&
+    selectedFuelPrice &&
+    Number.isFinite(requestedGallonsNumber) &&
+    requestedGallonsNumber > 0
+      ? Math.round(selectedFuelPrice.priceCents * requestedGallonsNumber)
+      : requestType === 'dollar_amount' &&
+        Number.isFinite(requestedDollarAmountNumber) &&
+        requestedDollarAmountNumber > 0
+      ? Math.round(requestedDollarAmountNumber * 100)
+      : null;
+  const estimatedTotal = estimatedFuelCost !== null ? estimatedFuelCost + 500 : null;
 
   function handleUseLocation() {
     if (!navigator.geolocation) {
@@ -286,6 +314,11 @@ export function BookingForm({
                           Snack pickup available
                         </span>
                       ) : null}
+                      {station.fuelPrices.length > 0 ? (
+                        <span className="rounded-full bg-white px-3 py-1 font-medium text-slate-700">
+                          From {formatCentsPerGallon(getLowestFuelPrice(station.fuelPrices))}
+                        </span>
+                      ) : null}
                     </div>
                   </button>
                 ))}
@@ -393,6 +426,33 @@ export function BookingForm({
                 below to continue.
               </p>
             ) : null}
+            {selectedStation ? (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                <p className="text-sm font-semibold text-slate-950">
+                  Current station pricing
+                </p>
+                {selectedStation.fuelPrices.length > 0 ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {selectedStation.fuelPrices.map((price) => (
+                      <span
+                        key={price.id}
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                          price.fuelGrade === fuelGrade
+                            ? 'bg-slate-950 text-white'
+                            : 'bg-white text-slate-700'
+                        }`}
+                      >
+                        {formatFuelGrade(price.fuelGrade)} {formatCentsPerGallon(price.priceCents)}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-2 text-sm text-slate-600">
+                    No current price has been loaded for this partner station yet.
+                  </p>
+                )}
+              </div>
+            ) : null}
             <Field label="Service slot" htmlFor="slotId">
               <select
                 id="slotId"
@@ -424,7 +484,8 @@ export function BookingForm({
             <select
               id="fuelGrade"
               name="fuelGrade"
-              defaultValue="regular"
+              value={fuelGrade}
+              onChange={(event) => setFuelGrade(event.target.value)}
               className="flex h-12 w-full rounded-full border border-input bg-white px-4 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
             >
               <option value="regular">Regular</option>
@@ -437,7 +498,8 @@ export function BookingForm({
             <select
               id="requestType"
               name="requestType"
-              defaultValue="fill_tank"
+              value={requestType}
+              onChange={(event) => setRequestType(event.target.value)}
               className="flex h-12 w-full rounded-full border border-input bg-white px-4 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
             >
               <option value="fill_tank">Fill tank</option>
@@ -453,6 +515,8 @@ export function BookingForm({
               name="requestedGallons"
               type="number"
               min="1"
+              value={requestedGallons}
+              onChange={(event) => setRequestedGallons(event.target.value)}
               placeholder="Only if choosing gallons"
             />
           </Field>
@@ -462,9 +526,30 @@ export function BookingForm({
               name="requestedDollarAmount"
               type="number"
               min="1"
+              value={requestedDollarAmount}
+              onChange={(event) => setRequestedDollarAmount(event.target.value)}
               placeholder="Only if choosing dollar amount"
             />
           </Field>
+        </div>
+        <div className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-4 text-sm text-slate-700">
+          <p className="font-semibold text-slate-950">Live estimate preview</p>
+          <p className="mt-2">
+            {selectedFuelPrice
+              ? `${formatFuelGrade(fuelGrade)} is currently ${formatCentsPerGallon(
+                  selectedFuelPrice.priceCents
+                )} at ${selectedStation?.name}.`
+              : 'Add a current station fuel price to unlock gallon-based estimates.'}
+          </p>
+          <p className="mt-2">
+            Service fee: <span className="font-semibold">{formatCurrency(500)}</span>
+          </p>
+          <p className="mt-1">
+            Estimated fuel: <span className="font-semibold">{formatEstimate(estimatedFuelCost)}</span>
+          </p>
+          <p className="mt-1">
+            Estimated total: <span className="font-semibold">{formatEstimate(estimatedTotal)}</span>
+          </p>
         </div>
       </section>
 
@@ -643,4 +728,34 @@ function getDistanceMiles(
     Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
 
   return 2 * earthRadiusMiles * Math.asin(Math.sqrt(a));
+}
+
+function getLowestFuelPrice(
+  prices: { fuelGrade: string; priceCents: number }[]
+) {
+  return prices.reduce((lowest, current) =>
+    current.priceCents < lowest.priceCents ? current : lowest
+  ).priceCents;
+}
+
+function formatFuelGrade(fuelGrade: string) {
+  return fuelGrade
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function formatCurrency(cents: number) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(cents / 100);
+}
+
+function formatCentsPerGallon(cents: number) {
+  return `${formatCurrency(cents)}/gal`;
+}
+
+function formatEstimate(cents: number | null) {
+  return cents === null ? 'TBD' : formatCurrency(cents);
 }
