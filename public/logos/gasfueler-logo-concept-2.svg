@@ -1,0 +1,17 @@
+<svg width="640" height="180" viewBox="0 0 640 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="c2" x1="38" y1="26" x2="132" y2="136" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FB923C"/>
+      <stop offset="0.6" stop-color="#F97316"/>
+      <stop offset="1" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="180" rx="28" fill="#FFFDF8"/>
+  <rect x="34" y="34" width="112" height="112" rx="32" fill="url(#c2)"/>
+  <path d="M69 60H101C106.523 60 111 64.477 111 70V90C111 95.523 106.523 100 101 100H69V60Z" fill="white"/>
+  <path d="M69 100H98C105.18 100 111 105.82 111 113V120H69V100Z" fill="white" fill-opacity="0.22"/>
+  <path d="M58 118H121" stroke="#FDE68A" stroke-width="7" stroke-linecap="round"/>
+  <path d="M51 78C62 70 71 67 80 69" stroke="#FDE68A" stroke-width="6" stroke-linecap="round"/>
+  <text x="178" y="87" fill="#0F172A" font-family="Georgia, 'Times New Roman', serif" font-size="50" font-weight="700">GasFueler</text>
+  <text x="179" y="119" fill="#C2410C" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="0.18em">PREMIUM FORECOURT SERVICE</text>
+</svg>

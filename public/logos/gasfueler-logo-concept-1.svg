@@ -1,0 +1,17 @@
+<svg width="640" height="180" viewBox="0 0 640 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="c1" x1="30" y1="20" x2="130" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F97316"/>
+      <stop offset="0.55" stop-color="#F59E0B"/>
+      <stop offset="1" stop-color="#06B6D4"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="180" rx="28" fill="#FFF9F4"/>
+  <circle cx="90" cy="90" r="54" fill="url(#c1)"/>
+  <path d="M75 50H105C112.18 50 118 55.82 118 63V78C118 85.18 112.18 91 105 91H75V50Z" fill="white" fill-opacity="0.96"/>
+  <path d="M75 91H102C111.941 91 120 99.059 120 109V116H75V91Z" fill="#0F172A" fill-opacity="0.14"/>
+  <circle cx="97" cy="69" r="4.5" fill="#F97316"/>
+  <path d="M63 108H116" stroke="white" stroke-width="7" stroke-linecap="round"/>
+  <text x="165" y="88" fill="#0F172A" font-family="Segoe UI, Arial, sans-serif" font-size="46" font-weight="800">GasFueler</text>
+  <text x="166" y="118" fill="#64748B" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="600" letter-spacing="0.2em">FULL-SERVICE FUELING</text>
+</svg>

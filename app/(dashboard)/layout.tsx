@@ -1,9 +1,10 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { CircleIcon, LogOut, Settings, TicketPlus } from 'lucide-react';
+import { LogOut, Settings, TicketPlus } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -92,16 +93,15 @@ function Header() {
     <header className="sticky top-0 z-40">
       <div className="mx-auto mt-4 flex max-w-7xl items-center justify-between rounded-full border border-white/60 bg-white/75 px-3 py-3 shadow-[0_18px_60px_-28px_rgba(15,23,42,0.55)] backdrop-blur-xl sm:px-6 lg:px-8">
         <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 via-amber-400 to-cyan-400 text-white shadow-lg shadow-orange-500/30 sm:h-10 sm:w-10">
-            <CircleIcon className="h-4 w-4 fill-current sm:h-5 sm:w-5" />
-          </div>
-          <div className="min-w-0">
-            <span className="block truncate text-base font-semibold tracking-tight text-slate-950 sm:text-lg">
-              GasFueler
-            </span>
-            <span className="hidden text-[11px] uppercase tracking-[0.26em] text-slate-500 sm:block">
-              Full-Service Fueling
-            </span>
+          <div className="relative h-10 w-[170px] shrink-0 sm:h-12 sm:w-[220px]">
+            <Image
+              src="/logos/gasfueler-logo.png"
+              alt="GasFueler logo"
+              fill
+              className="object-contain object-left"
+              priority
+              sizes="(max-width: 640px) 170px, 220px"
+            />
           </div>
         </Link>
         <div className="ml-3 flex shrink-0 items-center space-x-3 sm:space-x-4">
