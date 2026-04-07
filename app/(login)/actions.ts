@@ -97,6 +97,10 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
     return createCheckoutSession({ team: foundTeam, priceId });
   }
 
+  if (redirectTo === 'book') {
+    redirect('/book');
+  }
+
   redirect('/dashboard');
 });
 
@@ -216,6 +220,10 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   if (redirectTo === 'checkout') {
     const priceId = formData.get('priceId') as string;
     return createCheckoutSession({ team: createdTeam, priceId });
+  }
+
+  if (redirectTo === 'book') {
+    redirect('/book');
   }
 
   redirect('/dashboard');
