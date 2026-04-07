@@ -15,6 +15,7 @@ import {
   ServiceSlotStatus,
   stationFuelPrices,
   stations,
+  VehicleClass,
   vehicles,
   type NewVehicle
 } from '@/lib/db/schema';
@@ -39,6 +40,9 @@ const bookingSchema = z
       .union([z.coerce.number().int().positive(), z.literal('')])
       .optional(),
     nickname: z.string().max(100).optional(),
+    vehicleClass: z
+      .enum([VehicleClass.CAR, VehicleClass.SUV, VehicleClass.TRUCK])
+      .optional(),
     make: z.string().max(100).optional(),
     model: z.string().max(100).optional(),
     color: z.string().max(50).optional(),
@@ -114,6 +118,7 @@ export const createFuelRequest = validatedActionWithUser(
       const newVehicle: NewVehicle = {
         userId: user.id,
         nickname: data.nickname?.trim() || null,
+        vehicleClass: data.vehicleClass || VehicleClass.SUV,
         make: data.make?.trim() || null,
         model: data.model?.trim() || null,
         color: data.color?.trim() || null,
@@ -130,6 +135,21 @@ export const createFuelRequest = validatedActionWithUser(
       vehicleId = createdVehicle.id;
     }
 
+    let vehicleClass = data.vehicleClass || VehicleClass.SUV;
+
+    if (vehicleId) {
+      const [vehicleRecord] = await db
+        .select({
+          vehicleClass: vehicles.vehicleClass
+        })
+        .from(vehicles)
+        .where(eq(vehicles.id, vehicleId))
+        .limit(1);
+
+      vehicleClass =
+        (vehicleRecord?.vehicleClass as VehicleClass | null) || VehicleClass.SUV;
+    }
+
     const requestedGallons =
       typeof data.requestedGallons === 'number' ? data.requestedGallons : null;
     const requestedDollarAmount =
@@ -137,7 +157,7 @@ export const createFuelRequest = validatedActionWithUser(
         ? data.requestedDollarAmount
         : null;
 
-    const serviceFee = 500;
+    const serviceFee = getServiceFeeForVehicleClass(vehicleClass);
     let latestPrice:
       | {
           priceCents: number;
@@ -209,5 +229,17 @@ export async function submitFuelRequest(formData: FormData) {
 
   if (result && typeof result === 'object' && 'error' in result && result.error) {
     redirect(`/book?error=${encodeURIComponent(result.error)}`);
+  }
+}
+
+function getServiceFeeForVehicleClass(vehicleClass: VehicleClass) {
+  switch (vehicleClass) {
+    case VehicleClass.CAR:
+      return 699;
+    case VehicleClass.TRUCK:
+      return 1099;
+    case VehicleClass.SUV:
+    default:
+      return 899;
   }
 }

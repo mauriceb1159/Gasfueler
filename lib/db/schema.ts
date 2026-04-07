@@ -136,6 +136,7 @@ export const vehicles = pgTable('vehicles', {
     .notNull()
     .references(() => users.id),
   nickname: varchar('nickname', { length: 100 }),
+  vehicleClass: varchar('vehicle_class', { length: 20 }),
   make: varchar('make', { length: 100 }),
   model: varchar('model', { length: 100 }),
   color: varchar('color', { length: 50 }),
@@ -392,4 +393,10 @@ export enum FuelRequestStatus {
   COMPLETED = 'completed',
   CANCELED = 'canceled',
   NO_SHOW = 'no_show',
+}
+
+export enum VehicleClass {
+  CAR = 'car',
+  SUV = 'suv',
+  TRUCK = 'truck',
 }

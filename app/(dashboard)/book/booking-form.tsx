@@ -39,6 +39,7 @@ type VehicleRecord = {
   id: number;
   nickname: string | null;
   licensePlate: string;
+  vehicleClass: string | null;
 };
 
 type NearbyGasStation = {
@@ -74,6 +75,8 @@ export function BookingForm({
   const [requestType, setRequestType] = useState('fill_tank');
   const [requestedGallons, setRequestedGallons] = useState('');
   const [requestedDollarAmount, setRequestedDollarAmount] = useState('');
+  const [selectedVehicleId, setSelectedVehicleId] = useState('');
+  const [vehicleClass, setVehicleClass] = useState('suv');
   const [nearbyStatus, setNearbyStatus] = useState<
     'idle' | 'loading' | 'ready' | 'error' | 'unconfigured'
   >('idle');
@@ -173,6 +176,11 @@ export function BookingForm({
   );
   const requestedGallonsNumber = Number(requestedGallons);
   const requestedDollarAmountNumber = Number(requestedDollarAmount);
+  const selectedVehicleRecord =
+    vehicles.find((vehicle) => String(vehicle.id) === selectedVehicleId) ?? null;
+  const effectiveVehicleClass =
+    selectedVehicleRecord?.vehicleClass || vehicleClass || 'suv';
+  const serviceFee = getServiceFeeForVehicleClass(effectiveVehicleClass);
   const estimatedFuelCost =
     requestType === 'gallons' &&
     selectedFuelPrice &&
@@ -184,7 +192,8 @@ export function BookingForm({
         requestedDollarAmountNumber > 0
       ? Math.round(requestedDollarAmountNumber * 100)
       : null;
-  const estimatedTotal = estimatedFuelCost !== null ? estimatedFuelCost + 500 : null;
+  const estimatedTotal =
+    estimatedFuelCost !== null ? estimatedFuelCost + serviceFee : null;
 
   function handleUseLocation() {
     if (!navigator.geolocation) {
@@ -542,7 +551,13 @@ export function BookingForm({
               : 'Add a current station fuel price to unlock gallon-based estimates.'}
           </p>
           <p className="mt-2">
-            Service fee: <span className="font-semibold">{formatCurrency(500)}</span>
+            Vehicle type:{' '}
+            <span className="font-semibold">
+              {formatVehicleClass(effectiveVehicleClass)}
+            </span>
+          </p>
+          <p className="mt-1">
+            Service fee: <span className="font-semibold">{formatCurrency(serviceFee)}</span>
           </p>
           <p className="mt-1">
             Estimated fuel: <span className="font-semibold">{formatEstimate(estimatedFuelCost)}</span>
@@ -559,13 +574,17 @@ export function BookingForm({
           <select
             id="vehicleId"
             name="vehicleId"
-            defaultValue=""
+            value={selectedVehicleId}
+            onChange={(event) => setSelectedVehicleId(event.target.value)}
             className="flex h-12 w-full rounded-full border border-input bg-white px-4 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
           >
             <option value="">Add a new vehicle below</option>
             {vehicles.map((vehicle) => (
               <option key={vehicle.id} value={vehicle.id}>
                 {vehicle.nickname || vehicle.licensePlate}
+                {vehicle.vehicleClass
+                  ? ` - ${formatVehicleClass(vehicle.vehicleClass)}`
+                  : ''}
               </option>
             ))}
           </select>
@@ -580,6 +599,20 @@ export function BookingForm({
               name="licensePlate"
               placeholder="Required for new vehicles"
             />
+          </Field>
+          <Field label="Vehicle type" htmlFor="vehicleClass">
+            <select
+              id="vehicleClass"
+              name="vehicleClass"
+              value={vehicleClass}
+              onChange={(event) => setVehicleClass(event.target.value)}
+              disabled={Boolean(selectedVehicleId)}
+              className="flex h-12 w-full rounded-full border border-input bg-white px-4 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-60"
+            >
+              <option value="car">Car</option>
+              <option value="suv">SUV</option>
+              <option value="truck">Truck</option>
+            </select>
           </Field>
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
@@ -745,6 +778,12 @@ function formatFuelGrade(fuelGrade: string) {
     .join(' ');
 }
 
+function formatVehicleClass(vehicleClass: string) {
+  return vehicleClass.toUpperCase() === 'SUV'
+    ? 'SUV'
+    : vehicleClass.charAt(0).toUpperCase() + vehicleClass.slice(1);
+}
+
 function formatCurrency(cents: number) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -758,4 +797,16 @@ function formatCentsPerGallon(cents: number) {
 
 function formatEstimate(cents: number | null) {
   return cents === null ? 'TBD' : formatCurrency(cents);
+}
+
+function getServiceFeeForVehicleClass(vehicleClass: string) {
+  switch (vehicleClass) {
+    case 'car':
+      return 699;
+    case 'truck':
+      return 1099;
+    case 'suv':
+    default:
+      return 899;
+  }
 }
