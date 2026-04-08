@@ -24,6 +24,17 @@ export default async function FulfillmentPage() {
   }
 
   const requests = await getFuelRequestsForFulfillment();
+  const activeRequests = requests.filter(
+    (request) =>
+      request.status !== FuelRequestStatus.COMPLETED &&
+      request.status !== FuelRequestStatus.CANCELED
+  );
+  const completedRequests = requests.filter(
+    (request) => request.status === FuelRequestStatus.COMPLETED
+  );
+  const canceledRequests = requests.filter(
+    (request) => request.status === FuelRequestStatus.CANCELED
+  );
 
   return (
     <section className="flex-1 p-4 lg:p-8">
@@ -37,84 +48,149 @@ export default async function FulfillmentPage() {
         </p>
       </div>
 
-      <div className="space-y-6">
-        {requests.length > 0 ? (
-          requests.map((request) => (
-            <Card key={request.id}>
-              <CardHeader>
-                <CardTitle className="flex flex-col gap-2 text-base sm:flex-row sm:items-center sm:justify-between">
-                  <span className="flex items-center gap-2">
-                    <Fuel className="h-5 w-5 text-orange-600" />
-                    Request #{request.id}
-                  </span>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold capitalize text-slate-700">
-                      {request.status.replace('_', ' ')}
-                    </span>
-                    {request.status !== FuelRequestStatus.CANCELED &&
-                    request.status !== FuelRequestStatus.COMPLETED ? (
-                      <form action={cancelFuelRequest}>
-                        <input type="hidden" name="requestId" value={request.id} />
-                        <Button
-                          type="submit"
-                          variant="outline"
-                          className="rounded-full border-red-200 bg-white text-red-600 hover:bg-red-50 hover:text-red-700"
-                        >
-                          Delete pending request
-                        </Button>
-                      </form>
-                    ) : null}
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 text-sm text-slate-600 sm:grid-cols-2">
-                  <InfoRow label="Customer" value={request.user.name || request.user.email} />
-                  <InfoRow
-                    label="Station"
-                    value={`${request.station.name} - ${request.station.city}, ${request.station.state}`}
-                  />
-                  <InfoRow
-                    label="Vehicle"
-                    value={`${request.vehicle.nickname || request.vehicle.licensePlate} (${request.vehicle.licensePlate})`}
-                  />
-                  <InfoRow label="Fuel grade" value={formatFuelGrade(request.fuelGrade)} />
-                  <InfoRow label="Requested type" value={formatFuelGrade(request.requestType)} />
-                  <InfoRow label="Service fee" value={formatCurrency(request.serviceFee)} />
-                </div>
+      <div className="space-y-8">
+        <RequestSection
+          title="Active Requests"
+          description="Requests that still need attention, fueling, or final proof."
+          requests={activeRequests}
+          emptyMessage="No active fuel requests right now."
+        />
 
-                {request.completedAt ? (
-                  <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
-                    <div className="flex items-center gap-2 font-semibold">
-                      <CheckCircle2 className="h-4 w-4" />
-                      Completed with proof
-                    </div>
-                    <p className="mt-2">
-                      Pump photo and gas cap secured photo are stored in Supabase
-                      Storage for this request.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="mt-5 rounded-2xl border border-orange-100 bg-orange-50/80 p-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-slate-950">
-                      <Camera className="h-4 w-4 text-orange-600" />
-                      Attendant completion
-                    </div>
-                    <FulfillmentProofForm requestId={request.id} />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <Card>
-            <CardContent className="p-6 text-sm text-muted-foreground">
-              No fuel requests are ready for fulfillment yet.
-            </CardContent>
-          </Card>
-        )}
+        <RequestSection
+          title="Completed Requests"
+          description="Recently completed fuel stops with proof stored in Supabase Storage."
+          requests={completedRequests}
+          emptyMessage="No completed fuel requests yet."
+        />
+
+        <RequestSection
+          title="Canceled Requests"
+          description="Canceled requests are kept here as operational history."
+          requests={canceledRequests}
+          emptyMessage="No canceled requests."
+          subdued
+        />
       </div>
     </section>
+  );
+}
+
+function RequestSection({
+  title,
+  description,
+  requests,
+  emptyMessage,
+  subdued = false
+}: {
+  title: string;
+  description: string;
+  requests: Awaited<ReturnType<typeof getFuelRequestsForFulfillment>>;
+  emptyMessage: string;
+  subdued?: boolean;
+}) {
+  return (
+    <section className="space-y-4">
+      <div>
+        <h2
+          className={`text-base font-semibold lg:text-xl ${
+            subdued ? 'text-slate-700' : 'text-slate-950'
+          }`}
+        >
+          {title}
+        </h2>
+        <p className="mt-1 text-sm leading-6 text-muted-foreground">
+          {description}
+        </p>
+      </div>
+
+      {requests.length > 0 ? (
+        requests.map((request) => <RequestCard key={request.id} request={request} />)
+      ) : (
+        <Card className={subdued ? 'border-dashed border-slate-200 bg-slate-50/70' : ''}>
+          <CardContent className="p-6 text-sm text-muted-foreground">
+            {emptyMessage}
+          </CardContent>
+        </Card>
+      )}
+    </section>
+  );
+}
+
+function RequestCard({
+  request
+}: {
+  request: Awaited<ReturnType<typeof getFuelRequestsForFulfillment>>[number];
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex flex-col gap-2 text-base sm:flex-row sm:items-center sm:justify-between">
+          <span className="flex items-center gap-2">
+            <Fuel className="h-5 w-5 text-orange-600" />
+            Request #{request.id}
+          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold capitalize text-slate-700">
+              {request.status.replace('_', ' ')}
+            </span>
+            {request.status !== FuelRequestStatus.CANCELED &&
+            request.status !== FuelRequestStatus.COMPLETED ? (
+              <form action={cancelFuelRequest}>
+                <input type="hidden" name="requestId" value={request.id} />
+                <Button
+                  type="submit"
+                  variant="outline"
+                  className="rounded-full border-red-200 bg-white text-red-600 hover:bg-red-50 hover:text-red-700"
+                >
+                  Delete pending request
+                </Button>
+              </form>
+            ) : null}
+          </div>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-4 text-sm text-slate-600 sm:grid-cols-2">
+          <InfoRow label="Customer" value={request.user.name || request.user.email} />
+          <InfoRow
+            label="Station"
+            value={`${request.station.name} - ${request.station.city}, ${request.station.state}`}
+          />
+          <InfoRow
+            label="Vehicle"
+            value={`${request.vehicle.nickname || request.vehicle.licensePlate} (${request.vehicle.licensePlate})`}
+          />
+          <InfoRow label="Fuel grade" value={formatFuelGrade(request.fuelGrade)} />
+          <InfoRow label="Requested type" value={formatFuelGrade(request.requestType)} />
+          <InfoRow label="Service fee" value={formatCurrency(request.serviceFee)} />
+        </div>
+
+        {request.completedAt ? (
+          <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+            <div className="flex items-center gap-2 font-semibold">
+              <CheckCircle2 className="h-4 w-4" />
+              Completed with proof
+            </div>
+            <p className="mt-2">
+              Pump photo and gas cap secured photo are stored in Supabase
+              Storage for this request.
+            </p>
+          </div>
+        ) : request.status === FuelRequestStatus.CANCELED ? (
+          <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+            This request was canceled and moved out of the active queue.
+          </div>
+        ) : (
+          <div className="mt-5 rounded-2xl border border-orange-100 bg-orange-50/80 p-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-950">
+              <Camera className="h-4 w-4 text-orange-600" />
+              Attendant completion
+            </div>
+            <FulfillmentProofForm requestId={request.id} />
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
