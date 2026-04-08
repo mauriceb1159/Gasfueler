@@ -1,20 +1,31 @@
-<svg width="760" height="200" viewBox="0 0 760 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="920" height="220" viewBox="0 0 920 220" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="gasbiteBadge" x1="22" y1="18" x2="154" y2="148" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FB923C"/>
-      <stop offset="0.45" stop-color="#F97316"/>
-      <stop offset="1" stop-color="#DC2626"/>
-    </linearGradient>
-    <linearGradient id="gasbiteMetal" x1="70" y1="44" x2="150" y2="112" gradientUnits="userSpaceOnUse">
+    <linearGradient id="metalMain" x1="462" y1="94" x2="587" y2="56" gradientUnits="userSpaceOnUse">
       <stop stop-color="#F8FAFC"/>
-      <stop offset="0.5" stop-color="#CBD5E1"/>
+      <stop offset="0.32" stop-color="#CBD5E1"/>
+      <stop offset="0.68" stop-color="#F8FAFC"/>
       <stop offset="1" stop-color="#64748B"/>
     </linearGradient>
-    <filter id="softShadow" x="0" y="0" width="190" height="190" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+    <linearGradient id="metalDark" x1="520" y1="78" x2="616" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#475569"/>
+      <stop offset="1" stop-color="#E2E8F0"/>
+    </linearGradient>
+    <linearGradient id="redBody" x1="642" y1="28" x2="801" y2="117" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF5848"/>
+      <stop offset="0.35" stop-color="#EF2E1F"/>
+      <stop offset="0.72" stop-color="#C51111"/>
+      <stop offset="1" stop-color="#991B1B"/>
+    </linearGradient>
+    <linearGradient id="handleDark" x1="704" y1="96" x2="850" y2="196" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1E293B"/>
+      <stop offset="0.55" stop-color="#111827"/>
+      <stop offset="1" stop-color="#334155"/>
+    </linearGradient>
+    <filter id="logoShadow" x="420" y="8" width="450" height="206" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
       <feFlood flood-opacity="0" result="BackgroundImageFix"/>
       <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-      <feOffset dy="12"/>
-      <feGaussianBlur stdDeviation="10"/>
+      <feOffset dy="8"/>
+      <feGaussianBlur stdDeviation="8"/>
       <feComposite in2="hardAlpha" operator="out"/>
       <feColorMatrix type="matrix" values="0 0 0 0 0.0588235 0 0 0 0 0.0941176 0 0 0 0 0.168627 0 0 0 0.16 0"/>
       <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_1"/>
@@ -22,16 +33,27 @@
     </filter>
   </defs>
 
-  <g filter="url(#softShadow)">
-    <rect x="18" y="16" width="144" height="144" rx="42" fill="url(#gasbiteBadge)"/>
-    <path d="M59 98L78 79L111 112L92 131C84 139 70 139 62 131C54 123 54 107 59 98Z" fill="#111827"/>
-    <path d="M85 72L116 41C121 36 130 36 135 41L139 45C144 50 144 59 139 64L108 95L85 72Z" fill="url(#gasbiteMetal)"/>
-    <path d="M118 38L147 28C152 26 157 30 157 35C157 38 155 41 152 43L130 56L118 38Z" fill="#E2E8F0"/>
-    <path d="M72 87L119 134" stroke="#F8FAFC" stroke-width="8" stroke-linecap="round"/>
-    <circle cx="111" cy="112" r="7" fill="#F8FAFC" fill-opacity="0.55"/>
-  </g>
+  <g transform="translate(34 0)">
+    <g transform="translate(0 146) skewX(-14)">
+      <text x="0" y="0" fill="#FF6000" font-family="Arial Black, Arial, sans-serif" font-size="96" font-weight="900" letter-spacing="-0.06em">GAS</text>
+      <text x="245" y="0" fill="#172440" font-family="Arial Black, Arial, sans-serif" font-size="96" font-weight="900" letter-spacing="-0.065em">BITE</text>
+    </g>
 
-  <text x="192" y="96" fill="#F97316" font-family="Segoe UI, Arial, sans-serif" font-size="62" font-style="italic" font-weight="800" letter-spacing="-0.03em">Gas</text>
-  <text x="332" y="96" fill="#0F172A" font-family="Segoe UI, Arial, sans-serif" font-size="62" font-style="italic" font-weight="800" letter-spacing="-0.03em">Bite</text>
-  <text x="195" y="134" fill="#64748B" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="0.22em">FUEL • SNACKS • GO</text>
+    <g filter="url(#logoShadow)">
+      <path d="M468 110L496 97L516 109L472 127C460 132 447 124 447 111C447 100 458 94 468 99L475 102L468 110Z" fill="#111827"/>
+      <path d="M474 112L544 88C559 83 574 79 589 76L620 69L623 93L590 99C576 102 562 107 549 114L490 144C474 152 456 140 456 123C456 118 460 114 464 113L474 112Z" fill="url(#metalMain)"/>
+      <path d="M454 105L473 98L486 106L455 120C447 124 437 118 437 109C437 104 441 100 446 100L454 105Z" fill="#0F172A"/>
+      <path d="M552 83L622 68C636 65 650 62 663 58L674 82C659 87 644 90 629 93L559 108L552 83Z" fill="url(#metalDark)"/>
+      <ellipse cx="454" cy="109" rx="20" ry="22" fill="#111827"/>
+      <ellipse cx="454" cy="109" rx="14" ry="15" fill="#0B1220"/>
+      <path d="M628 58C656 46 690 32 722 28C748 25 772 32 790 50C802 62 807 82 801 99L780 158C776 171 763 180 749 178L655 168C635 166 621 146 624 127L628 58Z" fill="url(#redBody)"/>
+      <path d="M635 54C653 41 677 35 704 35C726 35 746 40 762 52" stroke="#FF8A80" stroke-width="5" stroke-linecap="round" opacity="0.45"/>
+      <path d="M694 110C723 103 753 109 775 128L838 183L810 202L741 150C733 144 723 141 713 141H690L694 110Z" fill="url(#handleDark)"/>
+      <path d="M709 112C696 129 693 150 703 172C710 188 724 198 744 201L770 171C755 166 744 156 739 140C735 127 738 115 747 104L709 112Z" fill="#0B1220"/>
+      <path d="M809 181L840 164C849 159 860 165 860 175V183C860 189 857 194 852 197L827 214L809 181Z" fill="#374151"/>
+      <path d="M776 52L789 42C793 39 798 43 796 48L791 65L776 52Z" fill="#4B5563"/>
+      <circle cx="741" cy="141" r="6" fill="#F8FAFC" fill-opacity="0.9"/>
+      <path d="M618 172C663 176 718 176 818 170" stroke="#CBD5E1" stroke-width="6" stroke-linecap="round" opacity="0.35"/>
+    </g>
+  </g>
 </svg>
