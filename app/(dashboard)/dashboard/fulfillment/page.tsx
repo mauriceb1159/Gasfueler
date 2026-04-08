@@ -47,9 +47,24 @@ export default async function FulfillmentPage() {
                     <Fuel className="h-5 w-5 text-orange-600" />
                     Request #{request.id}
                   </span>
-                  <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold capitalize text-slate-700">
-                    {request.status.replace('_', ' ')}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold capitalize text-slate-700">
+                      {request.status.replace('_', ' ')}
+                    </span>
+                    {request.status !== FuelRequestStatus.CANCELED &&
+                    request.status !== FuelRequestStatus.COMPLETED ? (
+                      <form action={cancelFuelRequest}>
+                        <input type="hidden" name="requestId" value={request.id} />
+                        <Button
+                          type="submit"
+                          variant="outline"
+                          className="rounded-full border-red-200 bg-white text-red-600 hover:bg-red-50 hover:text-red-700"
+                        >
+                          Delete pending request
+                        </Button>
+                      </form>
+                    ) : null}
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -81,23 +96,9 @@ export default async function FulfillmentPage() {
                   </div>
                 ) : (
                   <div className="mt-5 rounded-2xl border border-orange-100 bg-orange-50/80 p-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-center gap-2 text-sm font-semibold text-slate-950">
-                        <Camera className="h-4 w-4 text-orange-600" />
-                        Attendant completion
-                      </div>
-                      {request.status !== FuelRequestStatus.CANCELED ? (
-                        <form action={cancelFuelRequest}>
-                          <input type="hidden" name="requestId" value={request.id} />
-                          <Button
-                            type="submit"
-                            variant="outline"
-                            className="rounded-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                          >
-                            Delete pending request
-                          </Button>
-                        </form>
-                      ) : null}
+                    <div className="flex items-center gap-2 text-sm font-semibold text-slate-950">
+                      <Camera className="h-4 w-4 text-orange-600" />
+                      Attendant completion
                     </div>
                     <FulfillmentProofForm requestId={request.id} />
                   </div>
