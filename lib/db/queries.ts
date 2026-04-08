@@ -252,6 +252,37 @@ export async function getFuelRequestsForFulfillment() {
   });
 }
 
+export async function getFuelRequestById(requestId: number) {
+  return db.query.fuelRequests.findFirst({
+    where: eq(fuelRequests.id, requestId),
+    with: {
+      user: {
+        columns: {
+          id: true,
+          name: true,
+          email: true
+        }
+      },
+      station: true,
+      vehicle: true,
+      slot: true,
+      items: true,
+      statusEvents: {
+        with: {
+          createdByUser: {
+            columns: {
+              id: true,
+              name: true,
+              email: true
+            }
+          }
+        },
+        orderBy: (statusEvents, { desc }) => [desc(statusEvents.createdAt)]
+      }
+    }
+  });
+}
+
 function isMissingFuelPricesTableError(error: unknown) {
   return (
     error instanceof Error &&

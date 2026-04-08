@@ -231,7 +231,7 @@ export const createFuelRequest = validatedActionWithUser(
       .values(newRequest)
       .returning({ id: fuelRequests.id });
 
-    redirect(`/dashboard?request=${createdRequest.id}`);
+    redirect(`/requests/${createdRequest.id}`);
   }
 );
 
