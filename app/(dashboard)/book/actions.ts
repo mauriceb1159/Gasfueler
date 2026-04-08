@@ -1,6 +1,6 @@
 'use server';
 
-import { and, desc, eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
@@ -20,12 +20,12 @@ import {
   serviceSlots,
   ServiceSlotStatus,
   stationStoreItems,
-  stationFuelPrices,
   stations,
   VehicleClass,
   vehicles,
   type NewVehicle
 } from '@/lib/db/schema';
+import { getEffectiveFuelPriceForStationGrade } from '@/lib/fuel-pricing';
 
 const bookingSchema = z
   .object({
@@ -176,22 +176,13 @@ export const createFuelRequest = validatedActionWithUser(
       | {
           priceCents: number;
         }
-      | undefined;
+      | null = null;
 
     try {
-      [latestPrice] = await db
-        .select({
-          priceCents: stationFuelPrices.priceCents
-        })
-        .from(stationFuelPrices)
-        .where(
-          and(
-            eq(stationFuelPrices.stationId, station.id),
-            eq(stationFuelPrices.fuelGrade, data.fuelGrade)
-          )
-        )
-        .orderBy(desc(stationFuelPrices.recordedAt))
-        .limit(1);
+      latestPrice = await getEffectiveFuelPriceForStationGrade(
+        station,
+        data.fuelGrade
+      );
     } catch (error) {
       if (
         !(error instanceof Error) ||

@@ -122,9 +122,9 @@ function StationFuelPricing() {
       </CardHeader>
       <CardContent className="space-y-6">
         <p className="text-sm text-muted-foreground">
-          Enter the latest manual prices for your partner stations. The booking
-          flow uses these values to show current price chips and estimate fuel
-          totals before checkout.
+          Enter manual prices for your partner stations. These values override
+          the regional fallback feed used in booking, so station-specific
+          updates always win when both are available.
         </p>
 
         <form className="space-y-4" action={formAction}>
@@ -217,6 +217,7 @@ function StationFuelPricing() {
                           className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700"
                         >
                           {formatFuelGrade(price.fuelGrade)} {formatCurrency(price.priceCents)}/gal
+                          {price.source !== 'manual' ? ` · ${formatSourceLabel(price.source)}` : ''}
                         </span>
                       ))
                     ) : (
@@ -291,6 +292,14 @@ function formatCurrency(cents: number) {
     style: 'currency',
     currency: 'USD'
   }).format(cents / 100);
+}
+
+function formatSourceLabel(source: string) {
+  if (source === 'regional_eia') {
+    return 'regional avg';
+  }
+
+  return source.replace(/_/g, ' ');
 }
 
 export default function GeneralPage() {

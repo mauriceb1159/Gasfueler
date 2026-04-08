@@ -14,6 +14,7 @@ import {
 } from './schema';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth/session';
+import { getEffectiveFuelPricesForStation } from '@/lib/fuel-pricing';
 
 export async function getUser() {
   const sessionCookie = (await cookies()).get('session');
@@ -150,7 +151,7 @@ export async function getVehiclesForUser(userId: number) {
 
 export async function getBookableStations() {
   try {
-    return await db.query.stations.findMany({
+    const stationsResult = await db.query.stations.findMany({
       where: eq(stations.active, true),
       with: {
         fuelPrices: {
@@ -177,6 +178,13 @@ export async function getBookableStations() {
       },
       orderBy: asc(stations.name)
     });
+
+    return await Promise.all(
+      stationsResult.map(async (station) => ({
+        ...station,
+        fuelPrices: await getEffectiveFuelPricesForStation(station)
+      }))
+    );
   } catch (error) {
     if (!isMissingFuelPricesTableError(error)) {
       throw error;
@@ -207,16 +215,18 @@ export async function getBookableStations() {
       orderBy: asc(stations.name)
     });
 
-    return fallbackStations.map((station) => ({
-      ...station,
-      fuelPrices: []
-    }));
+    return await Promise.all(
+      fallbackStations.map(async (station) => ({
+        ...station,
+        fuelPrices: await getEffectiveFuelPricesForStation(station)
+      }))
+    );
   }
 }
 
 export async function getStationsForPricing() {
   try {
-    return await db.query.stations.findMany({
+    const stationsResult = await db.query.stations.findMany({
       where: eq(stations.active, true),
       with: {
         fuelPrices: {
@@ -225,6 +235,13 @@ export async function getStationsForPricing() {
       },
       orderBy: asc(stations.name)
     });
+
+    return await Promise.all(
+      stationsResult.map(async (station) => ({
+        ...station,
+        fuelPrices: await getEffectiveFuelPricesForStation(station)
+      }))
+    );
   } catch (error) {
     if (!isMissingFuelPricesTableError(error)) {
       throw error;
@@ -235,10 +252,12 @@ export async function getStationsForPricing() {
       orderBy: asc(stations.name)
     });
 
-    return fallbackStations.map((station) => ({
-      ...station,
-      fuelPrices: []
-    }));
+    return await Promise.all(
+      fallbackStations.map(async (station) => ({
+        ...station,
+        fuelPrices: await getEffectiveFuelPricesForStation(station)
+      }))
+    );
   }
 }
 
