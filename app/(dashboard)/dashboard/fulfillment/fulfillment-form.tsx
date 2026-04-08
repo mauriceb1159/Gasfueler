@@ -34,6 +34,7 @@ export function FulfillmentProofForm({ requestId }: { requestId: number }) {
             type="number"
             min="0.001"
             step="0.001"
+            inputMode="decimal"
             placeholder="12.384"
             required
           />
@@ -48,6 +49,7 @@ export function FulfillmentProofForm({ requestId }: { requestId: number }) {
             type="number"
             min="0.01"
             step="0.001"
+            inputMode="decimal"
             placeholder="4.799"
             required
           />
@@ -62,6 +64,7 @@ export function FulfillmentProofForm({ requestId }: { requestId: number }) {
             type="number"
             min="0.01"
             step="0.01"
+            inputMode="decimal"
             placeholder="59.43"
             required
           />

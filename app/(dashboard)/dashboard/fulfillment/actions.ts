@@ -28,9 +28,11 @@ export async function completeFuelRequestWithProof(
   }
 
   const requestId = Number(formData.get('requestId'));
-  const actualGallons = Number(formData.get('actualGallons'));
-  const actualPricePerGallon = Number(formData.get('actualPricePerGallon'));
-  const actualFuelTotal = Number(formData.get('actualFuelTotal'));
+  const actualGallons = parseDecimalFormValue(formData.get('actualGallons'));
+  const actualPricePerGallon = parseDecimalFormValue(
+    formData.get('actualPricePerGallon')
+  );
+  const actualFuelTotal = parseDecimalFormValue(formData.get('actualFuelTotal'));
   const pumpPhoto = formData.get('pumpPhoto');
   const gasCapPhoto = formData.get('gasCapPhoto');
 
@@ -172,4 +174,18 @@ function getSafeFileExtension(file: File) {
   }
 
   return file.type === 'image/png' ? 'png' : 'jpg';
+}
+
+function parseDecimalFormValue(value: FormDataEntryValue | null) {
+  if (typeof value !== 'string') {
+    return Number.NaN;
+  }
+
+  const normalizedValue = value.trim().replace(/[$,]/g, '');
+
+  if (!normalizedValue) {
+    return Number.NaN;
+  }
+
+  return Number(normalizedValue);
 }
