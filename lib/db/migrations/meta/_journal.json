@@ -8,6 +8,69 @@
       "when": 1726443359662,
       "tag": "0000_soft_the_anarchist",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1726443359663,
+      "tag": "0001_contact_inquiries",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1726443359664,
+      "tag": "0002_fuel_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1726443359665,
+      "tag": "0003_station_fuel_prices",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1726443359666,
+      "tag": "0004_vehicle_class",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1726443359667,
+      "tag": "0005_fuel_request_proof_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1726443359668,
+      "tag": "0006_store_commerce_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1726443359669,
+      "tag": "0007_general_orders_model",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1726443359670,
+      "tag": "0008_enable_public_table_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1726443359671,
+      "tag": "0009_public_table_rls_policies",
+      "breakpoints": true
     }
   ]
 }
