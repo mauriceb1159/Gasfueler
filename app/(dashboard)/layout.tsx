@@ -93,14 +93,14 @@ function Header() {
     <header className="sticky top-0 z-40">
       <div className="mx-auto mt-4 flex max-w-7xl items-center justify-between rounded-full border border-white/60 bg-white/75 px-3 py-3 shadow-[0_18px_60px_-28px_rgba(15,23,42,0.55)] backdrop-blur-xl sm:px-6 lg:px-8">
         <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <div className="relative h-11 w-[270px] shrink-0 overflow-hidden sm:h-14 sm:w-[335px] lg:h-[62px] lg:w-[410px]">
+          <div className="relative h-12 w-[300px] shrink-0 overflow-hidden sm:h-16 sm:w-[380px] lg:h-[66px] lg:w-[460px]">
             <Image
               src="/logos/gasbite-logo-header-final.png"
               alt="GasBite logo"
               fill
               className="object-contain object-left mix-blend-multiply"
               priority
-              sizes="(max-width: 640px) 270px, (max-width: 1024px) 335px, 410px"
+              sizes="(max-width: 640px) 300px, (max-width: 1024px) 380px, 460px"
               style={{ objectPosition: 'left center' }}
             />
           </div>
