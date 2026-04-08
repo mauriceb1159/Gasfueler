@@ -455,20 +455,30 @@ export function BookingForm({
                   Current station pricing
                 </p>
                 {selectedStation.fuelPrices.length > 0 ? (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {selectedStation.fuelPrices.map((price) => (
-                      <span
-                        key={price.id}
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          price.fuelGrade === fuelGrade
-                            ? 'bg-slate-950 text-white'
-                            : 'bg-white text-slate-700'
-                        }`}
-                      >
-                        {formatFuelGrade(price.fuelGrade)} {formatCentsPerGallon(price.priceCents)}
-                      </span>
-                    ))}
-                  </div>
+                    <div className="mt-3">
+                      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                      {selectedStation.fuelPrices.map((price) => (
+                        <button
+                          key={price.id}
+                          type="button"
+                          onClick={() => setFuelGrade(price.fuelGrade)}
+                          className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                            price.fuelGrade === fuelGrade
+                              ? 'bg-slate-950 text-white'
+                              : 'bg-white text-slate-700 hover:bg-orange-50'
+                          }`}
+                        >
+                          <span className="block">{formatFuelGrade(price.fuelGrade)}</span>
+                          <span className="mt-0.5 block text-[11px] opacity-80">
+                            {formatCentsPerGallon(price.priceCents)}
+                          </span>
+                        </button>
+                      ))}
+                      </div>
+                      <p className="mt-3 text-xs leading-5 text-slate-500">
+                        Tap a fuel grade here to update the estimate.
+                      </p>
+                    </div>
                 ) : (
                   <p className="mt-2 text-sm text-slate-600">
                     No current price has been loaded for this partner station yet.
