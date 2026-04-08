@@ -95,16 +95,13 @@ function Header() {
         <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
           <div className="relative h-11 w-[285px] max-w-[74vw] shrink-0 overflow-hidden sm:h-14 sm:w-[380px] sm:max-w-[66vw] lg:h-[62px] lg:w-[455px] lg:max-w-[54vw]">
             <Image
-              src="/logos/gasbite-logo-header-final.png"
+              src="/logos/gasbite-logo-header-transparent.png"
               alt="GasBite logo"
               fill
-              className="origin-left scale-[1.44] object-contain object-left opacity-95 mix-blend-multiply sm:scale-[1.48] lg:scale-[1.54]"
+              className="origin-left scale-[1.44] object-contain object-left mix-blend-multiply sm:scale-[1.48] lg:scale-[1.54]"
               priority
               sizes="(max-width: 640px) 285px, (max-width: 1024px) 380px, 455px"
-              style={{
-                objectPosition: 'left center',
-                filter: 'brightness(1.01) contrast(1.02)'
-              }}
+              style={{ objectPosition: 'left center' }}
             />
           </div>
         </Link>
