@@ -9,6 +9,7 @@ import { db } from '@/lib/db/drizzle';
 import {
   fuelRequests,
   FuelRequestStatus,
+  orders,
   requestStatusEvents
 } from '@/lib/db/schema';
 
@@ -28,6 +29,7 @@ export async function cancelFuelRequest(formData: FormData) {
   const [request] = await db
     .select({
       id: fuelRequests.id,
+      orderId: fuelRequests.orderId,
       status: fuelRequests.status,
       userId: fuelRequests.userId
     })
@@ -57,6 +59,16 @@ export async function cancelFuelRequest(formData: FormData) {
       updatedAt: new Date()
     })
     .where(eq(fuelRequests.id, requestId));
+
+  if (request.orderId) {
+    await db
+      .update(orders)
+      .set({
+        status: FuelRequestStatus.CANCELED,
+        updatedAt: new Date()
+      })
+      .where(eq(orders.id, request.orderId));
+  }
 
   await db.insert(requestStatusEvents).values({
     fuelRequestId: requestId,

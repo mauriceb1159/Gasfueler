@@ -32,6 +32,23 @@ type BookableStation = {
     source: string;
     recordedAt: Date | string;
   }[];
+  stationStoreItems: {
+    id: number;
+    priceCents: number;
+    active: boolean;
+    inventoryCount: number | null;
+    storeItem: {
+      id: number;
+      name: string;
+      description: string | null;
+      imageUrl: string | null;
+      category: {
+        id: number;
+        name: string;
+        slug: string;
+      };
+    };
+  }[];
   serviceSlots: StationSlot[];
 };
 
@@ -77,6 +94,9 @@ export function BookingForm({
   const [requestedDollarAmount, setRequestedDollarAmount] = useState('');
   const [selectedVehicleId, setSelectedVehicleId] = useState('');
   const [vehicleClass, setVehicleClass] = useState('suv');
+  const [selectedStoreItems, setSelectedStoreItems] = useState<
+    Record<number, number>
+  >({});
   const [nearbyStatus, setNearbyStatus] = useState<
     'idle' | 'loading' | 'ready' | 'error' | 'unconfigured'
   >('idle');
@@ -185,6 +205,7 @@ export function BookingForm({
   const selectedStation =
     visibleStations.find((station) => station.id === selectedStationId) ?? null;
   const selectedSlots = selectedStation?.serviceSlots ?? [];
+  const selectedStationStoreItems = selectedStation?.stationStoreItems ?? [];
   const selectedFuelPrice = selectedStation?.fuelPrices.find(
     (price) => price.fuelGrade === fuelGrade
   );
@@ -194,6 +215,10 @@ export function BookingForm({
     vehicles.find((vehicle) => String(vehicle.id) === selectedVehicleId) ?? null;
   const effectiveVehicleClass = vehicleClass || 'suv';
   const serviceFee = getServiceFeeForVehicleClass(effectiveVehicleClass);
+  const addonSubtotal = selectedStationStoreItems.reduce((sum, item) => {
+    const quantity = selectedStoreItems[item.id] ?? 0;
+    return sum + item.priceCents * quantity;
+  }, 0);
   const estimatedFuelCost =
     requestType === 'gallons' &&
     selectedFuelPrice &&
@@ -206,7 +231,44 @@ export function BookingForm({
       ? Math.round(requestedDollarAmountNumber * 100)
       : null;
   const estimatedTotal =
-    estimatedFuelCost !== null ? estimatedFuelCost + serviceFee : null;
+    estimatedFuelCost !== null ? estimatedFuelCost + serviceFee + addonSubtotal : null;
+  const groupedStoreItems = selectedStationStoreItems.reduce<
+    Record<
+      string,
+      {
+        categoryName: string;
+        items: typeof selectedStationStoreItems;
+      }
+    >
+  >((groups, item) => {
+    const categoryKey = item.storeItem.category.slug;
+
+    if (!groups[categoryKey]) {
+      groups[categoryKey] = {
+        categoryName: item.storeItem.category.name,
+        items: []
+      };
+    }
+
+    groups[categoryKey].items.push(item);
+    return groups;
+  }, {});
+
+  useEffect(() => {
+    const visibleStoreItemIds = new Set(selectedStationStoreItems.map((item) => item.id));
+
+    setSelectedStoreItems((currentItems) => {
+      const nextItems = Object.fromEntries(
+        Object.entries(currentItems).filter(([key]) =>
+          visibleStoreItemIds.has(Number(key))
+        )
+      );
+
+      return Object.keys(nextItems).length === Object.keys(currentItems).length
+        ? currentItems
+        : nextItems;
+    });
+  }, [selectedStationStoreItems]);
 
   function handleUseLocation() {
     if (!navigator.geolocation) {
@@ -231,12 +293,41 @@ export function BookingForm({
     );
   }
 
+  function updateStoreItemQuantity(stationStoreItemId: number, quantity: number) {
+    setSelectedStoreItems((currentItems) => {
+      if (quantity <= 0) {
+        const nextItems = { ...currentItems };
+        delete nextItems[stationStoreItemId];
+        return nextItems;
+      }
+
+      return {
+        ...currentItems,
+        [stationStoreItemId]: quantity
+      };
+    });
+  }
+
+  const selectedStoreItemsPayload = JSON.stringify(
+    Object.entries(selectedStoreItems)
+      .map(([stationStoreItemId, quantity]) => ({
+        stationStoreItemId: Number(stationStoreItemId),
+        quantity
+      }))
+      .filter((item) => item.quantity > 0)
+  );
+
   if (stations.length === 0) {
     return <EmptyBookingState />;
   }
 
   return (
     <form action={submitFuelRequest} className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6">
+      <input
+        type="hidden"
+        name="selectedStoreItems"
+        value={selectedStoreItemsPayload}
+      />
       <div className="space-y-6 sm:space-y-7">
         {initialError ? (
           <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -648,6 +739,109 @@ export function BookingForm({
         </Field>
         </section>
 
+        <section className="space-y-4">
+        <SectionTitle icon={Search} title="4. Snacks & essentials" />
+        {selectedStationStoreItems.length > 0 ? (
+          <div className="space-y-4 rounded-[1.5rem] border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+            <p className="text-sm leading-6 text-slate-600">
+              Add a few store items to the same order so the attendant can pick
+              them up while fueling.
+            </p>
+            <div className="space-y-5">
+              {Object.values(groupedStoreItems).map((group) => (
+                <div key={group.categoryName} className="space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      {group.categoryName}
+                    </h3>
+                    <span className="text-xs text-slate-400">
+                      {group.items.length} item{group.items.length === 1 ? '' : 's'}
+                    </span>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {group.items.map((item) => {
+                      const quantity = selectedStoreItems[item.id] ?? 0;
+
+                      return (
+                        <div
+                          key={item.id}
+                          className="rounded-[1.25rem] border border-white bg-white p-4 shadow-sm"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-100 via-amber-50 to-white text-[10px] font-semibold uppercase tracking-[0.16em] text-orange-700">
+                              {getStoreItemInitials(item.storeItem.name)}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <p className="font-semibold text-slate-950">
+                                    {item.storeItem.name}
+                                  </p>
+                                  {item.storeItem.description ? (
+                                    <p className="mt-1 text-sm leading-6 text-slate-500">
+                                      {item.storeItem.description}
+                                    </p>
+                                  ) : null}
+                                </div>
+                                <span className="shrink-0 text-sm font-semibold text-slate-950">
+                                  {formatCurrency(item.priceCents)}
+                                </span>
+                              </div>
+                              <div className="mt-4 flex items-center justify-between gap-3">
+                                <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 p-1">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      updateStoreItemQuantity(item.id, quantity - 1)
+                                    }
+                                    className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-slate-600 transition hover:bg-white hover:text-slate-950"
+                                    aria-label={`Remove ${item.storeItem.name}`}
+                                  >
+                                    -
+                                  </button>
+                                  <span className="min-w-10 text-center text-sm font-semibold text-slate-950">
+                                    {quantity}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      updateStoreItemQuantity(item.id, quantity + 1)
+                                    }
+                                    className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-slate-600 transition hover:bg-white hover:text-slate-950"
+                                    aria-label={`Add ${item.storeItem.name}`}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                                {quantity > 0 ? (
+                                  <span className="text-sm font-medium text-orange-700">
+                                    {formatCurrency(item.priceCents * quantity)}
+                                  </span>
+                                ) : (
+                                  <span className="text-sm text-slate-400">
+                                    Add to order
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50/70 p-5 text-sm leading-6 text-slate-600">
+            This partner station does not have a snack catalog loaded yet. Once
+            we add store items, customers will be able to add them to the same
+            order here.
+          </div>
+        )}
+        </section>
+
         <Field label="Arrival or special instructions" htmlFor="specialInstructions">
         <textarea
           id="specialInstructions"
@@ -696,6 +890,12 @@ export function BookingForm({
               </span>
             </div>
             <div className="mt-2 flex items-center justify-between gap-4">
+              <span className="text-slate-600">Snacks & essentials</span>
+              <span className="font-semibold text-slate-950">
+                {formatCurrency(addonSubtotal)}
+              </span>
+            </div>
+            <div className="mt-2 flex items-center justify-between gap-4">
               <span className="text-slate-600">Estimated tax</span>
               <span className="font-semibold text-slate-950">
                 {formatTaxLabel(estimatedFuelCost)}
@@ -712,6 +912,32 @@ export function BookingForm({
               </div>
             </div>
           </div>
+          {selectedStationStoreItems.some((item) => (selectedStoreItems[item.id] ?? 0) > 0) ? (
+            <div className="mt-4 rounded-2xl border border-white/70 bg-white/80 p-4">
+              <p className="text-sm font-semibold text-slate-950">Store items</p>
+              <div className="mt-3 space-y-2">
+                {selectedStationStoreItems
+                  .filter((item) => (selectedStoreItems[item.id] ?? 0) > 0)
+                  .map((item) => {
+                    const quantity = selectedStoreItems[item.id] ?? 0;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between gap-4 text-sm"
+                      >
+                        <span className="text-slate-600">
+                          {item.storeItem.name} x{quantity}
+                        </span>
+                        <span className="font-medium text-slate-950">
+                          {formatCurrency(item.priceCents * quantity)}
+                        </span>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          ) : null}
           <p className="mt-3 text-xs leading-5 text-slate-500">
             Fuel pump prices already reflect the station&apos;s posted fuel taxes.
             Any additional taxes on service fees or add-ons can be added later at
@@ -872,4 +1098,13 @@ function getServiceFeeForVehicleClass(vehicleClass: string) {
 
 function formatTaxLabel(estimatedFuelCost: number | null) {
   return estimatedFuelCost === null ? 'TBD' : 'Included in fuel price';
+}
+
+function getStoreItemInitials(name: string) {
+  return name
+    .split(' ')
+    .slice(0, 2)
+    .map((part) => part.charAt(0))
+    .join('')
+    .toUpperCase();
 }

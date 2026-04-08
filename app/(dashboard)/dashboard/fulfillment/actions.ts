@@ -7,6 +7,7 @@ import { db } from '@/lib/db/drizzle';
 import {
   fuelRequests,
   FuelRequestStatus,
+  orders,
   requestStatusEvents
 } from '@/lib/db/schema';
 import { getUser } from '@/lib/db/queries';
@@ -63,6 +64,7 @@ export async function completeFuelRequestWithProof(
   const [request] = await db
     .select({
       id: fuelRequests.id,
+      orderId: fuelRequests.orderId,
       serviceFee: fuelRequests.serviceFee,
       addonTotal: fuelRequests.addonTotal
     })
@@ -98,6 +100,22 @@ export async function completeFuelRequestWithProof(
         updatedAt: new Date()
       })
       .where(eq(fuelRequests.id, requestId));
+
+    if (request.orderId) {
+      await db
+        .update(orders)
+        .set({
+          status: FuelRequestStatus.COMPLETED,
+          fuelSubtotal: actualFuelTotalCents,
+          storeSubtotal: request.addonTotal,
+          serviceFee: request.serviceFee,
+          taxTotal: 0,
+          totalAmount:
+            actualFuelTotalCents + request.serviceFee + request.addonTotal,
+          updatedAt: new Date()
+        })
+        .where(eq(orders.id, request.orderId));
+    }
 
     await db.insert(requestStatusEvents).values({
       fuelRequestId: requestId,

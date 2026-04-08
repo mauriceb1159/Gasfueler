@@ -130,6 +130,81 @@ export const stationFuelPrices = pgTable('station_fuel_prices', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
+export const storeCategories = pgTable('store_categories', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  slug: varchar('slug', { length: 100 }).notNull().unique(),
+  active: boolean('active').notNull().default(true),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const storeItems = pgTable('store_items', {
+  id: serial('id').primaryKey(),
+  categoryId: integer('category_id')
+    .notNull()
+    .references(() => storeCategories.id),
+  name: varchar('name', { length: 120 }).notNull(),
+  slug: varchar('slug', { length: 120 }).notNull().unique(),
+  description: text('description'),
+  imageUrl: text('image_url'),
+  basePriceCents: integer('base_price_cents').notNull().default(0),
+  active: boolean('active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const stationStoreItems = pgTable('station_store_items', {
+  id: serial('id').primaryKey(),
+  stationId: integer('station_id')
+    .notNull()
+    .references(() => stations.id),
+  storeItemId: integer('store_item_id')
+    .notNull()
+    .references(() => storeItems.id),
+  priceCents: integer('price_cents').notNull().default(0),
+  active: boolean('active').notNull().default(true),
+  inventoryCount: integer('inventory_count'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const orders = pgTable('orders', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id),
+  stationId: integer('station_id').references(() => stations.id),
+  orderType: varchar('order_type', { length: 30 }).notNull().default('fuel_service'),
+  status: varchar('status', { length: 30 }).notNull().default('draft'),
+  fuelSubtotal: integer('fuel_subtotal').notNull().default(0),
+  storeSubtotal: integer('store_subtotal').notNull().default(0),
+  serviceFee: integer('service_fee').notNull().default(0),
+  taxTotal: integer('tax_total').notNull().default(0),
+  totalAmount: integer('total_amount').notNull().default(0),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const orderItems = pgTable('order_items', {
+  id: serial('id').primaryKey(),
+  orderId: integer('order_id')
+    .notNull()
+    .references(() => orders.id),
+  itemType: varchar('item_type', { length: 30 }).notNull(),
+  storeItemId: integer('store_item_id').references(() => storeItems.id),
+  stationStoreItemId: integer('station_store_item_id').references(
+    () => stationStoreItems.id
+  ),
+  itemName: varchar('item_name', { length: 120 }).notNull(),
+  quantity: integer('quantity').notNull().default(1),
+  unitPrice: integer('unit_price').notNull().default(0),
+  subtotalPrice: integer('subtotal_price').notNull().default(0),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 export const vehicles = pgTable('vehicles', {
   id: serial('id').primaryKey(),
   userId: integer('user_id')
@@ -149,6 +224,7 @@ export const vehicles = pgTable('vehicles', {
 
 export const fuelRequests = pgTable('fuel_requests', {
   id: serial('id').primaryKey(),
+  orderId: integer('order_id').references(() => orders.id),
   userId: integer('user_id')
     .notNull()
     .references(() => users.id),
@@ -186,9 +262,12 @@ export const fuelRequestItems = pgTable('fuel_request_items', {
   fuelRequestId: integer('fuel_request_id')
     .notNull()
     .references(() => fuelRequests.id),
+  itemType: varchar('item_type', { length: 30 }).notNull().default('store_item'),
+  storeItemId: integer('store_item_id').references(() => storeItems.id),
   itemName: varchar('item_name', { length: 120 }).notNull(),
   quantity: integer('quantity').notNull().default(1),
   unitPrice: integer('unit_price').notNull().default(0),
+  subtotalPrice: integer('subtotal_price').notNull().default(0),
 });
 
 export const requestStatusEvents = pgTable('request_status_events', {
@@ -212,6 +291,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   teamMembers: many(teamMembers),
   invitationsSent: many(invitations),
   vehicles: many(vehicles),
+  orders: many(orders),
   fuelRequests: many(fuelRequests),
   requestStatusEvents: many(requestStatusEvents),
 }));
@@ -220,6 +300,8 @@ export const stationsRelations = relations(stations, ({ many }) => ({
   stationHours: many(stationHours),
   serviceSlots: many(serviceSlots),
   fuelPrices: many(stationFuelPrices),
+  stationStoreItems: many(stationStoreItems),
+  orders: many(orders),
   fuelRequests: many(fuelRequests),
 }));
 
@@ -247,6 +329,65 @@ export const stationFuelPricesRelations = relations(
     }),
   })
 );
+
+export const storeCategoriesRelations = relations(
+  storeCategories,
+  ({ many }) => ({
+    storeItems: many(storeItems),
+  })
+);
+
+export const storeItemsRelations = relations(storeItems, ({ one, many }) => ({
+  category: one(storeCategories, {
+    fields: [storeItems.categoryId],
+    references: [storeCategories.id],
+  }),
+  stationStoreItems: many(stationStoreItems),
+  fuelRequestItems: many(fuelRequestItems),
+}));
+
+export const stationStoreItemsRelations = relations(
+  stationStoreItems,
+  ({ one, many }) => ({
+    station: one(stations, {
+      fields: [stationStoreItems.stationId],
+      references: [stations.id],
+    }),
+    storeItem: one(storeItems, {
+      fields: [stationStoreItems.storeItemId],
+      references: [storeItems.id],
+    }),
+    orderItems: many(orderItems),
+  })
+);
+
+export const ordersRelations = relations(orders, ({ one, many }) => ({
+  user: one(users, {
+    fields: [orders.userId],
+    references: [users.id],
+  }),
+  station: one(stations, {
+    fields: [orders.stationId],
+    references: [stations.id],
+  }),
+  fuelRequests: many(fuelRequests),
+  orderItems: many(orderItems),
+}));
+
+export const orderItemsRelations = relations(orderItems, ({ one }) => ({
+  order: one(orders, {
+    fields: [orderItems.orderId],
+    references: [orders.id],
+  }),
+  storeItem: one(storeItems, {
+    fields: [orderItems.storeItemId],
+    references: [storeItems.id],
+  }),
+  stationStoreItem: one(stationStoreItems, {
+    fields: [orderItems.stationStoreItemId],
+    references: [stationStoreItems.id],
+  }),
+}));
 
 export const invitationsRelations = relations(invitations, ({ one }) => ({
   team: one(teams, {
@@ -290,6 +431,10 @@ export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
 }));
 
 export const fuelRequestsRelations = relations(fuelRequests, ({ one, many }) => ({
+  order: one(orders, {
+    fields: [fuelRequests.orderId],
+    references: [orders.id],
+  }),
   user: one(users, {
     fields: [fuelRequests.userId],
     references: [users.id],
@@ -314,6 +459,10 @@ export const fuelRequestItemsRelations = relations(fuelRequestItems, ({ one }) =
   fuelRequest: one(fuelRequests, {
     fields: [fuelRequestItems.fuelRequestId],
     references: [fuelRequests.id],
+  }),
+  storeItem: one(storeItems, {
+    fields: [fuelRequestItems.storeItemId],
+    references: [storeItems.id],
   }),
 }));
 
@@ -351,6 +500,16 @@ export type ServiceSlot = typeof serviceSlots.$inferSelect;
 export type NewServiceSlot = typeof serviceSlots.$inferInsert;
 export type StationFuelPrice = typeof stationFuelPrices.$inferSelect;
 export type NewStationFuelPrice = typeof stationFuelPrices.$inferInsert;
+export type StoreCategory = typeof storeCategories.$inferSelect;
+export type NewStoreCategory = typeof storeCategories.$inferInsert;
+export type StoreItem = typeof storeItems.$inferSelect;
+export type NewStoreItem = typeof storeItems.$inferInsert;
+export type StationStoreItem = typeof stationStoreItems.$inferSelect;
+export type NewStationStoreItem = typeof stationStoreItems.$inferInsert;
+export type Order = typeof orders.$inferSelect;
+export type NewOrder = typeof orders.$inferInsert;
+export type OrderItem = typeof orderItems.$inferSelect;
+export type NewOrderItem = typeof orderItems.$inferInsert;
 export type Vehicle = typeof vehicles.$inferSelect;
 export type NewVehicle = typeof vehicles.$inferInsert;
 export type FuelRequest = typeof fuelRequests.$inferSelect;
@@ -405,4 +564,18 @@ export enum VehicleClass {
   CAR = 'car',
   SUV = 'suv',
   TRUCK = 'truck',
+}
+
+export enum FuelRequestItemType {
+  STORE_ITEM = 'store_item',
+  FUEL = 'fuel',
+  SERVICE_FEE = 'service_fee',
+  DISCOUNT = 'discount',
+  TAX = 'tax',
+}
+
+export enum OrderType {
+  FUEL_SERVICE = 'fuel_service',
+  STORE_ONLY = 'store_only',
+  MIXED = 'mixed',
 }

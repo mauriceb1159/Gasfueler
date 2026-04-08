@@ -3,6 +3,7 @@ import { db } from './drizzle';
 import {
   activityLogs,
   fuelRequests,
+  stationStoreItems,
   serviceSlots,
   stationFuelPrices,
   stations,
@@ -155,6 +156,17 @@ export async function getBookableStations() {
         fuelPrices: {
           orderBy: (fuelPrices, { desc }) => [desc(fuelPrices.recordedAt)]
         },
+        stationStoreItems: {
+          where: eq(stationStoreItems.active, true),
+          with: {
+            storeItem: {
+              with: {
+                category: true
+              }
+            }
+          },
+          orderBy: asc(stationStoreItems.id)
+        },
         serviceSlots: {
           where: and(
             eq(serviceSlots.status, 'open'),
@@ -173,6 +185,17 @@ export async function getBookableStations() {
     const fallbackStations = await db.query.stations.findMany({
       where: eq(stations.active, true),
       with: {
+        stationStoreItems: {
+          where: eq(stationStoreItems.active, true),
+          with: {
+            storeItem: {
+              with: {
+                category: true
+              }
+            }
+          },
+          orderBy: asc(stationStoreItems.id)
+        },
         serviceSlots: {
           where: and(
             eq(serviceSlots.status, 'open'),
@@ -223,6 +246,7 @@ export async function getFuelRequestsForUser(userId: number) {
   return db.query.fuelRequests.findMany({
     where: eq(fuelRequests.userId, userId),
     with: {
+      order: true,
       station: true,
       vehicle: true,
       slot: true,
@@ -235,6 +259,11 @@ export async function getFuelRequestsForUser(userId: number) {
 export async function getFuelRequestsForFulfillment() {
   return db.query.fuelRequests.findMany({
     with: {
+      order: {
+        with: {
+          orderItems: true
+        }
+      },
       user: {
         columns: {
           id: true,
@@ -256,6 +285,11 @@ export async function getFuelRequestById(requestId: number) {
   return db.query.fuelRequests.findFirst({
     where: eq(fuelRequests.id, requestId),
     with: {
+      order: {
+        with: {
+          orderItems: true
+        }
+      },
       user: {
         columns: {
           id: true,

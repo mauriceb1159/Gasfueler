@@ -207,6 +207,22 @@ export default async function RequestDetailsPage({
                     />
                   </div>
                 ) : null}
+                {request.order?.orderItems.length ? (
+                  <div className="mt-4 rounded-2xl border border-white/70 bg-white/80 p-4">
+                    <p className="text-sm font-semibold text-slate-950">
+                      Store items
+                    </p>
+                    <div className="mt-3 space-y-2">
+                      {request.order.orderItems.map((item) => (
+                        <SummaryRow
+                          key={item.id}
+                          label={`${item.itemName} x${item.quantity}`}
+                          value={formatCurrency(item.subtotalPrice)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </CardContent>
             </Card>
 
