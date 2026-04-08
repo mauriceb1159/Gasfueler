@@ -30,7 +30,7 @@ const workflow = [
     icon: Fuel,
     title: 'Stay in the car',
     copy:
-      'A GasFueler attendant handles the pump, confirms the stop, and keeps everything moving.',
+      'A GasBite attendant handles the pump, confirms the stop, and keeps everything moving.',
   },
   {
     icon: CarFront,
@@ -112,7 +112,7 @@ function HeroServiceCard({ className = '' }: { className?: string }) {
     >
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs uppercase tracking-[0.24em] text-cyan-200">
-          GasFueler Service
+          GasBite Service
         </p>
         <div className="hidden rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/70 sm:block">
           Static Hero
@@ -150,7 +150,7 @@ export function GasFuelerHomePage({
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/80 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-600 shadow-sm backdrop-blur sm:px-4 sm:text-xs sm:tracking-[0.24em]">
               <Sparkles className="h-4 w-4" />
-              GasFueler
+              GasBite
             </div>
 
             <h1 className="mt-6 text-4xl font-semibold tracking-[-0.05em] text-slate-950 sm:mt-8 sm:text-5xl lg:text-7xl">
@@ -161,7 +161,7 @@ export function GasFuelerHomePage({
             </h1>
 
             <p className="mt-5 max-w-xl text-base leading-7 text-slate-600 sm:mt-6 sm:text-xl sm:leading-8">
-              GasFueler brings back the ease of full-service gas with booking,
+              GasBite brings back the ease of full-service gas with booking,
               in-app snack ordering, and a polished drive-through experience
               that keeps customers in motion.
             </p>
@@ -172,7 +172,7 @@ export function GasFuelerHomePage({
                   size="lg"
                   className="h-12 w-full rounded-full bg-slate-950 px-7 text-base text-white shadow-[0_18px_40px_-18px_rgba(15,23,42,0.9)] hover:bg-slate-800 sm:w-auto"
                 >
-                  Book a GasFueler stop
+                  Book a GasBite stop
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </a>
@@ -221,7 +221,7 @@ export function GasFuelerHomePage({
                       Attendant Service
                     </div>
                     <div className="rounded-full border border-white/20 bg-white/15 px-3 py-1.5 text-xs text-white backdrop-blur-md sm:px-4 sm:py-2 sm:text-sm">
-                      GasFueler Stop
+                      GasBite Stop
                     </div>
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-transparent" />
@@ -235,7 +235,7 @@ export function GasFuelerHomePage({
               <div className="grid gap-4 lg:grid-cols-[1.12fr_0.88fr]">
                 <div className="rounded-[1.5rem] border border-white/70 bg-white/85 p-5 text-slate-950 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.7)] backdrop-blur-xl">
                   <p className="text-xs font-semibold uppercase tracking-[0.26em] text-orange-600">
-                    GasFueler Experience
+                    GasBite Experience
                   </p>
                   <p className="mt-3 text-2xl font-semibold leading-tight sm:text-[2rem]">
                     Pull in, fuel up, collect your order, and roll out.
@@ -300,7 +300,7 @@ export function GasFuelerHomePage({
             },
             {
               icon: Clock3,
-              title: 'The GasFueler answer',
+              title: 'The GasBite answer',
               copy:
                 'Scheduling, pump-side service, and pre-ordered snacks turn a frustrating stop into a premium routine.',
             },
@@ -334,7 +334,7 @@ export function GasFuelerHomePage({
             </h2>
             <p className="mt-4 text-lg leading-8 text-slate-300">
               Every part of the trip is optimized to remove friction: reserve
-              the stop, preload the basket, arrive on time, and let GasFueler
+              the stop, preload the basket, arrive on time, and let GasBite
               handle the final mile.
             </p>
           </div>
@@ -439,7 +439,7 @@ export function GasFuelerHomePage({
               A premium consumer experience with real upside for station partners
             </h2>
             <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-600">
-              GasFueler combines subscription access, per-visit convenience fees,
+              GasBite combines subscription access, per-visit convenience fees,
               listing partnerships, and stronger in-store add-on sales into one
               service layer that makes the station stop feel genuinely upgraded.
             </p>

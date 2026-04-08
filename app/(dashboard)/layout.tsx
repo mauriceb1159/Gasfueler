@@ -96,7 +96,7 @@ function Header() {
           <div className="relative h-10 w-[170px] shrink-0 sm:h-13 sm:w-[220px] lg:h-14 lg:w-[260px]">
             <Image
               src="/logos/gasfueler-logo-header.png"
-              alt="GasFueler logo"
+              alt="GasBite logo"
               fill
               className="object-contain object-left"
               priority

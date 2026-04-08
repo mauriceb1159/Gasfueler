@@ -20,7 +20,7 @@ const consumerPlans = [
     price: '$4-$6',
     cadence: 'service fee per fueling visit',
     summary:
-      'Schedule a stop, stay in your car, and pay only when you use GasFueler.',
+      'Schedule a stop, stay in your car, and pay only when you use GasBite.',
     features: [
       'On-demand full-service fueling at partner stations',
       'In-app scheduling with arrival windows',
@@ -34,7 +34,7 @@ const consumerPlans = [
       'Built around the business plan target service fee of $4-$6 per visit.'
   },
   {
-    name: 'FuelUp Membership',
+    name: 'GasBite Membership',
     eyebrow: 'Best for frequent drivers',
     price: 'Monthly',
     cadence: 'subscription pricing in pilot markets',
@@ -66,7 +66,7 @@ const partnerStreams = [
     icon: Coffee,
     title: 'Snack & Beverage Commission',
     description:
-      'GasFueler participates in the high-margin convenience basket that gets delivered to the car window.'
+      'GasBite participates in the high-margin convenience basket that gets delivered to the car window.'
   },
   {
     icon: Users,
@@ -174,7 +174,7 @@ export default function PricingPage() {
               <Callout
                 icon={ShieldCheck}
                 title="Membership for retention"
-                description="Subscriptions create repeat behavior and make GasFueler part of a driver's weekly routine."
+                description="Subscriptions create repeat behavior and make GasBite part of a driver's weekly routine."
               />
             </div>
           </div>
@@ -184,7 +184,7 @@ export default function PricingPage() {
               Core Audiences
             </p>
             <h2 className="mt-4 text-2xl font-semibold text-slate-950">
-              The people most likely to pay for GasFueler first
+              The people most likely to pay for GasBite first
             </h2>
             <ul className="mt-6 space-y-4">
               {audience.map((item) => (

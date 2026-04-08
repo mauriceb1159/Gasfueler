@@ -372,7 +372,7 @@ export function BookingForm({
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-slate-950">
-                    GasFueler partner stations
+                    GasBite partner stations
                   </p>
                   <p className="mt-1 text-xs leading-5 text-slate-500">
                     These are the stations you can book right now with live
@@ -535,7 +535,7 @@ export function BookingForm({
             {selectedNearbyStation ? (
               <p className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
                 {selectedNearbyStation.name} was selected from nearby Google
-                results. Booking is still limited to GasFueler partner stations
+                results. Booking is still limited to GasBite partner stations
                 with live service slots, so choose one of the partner stations
                 below to continue.
               </p>

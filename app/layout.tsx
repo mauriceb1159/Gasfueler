@@ -4,8 +4,8 @@ import { getUser, getTeamForUser } from '@/lib/db/queries';
 import { SWRConfig } from 'swr';
 
 export const metadata: Metadata = {
-  title: 'GasFueler',
-  description: 'GasFueler runs on Next.js, Postgres, and Stripe.'
+  title: 'GasBite',
+  description: 'GasBite runs on Next.js, Postgres, and Stripe.'
 };
 
 export const viewport: Viewport = {

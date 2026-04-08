@@ -46,7 +46,7 @@ export function ContactForm({
       <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
         <section className="rounded-[2rem] border border-orange-100 bg-slate-950 p-8 text-white shadow-[0_30px_90px_-45px_rgba(15,23,42,0.8)]">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-orange-300">
-            Contact GasFueler
+            Contact GasBite
           </p>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight">
             {activeInquiry.title}
@@ -119,7 +119,7 @@ export function ContactForm({
                       ? 'Tell us about your station location, foot traffic, and what a pilot would look like for you.'
                       : inquiryType === 'fleet'
                       ? 'Share your fleet size, operating area, and what kind of fueling workflow you need.'
-                      : 'Tell us where you are located and how you would want to use GasFueler.'
+                      : 'Tell us where you are located and how you would want to use GasBite.'
                   }
                 />
               </Field>

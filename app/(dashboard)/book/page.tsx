@@ -32,7 +32,7 @@ export default async function BookPage({
             Book Fueling
           </span>
           <h1 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950 sm:mt-6 sm:text-5xl">
-            Reserve a GasFueler stop in minutes.
+            Reserve a GasBite stop in minutes.
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
             Pick a partner station, choose a service window, and save the
