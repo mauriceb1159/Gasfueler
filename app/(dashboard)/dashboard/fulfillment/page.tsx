@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation';
 import { Camera, CheckCircle2, Fuel } from 'lucide-react';
 
 import { FulfillmentProofForm } from './fulfillment-form';
+import { cancelFuelRequest } from '@/app/(dashboard)/requests/actions';
+import { Button } from '@/components/ui/button';
 import {
   getFuelRequestsForFulfillment,
   getUser
@@ -12,6 +14,7 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
+import { FuelRequestStatus } from '@/lib/db/schema';
 
 export default async function FulfillmentPage() {
   const user = await getUser();
@@ -78,9 +81,23 @@ export default async function FulfillmentPage() {
                   </div>
                 ) : (
                   <div className="mt-5 rounded-2xl border border-orange-100 bg-orange-50/80 p-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-slate-950">
-                      <Camera className="h-4 w-4 text-orange-600" />
-                      Attendant completion
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-slate-950">
+                        <Camera className="h-4 w-4 text-orange-600" />
+                        Attendant completion
+                      </div>
+                      {request.status !== FuelRequestStatus.CANCELED ? (
+                        <form action={cancelFuelRequest}>
+                          <input type="hidden" name="requestId" value={request.id} />
+                          <Button
+                            type="submit"
+                            variant="outline"
+                            className="rounded-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                          >
+                            Delete pending request
+                          </Button>
+                        </form>
+                      ) : null}
                     </div>
                     <FulfillmentProofForm requestId={request.id} />
                   </div>

@@ -9,8 +9,11 @@ import {
 } from 'lucide-react';
 
 import { FulfillmentProofForm } from '@/app/(dashboard)/dashboard/fulfillment/fulfillment-form';
+import { cancelFuelRequest } from '@/app/(dashboard)/requests/actions';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getFuelRequestById, getUser } from '@/lib/db/queries';
+import { FuelRequestStatus } from '@/lib/db/schema';
 
 export default async function RequestDetailsPage({
   params
@@ -37,6 +40,10 @@ export default async function RequestDetailsPage({
   }
 
   const canManageFulfillment = user.role === 'owner';
+  const canCancelRequest =
+    request.status !== FuelRequestStatus.COMPLETED &&
+    request.status !== FuelRequestStatus.CANCELED &&
+    (user.role === 'owner' || request.userId === user.id);
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#fff8f1_0%,#ffffff_60%)] px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
@@ -61,9 +68,23 @@ export default async function RequestDetailsPage({
               <CardHeader>
                 <CardTitle className="flex flex-col gap-3 text-2xl text-slate-950 sm:flex-row sm:items-center sm:justify-between sm:text-3xl">
                   <span>Booking Summary</span>
-                  <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold capitalize tracking-wide text-slate-700">
-                    {request.status.replace('_', ' ')}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold capitalize tracking-wide text-slate-700">
+                      {request.status.replace('_', ' ')}
+                    </span>
+                    {canCancelRequest ? (
+                      <form action={cancelFuelRequest}>
+                        <input type="hidden" name="requestId" value={request.id} />
+                        <Button
+                          type="submit"
+                          variant="outline"
+                          className="rounded-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                        >
+                          Delete pending request
+                        </Button>
+                      </form>
+                    ) : null}
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
