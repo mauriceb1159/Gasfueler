@@ -22,23 +22,17 @@ import {
 
 const bookingSchema = z
   .object({
-    stationId: z.coerce.number().int().positive(),
-    slotId: z.coerce.number().int().positive(),
+    stationId: parseRequiredPositiveInt('Choose a partner station.'),
+    slotId: parseRequiredPositiveInt('Choose a service slot.'),
     fuelGrade: z.string().min(2).max(30),
     requestType: z.enum([
       FuelRequestType.FILL_TANK,
       FuelRequestType.GALLONS,
       FuelRequestType.DOLLAR_AMOUNT
     ]),
-    requestedGallons: z
-      .union([z.coerce.number().int().positive(), z.literal('')])
-      .optional(),
-    requestedDollarAmount: z
-      .union([z.coerce.number().int().positive(), z.literal('')])
-      .optional(),
-    vehicleId: z
-      .union([z.coerce.number().int().positive(), z.literal('')])
-      .optional(),
+    requestedGallons: parseOptionalPositiveInt(),
+    requestedDollarAmount: parseOptionalPositiveInt(),
+    vehicleId: parseOptionalPositiveInt(),
     nickname: z.string().max(100).optional(),
     vehicleClass: z
       .enum([VehicleClass.CAR, VehicleClass.SUV, VehicleClass.TRUCK])
@@ -253,4 +247,34 @@ function getServiceFeeForVehicleClass(vehicleClass: VehicleClass) {
     default:
       return 899;
   }
+}
+
+function parseRequiredPositiveInt(message: string) {
+  return z.preprocess((value) => {
+    if (typeof value === 'string') {
+      const trimmedValue = value.trim();
+      if (!trimmedValue) {
+        return undefined;
+      }
+
+      return Number(trimmedValue);
+    }
+
+    return value;
+  }, z.number({ message }).int().positive(message));
+}
+
+function parseOptionalPositiveInt() {
+  return z.preprocess((value) => {
+    if (typeof value === 'string') {
+      const trimmedValue = value.trim();
+      if (!trimmedValue) {
+        return undefined;
+      }
+
+      return Number(trimmedValue);
+    }
+
+    return value;
+  }, z.number().int().positive().optional());
 }
