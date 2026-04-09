@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { PackageCheck, ShoppingBag } from 'lucide-react';
 
-import { updateStoreOrderStatus } from './actions';
+import { submitStoreOrderStatus } from './actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getStoreOrdersForFulfillment, getUser } from '@/lib/db/queries';
@@ -188,7 +188,7 @@ function StoreOrderCard({
               </div>
               <div className="mt-4 flex flex-wrap gap-3">
                 {availableTransitions.map((status) => (
-                  <form key={status} action={updateStoreOrderStatus}>
+                  <form key={status} action={submitStoreOrderStatus}>
                     <input type="hidden" name="orderId" value={order.id} />
                     <input type="hidden" name="fulfillmentStatus" value={status} />
                     <Button type="submit" variant="outline" className="rounded-full bg-white">

@@ -17,6 +17,9 @@ import {
   stationStoreItems,
   stations,
 } from '@/lib/db/schema';
+import { createStoreOrderCheckoutSession, stripe } from '@/lib/payments/stripe';
+import Stripe from 'stripe';
+import { reconcileStoreOrderPayment } from '@/lib/store-orders';
 
 const storeCheckoutSchema = z
   .object({
@@ -174,6 +177,80 @@ export async function submitStoreOrder(formData: FormData) {
   if (result && typeof result === 'object' && 'error' in result && result.error) {
     redirect(`/market?error=${encodeURIComponent(result.error)}`);
   }
+}
+
+const storeCheckoutStartSchema = z.object({
+  orderId: z.coerce.number().int().positive()
+});
+
+export const beginStoreOrderCheckout = validatedActionWithUser(
+  storeCheckoutStartSchema,
+  async (data, _, user) => {
+    const order = await db.query.orders.findFirst({
+      where: and(
+        eq(orders.id, data.orderId),
+        eq(orders.userId, user.id),
+        eq(orders.orderType, OrderType.STORE_ONLY)
+      ),
+      with: {
+        orderItems: true
+      }
+    });
+
+    if (!order) {
+      return { error: 'Store order not found.' };
+    }
+
+    if (order.orderItems.length === 0) {
+      return { error: 'This store order has no items to charge.' };
+    }
+
+    await createStoreOrderCheckoutSession({
+      order,
+      orderItems: order.orderItems
+    });
+  }
+);
+
+export async function submitStoreOrderCheckout(formData: FormData) {
+  const result = await beginStoreOrderCheckout({}, formData);
+
+  if (result && typeof result === 'object' && 'error' in result && result.error) {
+    redirect(`/market?error=${encodeURIComponent(result.error)}`);
+  }
+}
+
+export async function syncStoreOrderCheckout({
+  orderId,
+  sessionId
+}: {
+  orderId: number;
+  sessionId: string;
+}) {
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+  if (
+    session.mode !== 'payment' ||
+    session.metadata?.orderType !== 'store_only' ||
+    Number(session.metadata?.orderId) !== orderId
+  ) {
+    return { status: 'invalid' as const };
+  }
+
+  if (session.payment_status !== 'paid') {
+    return { status: 'pending' as const, session };
+  }
+
+  const reconciliation = await reconcileStoreOrderPayment(orderId);
+
+  if (reconciliation.status === 'missing') {
+    return { status: 'invalid' as const };
+  }
+
+  return {
+    status: 'paid' as const,
+    session: session as Stripe.Checkout.Session
+  };
 }
 
 function parseRequiredPositiveInt(message: string) {

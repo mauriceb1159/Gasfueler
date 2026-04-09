@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { Clock3, ShoppingBag, Store } from 'lucide-react';
 
 import { submitStoreOrder } from './actions';
@@ -483,6 +484,12 @@ export function MarketForm({
                     </p>
                   ))}
                 </div>
+                <Link
+                  href={`/market/orders/${order.id}`}
+                  className="mt-4 inline-flex text-sm font-medium text-orange-700 underline-offset-4 hover:underline"
+                >
+                  View order details
+                </Link>
               </div>
             ))}
           </div>

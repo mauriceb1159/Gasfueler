@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { handleSubscriptionChange, stripe } from '@/lib/payments/stripe';
 import { NextRequest, NextResponse } from 'next/server';
+import { reconcileStoreOrderPayment } from '@/lib/store-orders';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
@@ -21,6 +22,19 @@ export async function POST(request: NextRequest) {
   }
 
   switch (event.type) {
+    case 'checkout.session.completed': {
+      const session = event.data.object as Stripe.Checkout.Session;
+
+      if (
+        session.mode === 'payment' &&
+        session.metadata?.orderType === 'store_only' &&
+        session.metadata?.orderId
+      ) {
+        await reconcileStoreOrderPayment(Number(session.metadata.orderId));
+      }
+
+      break;
+    }
     case 'customer.subscription.updated':
     case 'customer.subscription.deleted':
       const subscription = event.data.object as Stripe.Subscription;

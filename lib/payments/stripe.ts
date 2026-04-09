@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 import { redirect } from 'next/navigation';
-import { Team } from '@/lib/db/schema';
+import { Team, type Order } from '@/lib/db/schema';
 import {
   getTeamByStripeCustomerId,
   getUser,
@@ -11,12 +11,62 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-04-30.basil'
 });
 
-function hasValidStripeKey() {
+export function hasValidStripeKey() {
   const stripeKey = process.env.STRIPE_SECRET_KEY;
 
   return Boolean(
     stripeKey && stripeKey.trim().length > 0 && !stripeKey.includes('replace_me')
   );
+}
+
+export async function createStoreOrderCheckoutSession({
+  order,
+  orderItems
+}: {
+  order: Order;
+  orderItems: {
+    itemName: string;
+    quantity: number;
+    unitPrice: number;
+  }[];
+}) {
+  if (!hasValidStripeKey()) {
+    throw new Error(
+      'Stripe is not configured for local demo mode. Add a real STRIPE_SECRET_KEY to enable checkout.'
+    );
+  }
+
+  const user = await getUser();
+
+  if (!user) {
+    redirect(`/sign-in?redirect=market/orders/${order.id}`);
+  }
+
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ['card'],
+    mode: 'payment',
+    client_reference_id: String(order.id),
+    customer_email: user.email,
+    metadata: {
+      orderId: String(order.id),
+      orderType: 'store_only',
+      userId: String(user.id)
+    },
+    line_items: orderItems.map((item) => ({
+      quantity: item.quantity,
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: item.itemName
+        },
+        unit_amount: item.unitPrice
+      }
+    })),
+    success_url: `${process.env.BASE_URL}/market/orders/${order.id}?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${process.env.BASE_URL}/market/orders/${order.id}?checkout=cancelled`
+  });
+
+  redirect(session.url!);
 }
 
 export async function createCheckoutSession({

@@ -52,3 +52,7 @@ export const updateStoreOrderStatus = validatedActionWithUser(
     redirect('/dashboard/store-orders');
   }
 );
+
+export async function submitStoreOrderStatus(formData: FormData) {
+  await updateStoreOrderStatus({}, formData);
+}

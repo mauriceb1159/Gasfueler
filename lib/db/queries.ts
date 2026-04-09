@@ -295,6 +295,20 @@ export async function getStoreOrdersForUser(userId: number) {
   });
 }
 
+export async function getStoreOrderById(orderId: number, userId: number) {
+  return db.query.orders.findFirst({
+    where: and(
+      eq(orders.id, orderId),
+      eq(orders.userId, userId),
+      eq(orders.orderType, 'store_only')
+    ),
+    with: {
+      station: true,
+      orderItems: true
+    }
+  });
+}
+
 export async function getStoreOrdersForFulfillment() {
   return db.query.orders.findMany({
     where: eq(orders.orderType, 'store_only'),
