@@ -92,23 +92,23 @@ function Header() {
   return (
     <header className="sticky top-0 z-40">
       <div className="mx-auto mt-4 flex max-w-7xl items-center justify-between rounded-full border border-white/60 bg-white/75 px-3 py-3 shadow-[0_18px_60px_-28px_rgba(15,23,42,0.55)] backdrop-blur-xl sm:px-6 lg:px-8">
-        <Link href="/" className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-          <div className="relative h-12 w-[390px] max-w-none shrink-0 overflow-hidden sm:h-14 sm:w-[410px] sm:max-w-[68vw] lg:h-[64px] lg:w-[500px] lg:max-w-[58vw]">
+        <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <div className="relative h-11 w-[290px] max-w-[76vw] shrink-0 overflow-hidden sm:h-14 sm:w-[410px] sm:max-w-[68vw] lg:h-[64px] lg:w-[500px] lg:max-w-[58vw]">
             <Image
               src="/logos/gasbite-logo-header-transparent.png"
               alt="GasBite logo"
               fill
-              className="origin-left scale-[1.72] object-contain object-left sm:scale-[1.52] lg:scale-[1.6]"
+              className="origin-left scale-[1.42] object-contain object-left sm:scale-[1.52] lg:scale-[1.6]"
               priority
-              sizes="(max-width: 640px) 390px, (max-width: 1024px) 410px, 500px"
+              sizes="(max-width: 640px) 290px, (max-width: 1024px) 410px, 500px"
               style={{ objectPosition: 'left center' }}
             />
           </div>
         </Link>
-        <div className="ml-2 flex shrink-0 items-center space-x-3 sm:ml-3 sm:space-x-4">
+        <div className="ml-3 flex shrink-0 items-center space-x-3 sm:space-x-4">
           <Link
             href="/book"
-            className="hidden text-sm font-medium text-gray-700 hover:text-gray-900 sm:inline"
+            className="text-sm font-medium text-gray-700 hover:text-gray-900"
           >
             Book
           </Link>
