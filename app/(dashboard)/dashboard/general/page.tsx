@@ -126,6 +126,17 @@ function StationFuelPricing() {
           estimates. These values override the regional fallback feed, so
           station-specific updates always win when both are available.
         </p>
+        <div className="flex flex-wrap gap-2 text-xs text-slate-500">
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">
+            * Station-set
+          </span>
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">
+            G Google
+          </span>
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">
+            ~ Regional fallback
+          </span>
+        </div>
 
         <form className="space-y-4" action={formAction}>
           <div>
