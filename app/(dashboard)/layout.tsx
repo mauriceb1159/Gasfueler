@@ -123,21 +123,8 @@ function Header() {
   return (
     <header className="sticky top-0 z-40 px-3 pt-4 sm:px-4 lg:px-6">
       <div className="mx-auto flex h-[62px] max-w-7xl items-center justify-between rounded-full border border-white/60 bg-white/75 px-3 shadow-[0_18px_60px_-28px_rgba(15,23,42,0.55)] backdrop-blur-xl sm:h-[74px] sm:px-5 lg:h-[80px] lg:px-6">
-        <Link href="/" className="flex min-w-0 shrink-0 items-center">
-          <div className="relative h-[34px] w-[128px] shrink-0 overflow-hidden sm:h-[42px] sm:w-[180px] lg:h-[50px] lg:w-[220px]">
-            <Image
-              src="/logos/gasbite-logo-shared.jpg"
-              alt="GasBite logo"
-              fill
-              priority
-              className="object-contain object-left mix-blend-multiply opacity-95"
-              sizes="(max-width: 640px) 128px, (max-width: 1024px) 180px, 220px"
-              style={{
-                objectPosition: 'left center',
-                filter: 'brightness(1.01) contrast(1.01) saturate(0.99)'
-              }}
-            />
-          </div>
+        <Link href="/" className="text-sm font-semibold tracking-[0.18em] text-slate-500 uppercase">
+          Home
         </Link>
         <div className="ml-2 flex shrink-0 items-center gap-2 sm:ml-6 sm:gap-4">
           {showMarketCart ? <MarketCartButton cart={marketCart} /> : null}
