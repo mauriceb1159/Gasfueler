@@ -1,0 +1,54 @@
+<svg width="760" height="180" viewBox="0 0 760 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gasbite-orange-remake" x1="40" y1="42" x2="649" y2="152" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF8A1C"/>
+      <stop offset="1" stop-color="#FFB11A"/>
+    </linearGradient>
+    <linearGradient id="gasbite-blue-remake" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#2E79E8"/>
+      <stop offset="1" stop-color="#1657C8"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(18 16)">
+    <text
+      x="0"
+      y="118"
+      fill="url(#gasbite-orange-remake)"
+      font-family="Arial, Helvetica, sans-serif"
+      font-size="126"
+      font-style="italic"
+      font-weight="700"
+      letter-spacing="-6"
+    >gas</text>
+
+    <text
+      x="255"
+      y="118"
+      fill="url(#gasbite-orange-remake)"
+      font-family="Arial, Helvetica, sans-serif"
+      font-size="126"
+      font-style="italic"
+      font-weight="700"
+      letter-spacing="-6"
+    >b</text>
+
+    <rect x="363" y="36" width="26" height="86" rx="13" fill="url(#gasbite-blue-remake)"/>
+
+    <path
+      d="M376 0C392 24 400 37 400 50C400 66 389 79 376 79C363 79 352 66 352 50C352 37 360 24 376 0Z"
+      fill="url(#gasbite-blue-remake)"
+    />
+
+    <text
+      x="405"
+      y="118"
+      fill="url(#gasbite-orange-remake)"
+      font-family="Arial, Helvetica, sans-serif"
+      font-size="126"
+      font-style="italic"
+      font-weight="700"
+      letter-spacing="-8"
+    >te</text>
+  </g>
+</svg>
