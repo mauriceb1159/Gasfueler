@@ -112,121 +112,129 @@ const signUpSchema = z.object({
 
 export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   const { email, password, inviteId } = data;
-
-  const existingUser = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, email))
-    .limit(1);
-
-  if (existingUser.length > 0) {
-    return {
-      error: 'Failed to create user. Please try again.',
-      email,
-      password
-    };
-  }
-
-  const passwordHash = await hashPassword(password);
-
-  const newUser: NewUser = {
-    email,
-    passwordHash,
-    role: 'owner' // Default role, will be overridden if there's an invitation
-  };
-
-  const [createdUser] = await db.insert(users).values(newUser).returning();
-
-  if (!createdUser) {
-    return {
-      error: 'Failed to create user. Please try again.',
-      email,
-      password
-    };
-  }
-
-  let teamId: number;
-  let userRole: string;
-  let createdTeam: typeof teams.$inferSelect | null = null;
-
-  if (inviteId) {
-    // Check if there's a valid invitation
-    const [invitation] = await db
+  try {
+    const existingUser = await db
       .select()
-      .from(invitations)
-      .where(
-        and(
-          eq(invitations.id, parseInt(inviteId)),
-          eq(invitations.email, email),
-          eq(invitations.status, 'pending')
-        )
-      )
+      .from(users)
+      .where(eq(users.email, email))
       .limit(1);
 
-    if (invitation) {
-      teamId = invitation.teamId;
-      userRole = invitation.role;
-
-      await db
-        .update(invitations)
-        .set({ status: 'accepted' })
-        .where(eq(invitations.id, invitation.id));
-
-      await logActivity(teamId, createdUser.id, ActivityType.ACCEPT_INVITATION);
-
-      [createdTeam] = await db
-        .select()
-        .from(teams)
-        .where(eq(teams.id, teamId))
-        .limit(1);
-    } else {
-      return { error: 'Invalid or expired invitation.', email, password };
-    }
-  } else {
-    // Create a new team if there's no invitation
-    const newTeam: NewTeam = {
-      name: `${email}'s Team`
-    };
-
-    [createdTeam] = await db.insert(teams).values(newTeam).returning();
-
-    if (!createdTeam) {
+    if (existingUser.length > 0) {
       return {
-        error: 'Failed to create team. Please try again.',
+        error: 'An account with this email already exists. Try signing in instead.',
         email,
         password
       };
     }
 
-    teamId = createdTeam.id;
-    userRole = 'owner';
+    const passwordHash = await hashPassword(password);
 
-    await logActivity(teamId, createdUser.id, ActivityType.CREATE_TEAM);
+    const newUser: NewUser = {
+      email,
+      passwordHash,
+      role: 'owner' // Default role, will be overridden if there's an invitation
+    };
+
+    const [createdUser] = await db.insert(users).values(newUser).returning();
+
+    if (!createdUser) {
+      return {
+        error: 'We could not create your account. Please try again.',
+        email,
+        password
+      };
+    }
+
+    let teamId: number;
+    let userRole: string;
+    let createdTeam: typeof teams.$inferSelect | null = null;
+
+    if (inviteId) {
+      // Check if there's a valid invitation
+      const [invitation] = await db
+        .select()
+        .from(invitations)
+        .where(
+          and(
+            eq(invitations.id, parseInt(inviteId)),
+            eq(invitations.email, email),
+            eq(invitations.status, 'pending')
+          )
+        )
+        .limit(1);
+
+      if (invitation) {
+        teamId = invitation.teamId;
+        userRole = invitation.role;
+
+        await db
+          .update(invitations)
+          .set({ status: 'accepted' })
+          .where(eq(invitations.id, invitation.id));
+
+        await logActivity(teamId, createdUser.id, ActivityType.ACCEPT_INVITATION);
+
+        [createdTeam] = await db
+          .select()
+          .from(teams)
+          .where(eq(teams.id, teamId))
+          .limit(1);
+      } else {
+        return { error: 'This invitation is invalid or expired.', email, password };
+      }
+    } else {
+      // Create a new team if there's no invitation
+      const newTeam: NewTeam = {
+        name: `${email}'s Team`
+      };
+
+      [createdTeam] = await db.insert(teams).values(newTeam).returning();
+
+      if (!createdTeam) {
+        return {
+          error: 'Your account was created, but we could not create your team. Please try again.',
+          email,
+          password
+        };
+      }
+
+      teamId = createdTeam.id;
+      userRole = 'owner';
+
+      await logActivity(teamId, createdUser.id, ActivityType.CREATE_TEAM);
+    }
+
+    const newTeamMember: NewTeamMember = {
+      userId: createdUser.id,
+      teamId: teamId,
+      role: userRole
+    };
+
+    await Promise.all([
+      db.insert(teamMembers).values(newTeamMember),
+      logActivity(teamId, createdUser.id, ActivityType.SIGN_UP),
+      setSession(createdUser)
+    ]);
+
+    const redirectTo = formData.get('redirect') as string | null;
+    if (redirectTo === 'checkout') {
+      const priceId = formData.get('priceId') as string;
+      return createCheckoutSession({ team: createdTeam, priceId });
+    }
+
+    if (redirectTo === 'book') {
+      redirect('/book');
+    }
+
+    redirect('/dashboard');
+  } catch (error) {
+    console.error('Sign-up failed:', error);
+    return {
+      error: 'We could not finish creating your account right now. Please try again.',
+      email,
+      password
+    };
   }
-
-  const newTeamMember: NewTeamMember = {
-    userId: createdUser.id,
-    teamId: teamId,
-    role: userRole
-  };
-
-  await Promise.all([
-    db.insert(teamMembers).values(newTeamMember),
-    logActivity(teamId, createdUser.id, ActivityType.SIGN_UP),
-    setSession(createdUser)
-  ]);
-
-  const redirectTo = formData.get('redirect') as string | null;
-  if (redirectTo === 'checkout') {
-    const priceId = formData.get('priceId') as string;
-    return createCheckoutSession({ team: createdTeam, priceId });
-  }
-
-  if (redirectTo === 'book') {
-    redirect('/book');
-  }
-
-  redirect('/dashboard');
 });
 
 export async function signOut() {
