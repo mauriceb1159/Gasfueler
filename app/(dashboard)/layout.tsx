@@ -126,7 +126,7 @@ function Header() {
         <Link href="/" className="flex min-w-0 shrink-0 items-center">
           <div className="relative h-[42px] w-[170px] shrink-0 overflow-hidden sm:hidden">
             <Image
-              src="/logos/gasbite-mobile-logo-v5.svg"
+              src="/logos/gasbite-mobile-logo-v3.svg"
               alt="GasBite logo"
               fill
               priority
@@ -134,14 +134,14 @@ function Header() {
               sizes="170px"
             />
           </div>
-          <div className="relative hidden h-[62px] w-[390px] shrink-0 overflow-hidden sm:block lg:h-[76px] lg:w-[560px]">
+          <div className="relative hidden h-[66px] w-[450px] shrink-0 overflow-hidden sm:block lg:h-[84px] lg:w-[660px]">
             <Image
               src="/logos/gasbite-logo-prod.png"
               alt="GasBite logo"
               fill
               priority
               className="object-contain object-left mix-blend-multiply opacity-90"
-              sizes="(max-width: 1024px) 390px, 560px"
+              sizes="(max-width: 1024px) 450px, 660px"
               style={{
                 objectPosition: 'left center',
                 filter: 'brightness(1.015) contrast(1.015) saturate(0.98)'
