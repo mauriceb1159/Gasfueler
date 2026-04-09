@@ -1,26 +1,30 @@
 import { redirect } from 'next/navigation';
-import { Fuel } from 'lucide-react';
+import { ShoppingBag } from 'lucide-react';
 
-import { BookingForm, EmptyBookingState } from './booking-form';
+import { EmptyMarketState, MarketForm } from './market-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getBookableStations, getUser, getVehiclesForUser } from '@/lib/db/queries';
+import {
+  getStoreOrdersForUser,
+  getStoreStations,
+  getUser,
+} from '@/lib/db/queries';
 
-export default async function BookPage({
-  searchParams
+export default async function MarketPage({
+  searchParams,
 }: {
-  searchParams?: Promise<{ error?: string }>;
+  searchParams?: Promise<{ error?: string; success?: string }>;
 }) {
   const user = await getUser();
 
   if (!user) {
-    redirect('/sign-in?redirect=book');
+    redirect('/sign-in?redirect=market');
   }
 
   const params = searchParams ? await searchParams : undefined;
 
-  const [stations, vehicles] = await Promise.all([
-    getBookableStations(),
-    getVehiclesForUser(user.id)
+  const [stations, recentOrders] = await Promise.all([
+    getStoreStations(),
+    getStoreOrdersForUser(user.id),
   ]);
 
   return (
@@ -28,16 +32,15 @@ export default async function BookPage({
       <div className="mx-auto max-w-6xl">
         <div className="max-w-3xl">
           <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/80 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-orange-700 shadow-sm sm:px-4 sm:text-xs sm:tracking-[0.28em]">
-            <Fuel className="h-3.5 w-3.5" />
-            Book Fueling
+            <ShoppingBag className="h-3.5 w-3.5" />
+            Store Pickup
           </span>
           <h1 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950 sm:mt-6 sm:text-5xl">
-            Choose fuel, snacks, or both in one polished stop.
+            Build a store-only order without booking fuel first.
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
-            Start with fuel only, build a bigger convenience order, or shop the
-            market first. The flow adjusts so customers can get in and out with
-            less friction.
+            Pick a partner station, fill your bag, and choose how pickup should
+            work. This is the first standalone version of the market flow.
           </p>
         </div>
 
@@ -45,17 +48,18 @@ export default async function BookPage({
           <Card className="rounded-[1.5rem] border-orange-100 shadow-[0_25px_70px_-40px_rgba(15,23,42,0.32)] sm:rounded-[2rem]">
             <CardHeader>
               <CardTitle className="text-2xl text-slate-950 sm:text-3xl">
-                Plan your stop
+                Market order
               </CardTitle>
             </CardHeader>
             <CardContent>
               {stations.length === 0 ? (
-                <EmptyBookingState />
+                <EmptyMarketState />
               ) : (
-                <BookingForm
+                <MarketForm
                   stations={stations}
-                  vehicles={vehicles}
+                  recentOrders={recentOrders}
                   initialError={params?.error}
+                  successOrderId={params?.success}
                 />
               )}
             </CardContent>

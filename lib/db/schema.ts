@@ -178,11 +178,21 @@ export const orders = pgTable('orders', {
   stationId: integer('station_id').references(() => stations.id),
   orderType: varchar('order_type', { length: 30 }).notNull().default('fuel_service'),
   status: varchar('status', { length: 30 }).notNull().default('draft'),
+  pickupMode: varchar('pickup_mode', { length: 30 }),
+  pickupWindowStart: timestamp('pickup_window_start'),
+  pickupWindowEnd: timestamp('pickup_window_end'),
+  customerNotes: text('customer_notes'),
+  fulfillmentStatus: varchar('fulfillment_status', { length: 30 })
+    .notNull()
+    .default('draft'),
   fuelSubtotal: integer('fuel_subtotal').notNull().default(0),
   storeSubtotal: integer('store_subtotal').notNull().default(0),
   serviceFee: integer('service_fee').notNull().default(0),
   taxTotal: integer('tax_total').notNull().default(0),
   totalAmount: integer('total_amount').notNull().default(0),
+  readyAt: timestamp('ready_at'),
+  fulfilledAt: timestamp('fulfilled_at'),
+  cancelReason: text('cancel_reason'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
@@ -578,4 +588,20 @@ export enum OrderType {
   FUEL_SERVICE = 'fuel_service',
   STORE_ONLY = 'store_only',
   MIXED = 'mixed',
+}
+
+export enum PickupMode {
+  ASAP = 'asap',
+  SCHEDULED = 'scheduled',
+  ON_ARRIVAL = 'on_arrival',
+}
+
+export enum OrderFulfillmentStatus {
+  DRAFT = 'draft',
+  PENDING_PAYMENT = 'pending_payment',
+  PAID = 'paid',
+  PREPARING = 'preparing',
+  READY_FOR_PICKUP = 'ready_for_pickup',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
 }

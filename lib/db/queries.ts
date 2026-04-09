@@ -3,6 +3,7 @@ import { db } from './drizzle';
 import {
   activityLogs,
   fuelRequests,
+  orders,
   stationStoreItems,
   serviceSlots,
   stationFuelPrices,
@@ -259,6 +260,58 @@ export async function getStationsForPricing() {
       }))
     );
   }
+}
+
+export async function getStoreStations() {
+  const stationsResult = await db.query.stations.findMany({
+    where: eq(stations.active, true),
+    with: {
+      stationStoreItems: {
+        where: eq(stationStoreItems.active, true),
+        with: {
+          storeItem: {
+            with: {
+              category: true
+            }
+          }
+        },
+        orderBy: asc(stationStoreItems.id)
+      }
+    },
+    orderBy: asc(stations.name)
+  });
+
+  return stationsResult.filter((station) => station.stationStoreItems.length > 0);
+}
+
+export async function getStoreOrdersForUser(userId: number) {
+  return db.query.orders.findMany({
+    where: and(eq(orders.userId, userId), eq(orders.orderType, 'store_only')),
+    with: {
+      station: true,
+      orderItems: true
+    },
+    orderBy: desc(orders.createdAt)
+  });
+}
+
+export async function getStoreOrdersForFulfillment() {
+  return db.query.orders.findMany({
+    where: eq(orders.orderType, 'store_only'),
+    with: {
+      user: {
+        columns: {
+          id: true,
+          name: true,
+          email: true
+        }
+      },
+      station: true,
+      orderItems: true
+    },
+    orderBy: desc(orders.createdAt),
+    limit: 30
+  });
 }
 
 export async function getFuelRequestsForUser(userId: number) {

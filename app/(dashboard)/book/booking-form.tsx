@@ -1,7 +1,15 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Fuel, MapPinned, Navigation, Search } from 'lucide-react';
+import {
+  Fuel,
+  type LucideIcon,
+  MapPinned,
+  Navigation,
+  Search,
+  ShoppingBag,
+  Store
+} from 'lucide-react';
 
 import { submitFuelRequest } from './actions';
 import { Button } from '@/components/ui/button';
@@ -68,6 +76,8 @@ type NearbyGasStation = {
   longitude: number | null;
 };
 
+type BookingMode = 'fuel_only' | 'fuel_and_store' | 'store_first';
+
 export function BookingForm({
   stations,
   vehicles,
@@ -88,6 +98,7 @@ export function BookingForm({
   const [nearbyStations, setNearbyStations] = useState<NearbyGasStation[]>([]);
   const [selectedNearbyStation, setSelectedNearbyStation] =
     useState<NearbyGasStation | null>(null);
+  const [bookingMode, setBookingMode] = useState<BookingMode>('fuel_only');
   const [fuelGrade, setFuelGrade] = useState('regular');
   const [requestType, setRequestType] = useState('fill_tank');
   const [requestedGallons, setRequestedGallons] = useState('');
@@ -214,6 +225,8 @@ export function BookingForm({
   const selectedVehicleRecord =
     vehicles.find((vehicle) => String(vehicle.id) === selectedVehicleId) ?? null;
   const effectiveVehicleClass = vehicleClass || 'suv';
+  const showStoreSection = bookingMode !== 'fuel_only';
+  const storeFirst = bookingMode === 'store_first';
   const serviceFee = getServiceFeeForVehicleClass(effectiveVehicleClass);
   const addonSubtotal = selectedStationStoreItems.reduce((sum, item) => {
     const quantity = selectedStoreItems[item.id] ?? 0;
@@ -232,6 +245,15 @@ export function BookingForm({
       : null;
   const estimatedTotal =
     estimatedFuelCost !== null ? estimatedFuelCost + serviceFee + addonSubtotal : null;
+  const selectedStoreItemCount = Object.values(selectedStoreItems).reduce(
+    (sum, quantity) => sum + quantity,
+    0
+  );
+  const featuredStoreItem = selectedStationStoreItems[0] ?? null;
+  const lowestStorePrice =
+    selectedStationStoreItems.length > 0
+      ? Math.min(...selectedStationStoreItems.map((item) => item.priceCents))
+      : null;
   const groupedStoreItems = selectedStationStoreItems.reduce<
     Record<
       string,
@@ -269,6 +291,12 @@ export function BookingForm({
         : nextItems;
     });
   }, [selectedStationStoreItems]);
+
+  useEffect(() => {
+    if (bookingMode === 'fuel_only' && Object.keys(selectedStoreItems).length > 0) {
+      setSelectedStoreItems({});
+    }
+  }, [bookingMode, selectedStoreItems]);
 
   function handleUseLocation() {
     if (!navigator.geolocation) {
@@ -321,6 +349,169 @@ export function BookingForm({
     return <EmptyBookingState />;
   }
 
+  const submitLabel =
+    bookingMode === 'fuel_only'
+      ? 'Save fuel stop'
+      : bookingMode === 'store_first'
+      ? 'Save store-first stop'
+      : 'Save stop';
+  const storeSection = (
+    <section className="space-y-4">
+      <SectionTitle icon={ShoppingBag} title="Market pickup" />
+      {selectedStationStoreItems.length > 0 ? (
+        <div className="space-y-5 rounded-[1.5rem] border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+          <div className="rounded-[1.4rem] border border-white/80 bg-white p-5 shadow-sm">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-2">
+                <span className="inline-flex w-fit rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700">
+                  {storeFirst ? 'Start with the bag' : 'Add-on market'}
+                </span>
+                <h3 className="text-xl font-semibold text-slate-950">
+                  Snacks, drinks, and convenience picks ready when you arrive
+                </h3>
+                <p className="max-w-2xl text-sm leading-6 text-slate-600">
+                  {storeFirst
+                    ? 'Build the order first, then finish the quick station and fueling details before checkout.'
+                    : 'Upgrade this stop with a few grab-and-go items so everything is ready at the pump.'}
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <StoreStat
+                  label="Catalog"
+                  value={`${selectedStationStoreItems.length} items`}
+                />
+                <StoreStat
+                  label="Starting at"
+                  value={
+                    lowestStorePrice !== null ? formatCurrency(lowestStorePrice) : 'TBD'
+                  }
+                />
+                <StoreStat
+                  label="In bag"
+                  value={`${selectedStoreItemCount} item${selectedStoreItemCount === 1 ? '' : 's'}`}
+                />
+              </div>
+            </div>
+            {featuredStoreItem ? (
+              <div className="mt-4 rounded-[1.25rem] border border-slate-100 bg-gradient-to-r from-orange-50 via-white to-amber-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  Featured pick
+                </p>
+                <div className="mt-2 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="font-semibold text-slate-950">
+                      {featuredStoreItem.storeItem.name}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-600">
+                      {featuredStoreItem.storeItem.description ||
+                        'Freshly merchandised for quick pickup at the pump.'}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-sm font-semibold text-slate-950">
+                    {formatCurrency(featuredStoreItem.priceCents)}
+                  </span>
+                </div>
+              </div>
+            ) : null}
+          </div>
+          <div className="space-y-5">
+            {Object.values(groupedStoreItems).map((group) => (
+              <div key={group.categoryName} className="space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    {group.categoryName}
+                  </h3>
+                  <span className="text-xs text-slate-400">
+                    {group.items.length} item{group.items.length === 1 ? '' : 's'}
+                  </span>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {group.items.map((item) => {
+                    const quantity = selectedStoreItems[item.id] ?? 0;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="rounded-[1.25rem] border border-white bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-100 via-amber-50 to-white text-[10px] font-semibold uppercase tracking-[0.16em] text-orange-700">
+                            {getStoreItemInitials(item.storeItem.name)}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <p className="font-semibold text-slate-950">
+                                    {item.storeItem.name}
+                                  </p>
+                                  <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                    {item.storeItem.category.name}
+                                  </span>
+                                </div>
+                                {item.storeItem.description ? (
+                                  <p className="mt-1 text-sm leading-6 text-slate-500">
+                                    {item.storeItem.description}
+                                  </p>
+                                ) : null}
+                              </div>
+                              <span className="shrink-0 text-sm font-semibold text-slate-950">
+                                {formatCurrency(item.priceCents)}
+                              </span>
+                            </div>
+                            <div className="mt-4 flex items-center justify-between gap-3">
+                              <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 p-1">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    updateStoreItemQuantity(item.id, quantity - 1)
+                                  }
+                                  className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-slate-600 transition hover:bg-white hover:text-slate-950"
+                                  aria-label={`Remove ${item.storeItem.name}`}
+                                >
+                                  -
+                                </button>
+                                <span className="min-w-10 text-center text-sm font-semibold text-slate-950">
+                                  {quantity}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    updateStoreItemQuantity(item.id, quantity + 1)
+                                  }
+                                  className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-slate-600 transition hover:bg-white hover:text-slate-950"
+                                  aria-label={`Add ${item.storeItem.name}`}
+                                >
+                                  +
+                                </button>
+                              </div>
+                              {quantity > 0 ? (
+                                <span className="text-sm font-medium text-orange-700">
+                                  {formatCurrency(item.priceCents * quantity)}
+                                </span>
+                              ) : (
+                                <span className="text-sm text-slate-400">Add to bag</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50/70 p-5 text-sm leading-6 text-slate-600">
+          This partner station does not have its market catalog loaded yet. Pick
+          another location or come back once this station&apos;s shelf is live.
+        </div>
+      )}
+    </section>
+  );
+
   return (
     <form action={submitFuelRequest} className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6">
       <input
@@ -336,7 +527,34 @@ export function BookingForm({
         ) : null}
 
         <section className="space-y-4">
-        <SectionTitle icon={MapPinned} title="1. Choose a station and time window" />
+          <SectionTitle icon={Store} title="Choose your stop" />
+          <div className="grid gap-3 lg:grid-cols-3">
+            <BookingModeCard
+              title="Fuel only"
+              description="Book the pump-side service fast and keep the stop clean."
+              eyebrow="Fastest path"
+              selected={bookingMode === 'fuel_only'}
+              onSelect={() => setBookingMode('fuel_only')}
+            />
+            <BookingModeCard
+              title="Fuel + store"
+              description="Bundle snacks, drinks, and essentials into the same stop."
+              eyebrow="Most popular"
+              selected={bookingMode === 'fuel_and_store'}
+              onSelect={() => setBookingMode('fuel_and_store')}
+            />
+            <BookingModeCard
+              title="Store first"
+              description="Start with the catalog, then add the quick arrival details before checkout."
+              eyebrow="Shop first"
+              selected={bookingMode === 'store_first'}
+              onSelect={() => setBookingMode('store_first')}
+            />
+          </div>
+        </section>
+
+        <section className="space-y-4">
+        <SectionTitle icon={MapPinned} title="Station & pickup window" />
         <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
           <div className="space-y-4 rounded-[1.25rem] border border-orange-100 bg-orange-50/70 p-4 sm:rounded-[1.5rem]">
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -372,7 +590,7 @@ export function BookingForm({
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-slate-950">
-                    GasBite partner stations
+                    Gasbite partner stations
                   </p>
                   <p className="mt-1 text-xs leading-5 text-slate-500">
                     These are the stations you can book right now with live
@@ -539,7 +757,7 @@ export function BookingForm({
             {selectedNearbyStation ? (
               <p className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
                 {selectedNearbyStation.name} was selected from nearby Google
-                results. Booking is still limited to GasBite partner stations
+                results. Booking is still limited to Gasbite partner stations
                 with live service slots, so choose one of the partner stations
                 below to continue.
               </p>
@@ -604,16 +822,17 @@ export function BookingForm({
               </select>
             </Field>
             <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-              Start with nearby partner locations only. That keeps launch-market
-              operations realistic while still giving drivers a useful location-based
-              experience.
+              Choose the station first, then shape the stop around fuel only,
+              fuel plus store pickup, or a store-first bag build.
             </p>
           </div>
         </div>
         </section>
 
+        {showStoreSection && storeFirst ? storeSection : null}
+
         <section className="space-y-4">
-        <SectionTitle icon={Fuel} title="2. Fuel details" />
+        <SectionTitle icon={Fuel} title="Fuel details" />
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Fuel grade" htmlFor="fuelGrade">
             <select
@@ -670,7 +889,7 @@ export function BookingForm({
         </section>
 
         <section className="space-y-4">
-        <SectionTitle icon={Navigation} title="3. Vehicle details" />
+        <SectionTitle icon={Navigation} title="Vehicle details" />
         <Field label="Saved vehicle" htmlFor="vehicleId">
           <select
             id="vehicleId"
@@ -750,108 +969,7 @@ export function BookingForm({
         </Field>
         </section>
 
-        <section className="space-y-4">
-        <SectionTitle icon={Search} title="4. Snacks & essentials" />
-        {selectedStationStoreItems.length > 0 ? (
-          <div className="space-y-4 rounded-[1.5rem] border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
-            <p className="text-sm leading-6 text-slate-600">
-              Add a few store items to the same order so the attendant can pick
-              them up while fueling.
-            </p>
-            <div className="space-y-5">
-              {Object.values(groupedStoreItems).map((group) => (
-                <div key={group.categoryName} className="space-y-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      {group.categoryName}
-                    </h3>
-                    <span className="text-xs text-slate-400">
-                      {group.items.length} item{group.items.length === 1 ? '' : 's'}
-                    </span>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {group.items.map((item) => {
-                      const quantity = selectedStoreItems[item.id] ?? 0;
-
-                      return (
-                        <div
-                          key={item.id}
-                          className="rounded-[1.25rem] border border-white bg-white p-4 shadow-sm"
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-100 via-amber-50 to-white text-[10px] font-semibold uppercase tracking-[0.16em] text-orange-700">
-                              {getStoreItemInitials(item.storeItem.name)}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-start justify-between gap-3">
-                                <div>
-                                  <p className="font-semibold text-slate-950">
-                                    {item.storeItem.name}
-                                  </p>
-                                  {item.storeItem.description ? (
-                                    <p className="mt-1 text-sm leading-6 text-slate-500">
-                                      {item.storeItem.description}
-                                    </p>
-                                  ) : null}
-                                </div>
-                                <span className="shrink-0 text-sm font-semibold text-slate-950">
-                                  {formatCurrency(item.priceCents)}
-                                </span>
-                              </div>
-                              <div className="mt-4 flex items-center justify-between gap-3">
-                                <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 p-1">
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      updateStoreItemQuantity(item.id, quantity - 1)
-                                    }
-                                    className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-slate-600 transition hover:bg-white hover:text-slate-950"
-                                    aria-label={`Remove ${item.storeItem.name}`}
-                                  >
-                                    -
-                                  </button>
-                                  <span className="min-w-10 text-center text-sm font-semibold text-slate-950">
-                                    {quantity}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      updateStoreItemQuantity(item.id, quantity + 1)
-                                    }
-                                    className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-slate-600 transition hover:bg-white hover:text-slate-950"
-                                    aria-label={`Add ${item.storeItem.name}`}
-                                  >
-                                    +
-                                  </button>
-                                </div>
-                                {quantity > 0 ? (
-                                  <span className="text-sm font-medium text-orange-700">
-                                    {formatCurrency(item.priceCents * quantity)}
-                                  </span>
-                                ) : (
-                                  <span className="text-sm text-slate-400">
-                                    Add to order
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50/70 p-5 text-sm leading-6 text-slate-600">
-            This partner station does not have a snack catalog loaded yet. Once
-            we add store items, customers will be able to add them to the same
-            order here.
-          </div>
-        )}
-        </section>
+        {showStoreSection && !storeFirst ? storeSection : null}
 
         <Field label="Arrival or special instructions" htmlFor="specialInstructions">
         <textarea
@@ -867,19 +985,27 @@ export function BookingForm({
           type="submit"
           className="h-12 w-full rounded-full bg-slate-950 px-6 text-white hover:bg-slate-800 sm:w-auto"
         >
-          Save Fuel Request
+          {submitLabel}
         </Button>
       </div>
 
       <aside className="mt-6 lg:mt-0">
         <div className="rounded-[1.5rem] border border-orange-200 bg-orange-50 p-4 text-sm text-slate-700 lg:sticky lg:top-6">
-          <p className="font-semibold text-slate-950">Order summary</p>
+          <p className="font-semibold text-slate-950">
+            {bookingMode === 'fuel_only'
+              ? 'Fuel stop summary'
+              : bookingMode === 'store_first'
+              ? 'Store-first summary'
+              : 'Order summary'}
+          </p>
           <p className="mt-2">
             {selectedFuelPrice
               ? `${formatFuelGrade(fuelGrade)} is currently ${formatCentsPerGallon(
                   selectedFuelPrice.priceCents
                 )} at ${selectedStation?.name}.`
-              : 'Add a current station fuel price to unlock gallon-based estimates.'}
+              : bookingMode === 'fuel_only'
+              ? 'Add a current station fuel price to unlock gallon-based estimates.'
+              : 'Build the bag first, then confirm fuel details before checkout.'}
           </p>
           <div className="mt-4 rounded-2xl border border-white/70 bg-white/80 p-4">
             <div className="flex items-center justify-between gap-4">
@@ -901,9 +1027,11 @@ export function BookingForm({
               </span>
             </div>
             <div className="mt-2 flex items-center justify-between gap-4">
-              <span className="text-slate-600">Snacks & essentials</span>
+              <span className="text-slate-600">
+                {showStoreSection ? 'Snacks & essentials' : 'Add-ons'}
+              </span>
               <span className="font-semibold text-slate-950">
-                {formatCurrency(addonSubtotal)}
+                {showStoreSection ? formatCurrency(addonSubtotal) : 'Not included'}
               </span>
             </div>
             <div className="mt-2 flex items-center justify-between gap-4">
@@ -923,9 +1051,10 @@ export function BookingForm({
               </div>
             </div>
           </div>
-          {selectedStationStoreItems.some((item) => (selectedStoreItems[item.id] ?? 0) > 0) ? (
+          {showStoreSection &&
+          selectedStationStoreItems.some((item) => (selectedStoreItems[item.id] ?? 0) > 0) ? (
             <div className="mt-4 rounded-2xl border border-white/70 bg-white/80 p-4">
-              <p className="text-sm font-semibold text-slate-950">Store items</p>
+              <p className="text-sm font-semibold text-slate-950">In your bag</p>
               <div className="mt-3 space-y-2">
                 {selectedStationStoreItems
                   .filter((item) => (selectedStoreItems[item.id] ?? 0) > 0)
@@ -951,8 +1080,8 @@ export function BookingForm({
           ) : null}
           <p className="mt-3 text-xs leading-5 text-slate-500">
             Fuel pump prices already reflect the station&apos;s posted fuel taxes.
-            Any additional taxes on service fees or add-ons can be added later at
-            checkout once we finalize that flow.
+            Any additional taxes on service fees or market items can be added
+            later at checkout once we finalize that flow.
           </p>
         </div>
       </aside>
@@ -979,11 +1108,54 @@ export function EmptyBookingState() {
   );
 }
 
+function BookingModeCard({
+  title,
+  description,
+  eyebrow,
+  selected,
+  onSelect
+}: {
+  title: string;
+  description: string;
+  eyebrow: string;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`rounded-[1.35rem] border p-5 text-left transition ${
+        selected
+          ? 'border-slate-950 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.35)]'
+          : 'border-slate-200 bg-slate-50/70 hover:border-orange-200 hover:bg-white'
+      }`}
+    >
+      <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+        {eyebrow}
+      </span>
+      <p className="mt-3 text-lg font-semibold text-slate-950">{title}</p>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+    </button>
+  );
+}
+
+function StoreStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[1.1rem] border border-slate-200 bg-slate-50 px-4 py-3">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+        {label}
+      </p>
+      <p className="mt-1 text-sm font-semibold text-slate-950">{value}</p>
+    </div>
+  );
+}
+
 function SectionTitle({
   icon: Icon,
   title
 }: {
-  icon: typeof MapPinned;
+  icon: LucideIcon;
   title: string;
 }) {
   return (
