@@ -227,12 +227,14 @@ async function ensureStoreItem({
   name,
   slug,
   description,
+  imageUrl,
   basePriceCents
 }: {
   categoryId: number;
   name: string;
   slug: string;
   description: string;
+  imageUrl: string;
   basePriceCents: number;
 }) {
   let [item] = await db
@@ -249,9 +251,24 @@ async function ensureStoreItem({
         name,
         slug,
         description,
+        imageUrl,
         basePriceCents,
         active: true
       })
+      .returning();
+  } else {
+    [item] = await db
+      .update(storeItems)
+      .set({
+        categoryId,
+        name,
+        description,
+        imageUrl,
+        basePriceCents,
+        active: true,
+        updatedAt: new Date()
+      })
+      .where(eq(storeItems.id, item.id))
       .returning();
   }
 
@@ -281,6 +298,7 @@ async function ensureStationStoreCatalog() {
       name: 'Kettle Chips',
       slug: 'kettle-chips',
       description: 'Sea salt kettle chips for a quick road snack.',
+      imageUrl: '/store-items/kettle-chips.svg',
       basePriceCents: 279
     },
     {
@@ -288,6 +306,7 @@ async function ensureStationStoreCatalog() {
       name: 'Protein Bar',
       slug: 'protein-bar',
       description: 'Chocolate peanut butter protein bar.',
+      imageUrl: '/store-items/protein-bar.svg',
       basePriceCents: 349
     },
     {
@@ -295,6 +314,7 @@ async function ensureStationStoreCatalog() {
       name: 'Cold Brew Coffee',
       slug: 'cold-brew-coffee',
       description: 'Ready-to-drink cold brew over ice.',
+      imageUrl: '/store-items/cold-brew-coffee.svg',
       basePriceCents: 429
     },
     {
@@ -302,6 +322,7 @@ async function ensureStationStoreCatalog() {
       name: 'Sparkling Water',
       slug: 'sparkling-water',
       description: 'Lime sparkling water, chilled and ready.',
+      imageUrl: '/store-items/sparkling-water.svg',
       basePriceCents: 219
     },
     {
@@ -309,6 +330,7 @@ async function ensureStationStoreCatalog() {
       name: 'Windshield Wipes',
       slug: 'windshield-wipes',
       description: 'Travel pack for quick glass cleanup.',
+      imageUrl: '/store-items/windshield-wipes.svg',
       basePriceCents: 599
     },
     {
@@ -316,6 +338,7 @@ async function ensureStationStoreCatalog() {
       name: 'Phone Charger',
       slug: 'phone-charger',
       description: 'Universal USB-C charging cable.',
+      imageUrl: '/store-items/phone-charger.svg',
       basePriceCents: 1299
     }
   ];
