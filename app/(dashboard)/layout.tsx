@@ -126,7 +126,7 @@ function Header() {
         <Link href="/" className="flex min-w-0 shrink-0 items-center">
           <div className="relative h-[42px] w-[170px] shrink-0 overflow-hidden sm:hidden">
             <Image
-              src="/logos/gasbite-mobile-logo-v3.svg"
+              src="/logos/gasbite-mobile-logo-v4.svg"
               alt="GasBite logo"
               fill
               priority

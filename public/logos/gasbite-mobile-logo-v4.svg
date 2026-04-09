@@ -1,0 +1,18 @@
+<svg width="260" height="72" viewBox="0 0 260 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gasOrangeV4" x1="8" y1="16" x2="104" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFB200"/>
+      <stop offset="0.54" stop-color="#FF7A00"/>
+      <stop offset="1" stop-color="#F25A00"/>
+    </linearGradient>
+    <linearGradient id="biteBlueV4" x1="96" y1="12" x2="226" y2="62" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#37B8FF"/>
+      <stop offset="0.55" stop-color="#157BFF"/>
+      <stop offset="1" stop-color="#1757D8"/>
+    </linearGradient>
+  </defs>
+  <text x="8" y="54" fill="url(#gasOrangeV4)" font-family="Arial Black, Arial, sans-serif" font-size="54" font-weight="900" font-style="italic" letter-spacing="-0.06em">Gas</text>
+  <text x="96" y="54" fill="url(#biteBlueV4)" font-family="Arial Black, Arial, sans-serif" font-size="54" font-weight="900" font-style="italic" letter-spacing="-0.06em">Bite</text>
+  <path d="M154.5 8C157.5 3.7 163.5 3.7 166.5 8L171.4 15C175.4 20.8 171.2 28.7 164.1 28.7H156.9C149.8 28.7 145.6 20.8 149.6 15L154.5 8Z" fill="#FFCC17"/>
+  <path d="M157.8 11.4C159.8 8.6 163.7 8.6 165.7 11.4L168.8 15.9C171.4 19.6 168.7 24.7 164.1 24.7H159.4C154.8 24.7 152.1 19.6 154.7 15.9L157.8 11.4Z" fill="#FF8A00"/>
+</svg>
