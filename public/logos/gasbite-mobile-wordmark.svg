@@ -1,6 +1,6 @@
 <svg width="340" height="92" viewBox="0 0 340 92" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="gasbiteOrange" x1="44" y1="18" x2="155" y2="74" gradientUnits="userSpaceOnUse">
+    <linearGradient id="gasbiteOrange" x1="10" y1="18" x2="122" y2="74" gradientUnits="userSpaceOnUse">
       <stop stop-color="#FF9A1F"/>
       <stop offset="0.52" stop-color="#FF6A00"/>
       <stop offset="1" stop-color="#F24C00"/>
@@ -17,8 +17,7 @@
     </filter>
   </defs>
   <g filter="url(#markShadow)">
-    <path d="M30 66V20H54V45L68 20H93L77 48L95 66H67L54 52V66H30Z" fill="#173D9B"/>
-    <text x="105" y="64" fill="url(#gasbiteOrange)" font-family="Arial Black, Arial, sans-serif" font-size="58" font-weight="900" font-style="italic" letter-spacing="-0.06em">Gas</text>
-    <text x="202" y="64" fill="#173D9B" font-family="Arial Black, Arial, sans-serif" font-size="58" font-weight="900" font-style="italic" letter-spacing="-0.06em">Bite</text>
+    <text x="12" y="64" fill="url(#gasbiteOrange)" font-family="Arial Black, Arial, sans-serif" font-size="58" font-weight="900" font-style="italic" letter-spacing="-0.06em">Gas</text>
+    <text x="109" y="64" fill="#173D9B" font-family="Arial Black, Arial, sans-serif" font-size="58" font-weight="900" font-style="italic" letter-spacing="-0.06em">Bite</text>
   </g>
 </svg>
