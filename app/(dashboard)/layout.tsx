@@ -122,17 +122,20 @@ function Header() {
 
   return (
     <header className="sticky top-0 z-40 px-3 pt-4 sm:px-4 lg:px-6">
-      <div className="mx-auto flex h-[62px] max-w-7xl items-center justify-between rounded-full border border-white/60 bg-white/75 px-3 shadow-[0_18px_60px_-28px_rgba(15,23,42,0.55)] backdrop-blur-xl sm:h-[72px] sm:px-5 lg:h-[76px] lg:px-6">
+      <div className="mx-auto flex h-[62px] max-w-7xl items-center justify-between rounded-full border border-white/60 bg-white/75 px-3 shadow-[0_18px_60px_-28px_rgba(15,23,42,0.55)] backdrop-blur-xl sm:h-[74px] sm:px-5 lg:h-[80px] lg:px-6">
         <Link href="/" className="flex min-w-0 shrink-0 items-center">
-          <div className="relative h-[42px] w-[170px] shrink-0 overflow-hidden sm:h-[56px] sm:w-[320px] lg:h-[68px] lg:w-[430px]">
+          <div className="relative h-[48px] w-[210px] shrink-0 overflow-hidden sm:h-[60px] sm:w-[360px] lg:h-[72px] lg:w-[500px]">
             <Image
               src="/logos/gasbite-logo-prod.png"
               alt="GasBite logo"
               fill
               priority
-              className="object-contain object-left lg:mix-blend-multiply"
-              sizes="(max-width: 640px) 170px, (max-width: 1024px) 320px, 430px"
-              style={{ objectPosition: 'left center' }}
+              className="object-contain object-left mix-blend-multiply opacity-95"
+              sizes="(max-width: 640px) 210px, (max-width: 1024px) 360px, 500px"
+              style={{
+                objectPosition: 'left center',
+                filter: 'brightness(1.01) contrast(1.02)'
+              }}
             />
           </div>
         </Link>
