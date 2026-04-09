@@ -5,7 +5,10 @@ import {
   ServiceSlotStatus,
   stationFuelPrices,
   stationHours,
+  stationStoreItems,
   stations,
+  storeCategories,
+  storeItems,
   teams,
   teamMembers,
   users
@@ -189,6 +192,172 @@ async function ensureDemoStation({
   }
 }
 
+async function ensureStoreCategory({
+  name,
+  slug,
+  sortOrder
+}: {
+  name: string;
+  slug: string;
+  sortOrder: number;
+}) {
+  let [category] = await db
+    .select()
+    .from(storeCategories)
+    .where(eq(storeCategories.slug, slug))
+    .limit(1);
+
+  if (!category) {
+    [category] = await db
+      .insert(storeCategories)
+      .values({
+        name,
+        slug,
+        sortOrder,
+        active: true
+      })
+      .returning();
+  }
+
+  return category;
+}
+
+async function ensureStoreItem({
+  categoryId,
+  name,
+  slug,
+  description,
+  basePriceCents
+}: {
+  categoryId: number;
+  name: string;
+  slug: string;
+  description: string;
+  basePriceCents: number;
+}) {
+  let [item] = await db
+    .select()
+    .from(storeItems)
+    .where(eq(storeItems.slug, slug))
+    .limit(1);
+
+  if (!item) {
+    [item] = await db
+      .insert(storeItems)
+      .values({
+        categoryId,
+        name,
+        slug,
+        description,
+        basePriceCents,
+        active: true
+      })
+      .returning();
+  }
+
+  return item;
+}
+
+async function ensureStationStoreCatalog() {
+  const snackCategory = await ensureStoreCategory({
+    name: 'Snacks',
+    slug: 'snacks',
+    sortOrder: 1
+  });
+  const drinksCategory = await ensureStoreCategory({
+    name: 'Drinks',
+    slug: 'drinks',
+    sortOrder: 2
+  });
+  const essentialsCategory = await ensureStoreCategory({
+    name: 'Essentials',
+    slug: 'essentials',
+    sortOrder: 3
+  });
+
+  const catalog = [
+    {
+      categoryId: snackCategory.id,
+      name: 'Kettle Chips',
+      slug: 'kettle-chips',
+      description: 'Sea salt kettle chips for a quick road snack.',
+      basePriceCents: 279
+    },
+    {
+      categoryId: snackCategory.id,
+      name: 'Protein Bar',
+      slug: 'protein-bar',
+      description: 'Chocolate peanut butter protein bar.',
+      basePriceCents: 349
+    },
+    {
+      categoryId: drinksCategory.id,
+      name: 'Cold Brew Coffee',
+      slug: 'cold-brew-coffee',
+      description: 'Ready-to-drink cold brew over ice.',
+      basePriceCents: 429
+    },
+    {
+      categoryId: drinksCategory.id,
+      name: 'Sparkling Water',
+      slug: 'sparkling-water',
+      description: 'Lime sparkling water, chilled and ready.',
+      basePriceCents: 219
+    },
+    {
+      categoryId: essentialsCategory.id,
+      name: 'Windshield Wipes',
+      slug: 'windshield-wipes',
+      description: 'Travel pack for quick glass cleanup.',
+      basePriceCents: 599
+    },
+    {
+      categoryId: essentialsCategory.id,
+      name: 'Phone Charger',
+      slug: 'phone-charger',
+      description: 'Universal USB-C charging cable.',
+      basePriceCents: 1299
+    }
+  ];
+
+  const stationsResult = await db
+    .select({
+      id: stations.id,
+      name: stations.name
+    })
+    .from(stations)
+    .where(eq(stations.active, true));
+
+  for (const station of stationsResult) {
+    for (const catalogItem of catalog) {
+      const item = await ensureStoreItem(catalogItem);
+
+      const [existingStationItem] = await db
+        .select()
+        .from(stationStoreItems)
+        .where(
+          and(
+            eq(stationStoreItems.stationId, station.id),
+            eq(stationStoreItems.storeItemId, item.id)
+          )
+        )
+        .limit(1);
+
+      if (!existingStationItem) {
+        await db.insert(stationStoreItems).values({
+          stationId: station.id,
+          storeItemId: item.id,
+          priceCents: item.basePriceCents,
+          active: true,
+          inventoryCount: 24
+        });
+      }
+    }
+
+    console.log(`${station.name} store catalog ensured.`);
+  }
+}
+
 async function seed() {
   const email = 'test@test.com';
   const password = 'Fuelup2026!';
@@ -271,6 +440,8 @@ async function seed() {
     latitude: '38.6857',
     longitude: '-121.0822'
   });
+
+  await ensureStationStoreCatalog();
 
   if (shouldSkipStripeSeed()) {
     console.log(

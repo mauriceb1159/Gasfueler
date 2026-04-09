@@ -93,14 +93,14 @@ function Header() {
     <header className="sticky top-0 z-40">
       <div className="mx-auto mt-4 flex max-w-7xl items-center justify-between rounded-full border border-white/60 bg-white/75 px-3 py-3 shadow-[0_18px_60px_-28px_rgba(15,23,42,0.55)] backdrop-blur-xl sm:px-6 lg:px-8">
         <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <div className="relative h-12 w-[220px] shrink-0 overflow-hidden sm:hidden">
+          <div className="relative h-12 w-[205px] shrink-0 overflow-hidden sm:hidden">
             <Image
               src="/logos/gasbite-mobile-wordmark-v2.svg"
               alt="GasBite logo"
               fill
               className="object-contain object-left"
               priority
-              sizes="220px"
+              sizes="205px"
             />
           </div>
           <div className="relative hidden h-14 w-[410px] max-w-[68vw] shrink-0 overflow-hidden sm:block lg:h-[64px] lg:w-[500px] lg:max-w-[58vw]">
@@ -118,7 +118,7 @@ function Header() {
         <div className="ml-3 flex shrink-0 items-center space-x-3 sm:space-x-4">
           <Link
             href="/book"
-            className="hidden text-sm font-medium text-gray-700 hover:text-gray-900 sm:inline"
+            className="text-xs font-medium text-gray-700 hover:text-gray-900 sm:text-sm"
           >
             Book
           </Link>

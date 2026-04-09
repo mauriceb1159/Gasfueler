@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Clock3, ShoppingBag, Store } from 'lucide-react';
+import { Clock3, ShoppingCart, Store } from 'lucide-react';
 
 import { submitStoreOrder } from './actions';
 import { Button } from '@/components/ui/button';
@@ -298,7 +298,14 @@ export function MarketForm({
                                         {formatCurrency(item.priceCents * quantity)}
                                       </span>
                                     ) : (
-                                      <span className="text-sm text-slate-400">Add to bag</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => updateStoreItemQuantity(item.id, 1)}
+                                        className="inline-flex items-center gap-1 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-sm font-medium text-orange-700 transition hover:bg-orange-100"
+                                      >
+                                        <ShoppingCart className="h-3.5 w-3.5" />
+                                        Add to cart
+                                      </button>
                                     )}
                                   </div>
                                 </div>
