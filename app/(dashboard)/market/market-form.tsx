@@ -191,6 +191,39 @@ export function MarketForm({
   }, 0);
 
   useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent('gasbite-market-cart:update', {
+        detail: {
+          count: selectedItemCount,
+          subtotal,
+          stationName: selectedStation?.name ?? null,
+          items: cartItems.map((item) => ({
+            id: item.id,
+            name: item.storeItem.name,
+            quantity: selectedStoreItems[item.id] ?? 0,
+            subtotal: item.priceCents * (selectedStoreItems[item.id] ?? 0),
+          })),
+        },
+      })
+    );
+  }, [cartItems, selectedItemCount, selectedStation?.name, selectedStoreItems, subtotal]);
+
+  useEffect(() => {
+    return () => {
+      window.dispatchEvent(
+        new CustomEvent('gasbite-market-cart:update', {
+          detail: {
+            count: 0,
+            subtotal: 0,
+            stationName: null,
+            items: [],
+          },
+        })
+      );
+    };
+  }, []);
+
+  useEffect(() => {
     const visibleStoreItemIds = new Set(selectedStationStoreItems.map((item) => item.id));
 
     setSelectedStoreItems((currentItems) => {
@@ -234,44 +267,43 @@ export function MarketForm({
         </div>
       ) : null}
 
-      <form action={submitStoreOrder} className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6">
+      <form action={submitStoreOrder} className="space-y-6">
         <input type="hidden" name="stationId" value={selectedStation?.id ?? ''} />
         <input type="hidden" name="selectedStoreItems" value={selectedStoreItemsPayload} />
 
-        <div className="space-y-6">
-          <section className="space-y-4">
-            <SectionTitle icon={Store} title="Choose your pickup station" />
-            <div className="grid gap-3 md:grid-cols-2">
-              {stations.map((station) => (
-                <button
-                  key={station.id}
-                  type="button"
-                  onClick={() => setSelectedStationId(station.id)}
-                  className={`rounded-[1.35rem] border p-4 text-left transition ${
-                    selectedStationId === station.id
-                      ? 'border-slate-950 bg-white shadow-sm'
-                      : 'border-slate-200 bg-slate-50/70 hover:border-orange-200 hover:bg-white'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-slate-950">{station.name}</p>
-                      <p className="mt-1 text-sm leading-6 text-slate-600">
-                        {station.address}, {station.city}, {station.state} {station.zip}
-                      </p>
-                    </div>
-                    <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
-                      {station.stationStoreItems.length} items
-                    </span>
+        <section className="space-y-4">
+          <SectionTitle icon={Store} title="Choose your pickup station" />
+          <div className="grid gap-3 md:grid-cols-2">
+            {stations.map((station) => (
+              <button
+                key={station.id}
+                type="button"
+                onClick={() => setSelectedStationId(station.id)}
+                className={`rounded-[1.35rem] border p-4 text-left transition ${
+                  selectedStationId === station.id
+                    ? 'border-slate-950 bg-white shadow-sm'
+                    : 'border-slate-200 bg-slate-50/70 hover:border-orange-200 hover:bg-white'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-950">{station.name}</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      {station.address}, {station.city}, {station.state} {station.zip}
+                    </p>
                   </div>
-                </button>
-              ))}
-            </div>
-          </section>
+                  <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
+                    {station.stationStoreItems.length} items
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
 
-          <section className="space-y-4">
-            <SectionTitle icon={ShoppingCart} title="Build your cart" />
-            <div className="space-y-5 rounded-[1.5rem] border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+        <section className="space-y-4">
+          <SectionTitle icon={ShoppingCart} title="Build your cart" />
+          <div className="space-y-5 rounded-[1.5rem] border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
               <div className="overflow-hidden rounded-[1.5rem] border border-white/80 bg-white shadow-sm">
                 <div className="bg-[radial-gradient(circle_at_top_left,_rgba(251,146,60,0.26),_transparent_42%),linear-gradient(135deg,#fff7ed_0%,#ffffff_58%,#fffbeb_100%)] p-5">
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -443,137 +475,74 @@ export function MarketForm({
                 </div>
               )}
             </div>
-          </section>
+        </section>
 
-          <section className="space-y-4">
-            <SectionTitle icon={Clock3} title="Pickup details" />
-            <div className="grid gap-3 md:grid-cols-3">
-              <PickupModeCard
-                title="ASAP"
-                description="Prep it right away."
-                selected={pickupMode === 'asap'}
-                onSelect={() => setPickupMode('asap')}
-              />
-              <PickupModeCard
-                title="Scheduled"
-                description="Choose a pickup window."
-                selected={pickupMode === 'scheduled'}
-                onSelect={() => setPickupMode('scheduled')}
-              />
-              <PickupModeCard
-                title="On arrival"
-                description="We start when you pull in."
-                selected={pickupMode === 'on_arrival'}
-                onSelect={() => setPickupMode('on_arrival')}
-              />
-            </div>
-            <input type="hidden" name="pickupMode" value={pickupMode} />
-
-            {pickupMode === 'scheduled' ? (
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Pickup window start" htmlFor="pickupWindowStart">
-                  <Input
-                    id="pickupWindowStart"
-                    name="pickupWindowStart"
-                    type="datetime-local"
-                    value={pickupWindowStart}
-                    onChange={(event) => setPickupWindowStart(event.target.value)}
-                  />
-                </Field>
-                <Field label="Pickup window end" htmlFor="pickupWindowEnd">
-                  <Input
-                    id="pickupWindowEnd"
-                    name="pickupWindowEnd"
-                    type="datetime-local"
-                    value={pickupWindowEnd}
-                    onChange={(event) => setPickupWindowEnd(event.target.value)}
-                  />
-                </Field>
-              </div>
-            ) : null}
-
-            <Field label="Pickup notes" htmlFor="customerNotes">
-              <textarea
-                id="customerNotes"
-                name="customerNotes"
-                rows={4}
-                value={customerNotes}
-                onChange={(event) => setCustomerNotes(event.target.value)}
-                className="flex w-full rounded-3xl border border-input bg-transparent px-4 py-3 text-base shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                placeholder="Arrival notes, curbside details, or anything the store team should know"
-              />
-            </Field>
-          </section>
-
-          <Button
-            type="submit"
-            className="h-12 w-full rounded-full bg-slate-950 px-6 text-white hover:bg-slate-800 sm:w-auto"
-          >
-            Place store order
-          </Button>
-        </div>
-
-        <aside className="mt-6 lg:mt-0">
-          <div className="rounded-[1.5rem] border border-orange-200 bg-orange-50 p-4 text-sm text-slate-700 lg:sticky lg:top-6">
-            <p className="font-semibold text-slate-950">Your cart</p>
-            <p className="mt-2">
-              {selectedStation
-                ? `Pickup will be coordinated through ${selectedStation.name}.`
-                : 'Choose a station to start your order.'}
-            </p>
-            <div className="mt-4 rounded-2xl border border-white/70 bg-white/80 p-4">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-600">Pickup mode</span>
-                <span className="font-semibold text-slate-950">
-                  {formatPickupMode(pickupMode)}
-                </span>
-              </div>
-              <div className="mt-2 flex items-center justify-between gap-4">
-                <span className="text-slate-600">Items</span>
-                <span className="font-semibold text-slate-950">{selectedItemCount}</span>
-              </div>
-              <div className="mt-2 flex items-center justify-between gap-4">
-                <span className="text-slate-600">Subtotal</span>
-                <span className="font-semibold text-slate-950">
-                  {formatCurrency(subtotal)}
-                </span>
-              </div>
-              <div className="mt-3 border-t border-orange-100 pt-3">
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-base font-semibold text-slate-950">Estimated total</span>
-                  <span className="text-base font-semibold text-slate-950">
-                    {formatCurrency(subtotal)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {selectedItemCount > 0 ? (
-              <div className="mt-4 rounded-2xl border border-white/70 bg-white/80 p-4">
-                <p className="text-sm font-semibold text-slate-950">In your cart</p>
-                <div className="mt-3 space-y-2">
-                  {cartItems.map((item) => {
-                    const quantity = selectedStoreItems[item.id] ?? 0;
-
-                    return (
-                      <div
-                        key={item.id}
-                        className="flex items-center justify-between gap-4 text-sm"
-                      >
-                        <span className="text-slate-600">
-                          {item.storeItem.name} x{quantity}
-                        </span>
-                        <span className="font-medium text-slate-950">
-                          {formatCurrency(item.priceCents * quantity)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : null}
+        <section className="space-y-4">
+          <SectionTitle icon={Clock3} title="Pickup details" />
+          <div className="grid gap-3 md:grid-cols-3">
+            <PickupModeCard
+              title="ASAP"
+              description="Prep it right away."
+              selected={pickupMode === 'asap'}
+              onSelect={() => setPickupMode('asap')}
+            />
+            <PickupModeCard
+              title="Scheduled"
+              description="Choose a pickup window."
+              selected={pickupMode === 'scheduled'}
+              onSelect={() => setPickupMode('scheduled')}
+            />
+            <PickupModeCard
+              title="On arrival"
+              description="We start when you pull in."
+              selected={pickupMode === 'on_arrival'}
+              onSelect={() => setPickupMode('on_arrival')}
+            />
           </div>
-        </aside>
+          <input type="hidden" name="pickupMode" value={pickupMode} />
+
+          {pickupMode === 'scheduled' ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Pickup window start" htmlFor="pickupWindowStart">
+                <Input
+                  id="pickupWindowStart"
+                  name="pickupWindowStart"
+                  type="datetime-local"
+                  value={pickupWindowStart}
+                  onChange={(event) => setPickupWindowStart(event.target.value)}
+                />
+              </Field>
+              <Field label="Pickup window end" htmlFor="pickupWindowEnd">
+                <Input
+                  id="pickupWindowEnd"
+                  name="pickupWindowEnd"
+                  type="datetime-local"
+                  value={pickupWindowEnd}
+                  onChange={(event) => setPickupWindowEnd(event.target.value)}
+                />
+              </Field>
+            </div>
+          ) : null}
+
+          <Field label="Pickup notes" htmlFor="customerNotes">
+            <textarea
+              id="customerNotes"
+              name="customerNotes"
+              rows={4}
+              value={customerNotes}
+              onChange={(event) => setCustomerNotes(event.target.value)}
+              className="flex w-full rounded-3xl border border-input bg-transparent px-4 py-3 text-base shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              placeholder="Arrival notes, curbside details, or anything the store team should know"
+            />
+          </Field>
+        </section>
+
+        <Button
+          type="submit"
+          className="h-12 w-full rounded-full bg-slate-950 px-6 text-white hover:bg-slate-800 sm:w-auto"
+        >
+          Place store order
+        </Button>
       </form>
 
       {recentOrders.length > 0 ? (
