@@ -432,7 +432,11 @@ export function BookingForm({
                         <span className="rounded-full bg-white px-3 py-1 font-medium text-slate-700">
                           From {formatCentsPerGallon(getLowestFuelPrice(station.fuelPrices))}
                         </span>
-                      ) : null}
+                      ) : (
+                        <span className="rounded-full bg-white px-3 py-1 font-medium text-slate-500">
+                          Price unavailable
+                        </span>
+                      )}
                     </div>
                   </button>
                 ))}
@@ -563,6 +567,13 @@ export function BookingForm({
                           <span className="mt-0.5 block text-[11px] opacity-80">
                             {formatCentsPerGallon(price.priceCents)}
                           </span>
+                          <span
+                            className="mt-0.5 block text-[10px] uppercase tracking-[0.14em] opacity-70"
+                            title={formatFuelPriceTooltip(price.source)}
+                            aria-label={formatFuelPriceTooltip(price.source)}
+                          >
+                            {formatFuelPriceMarker(price.source)}
+                          </span>
                         </button>
                       ))}
                       </div>
@@ -572,7 +583,7 @@ export function BookingForm({
                     </div>
                 ) : (
                   <p className="mt-2 text-sm text-slate-600">
-                    No current price has been loaded for this partner station yet.
+                    Price unavailable for this partner station right now.
                   </p>
                 )}
               </div>
@@ -1080,8 +1091,32 @@ function formatCentsPerGallon(cents: number) {
   return `${formatCurrency(cents)}/gal`;
 }
 
+function formatFuelPriceMarker(source: string) {
+  if (source === 'manual') {
+    return '*';
+  }
+
+  if (source === 'regional_eia') {
+    return '~';
+  }
+
+  return '•';
+}
+
 function formatEstimate(cents: number | null) {
   return cents === null ? 'TBD' : formatCurrency(cents);
+}
+
+function formatFuelPriceTooltip(source: string) {
+  if (source === 'manual') {
+    return 'Station-set price';
+  }
+
+  if (source === 'regional_eia') {
+    return 'Regional fallback price';
+  }
+
+  return 'Price source';
 }
 
 function getServiceFeeForVehicleClass(vehicleClass: string) {

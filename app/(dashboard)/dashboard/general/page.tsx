@@ -215,9 +215,11 @@ function StationFuelPricing() {
                         <span
                           key={`${station.id}-${price.fuelGrade}`}
                           className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700"
+                          title={formatSourceTooltip(price.source)}
+                          aria-label={formatSourceTooltip(price.source)}
                         >
-                          {formatFuelGrade(price.fuelGrade)} {formatCurrency(price.priceCents)}/gal
-                          {price.source !== 'manual' ? ` · ${formatSourceLabel(price.source)}` : ''}
+                          {formatFuelGrade(price.fuelGrade)} {formatCurrency(price.priceCents)}/gal{' '}
+                          {formatSourceMarker(price.source)}
                         </span>
                       ))
                     ) : (
@@ -294,12 +296,28 @@ function formatCurrency(cents: number) {
   }).format(cents / 100);
 }
 
-function formatSourceLabel(source: string) {
-  if (source === 'regional_eia') {
-    return 'regional avg';
+function formatSourceMarker(source: string) {
+  if (source === 'manual') {
+    return '*';
   }
 
-  return source.replace(/_/g, ' ');
+  if (source === 'regional_eia') {
+    return '~';
+  }
+
+  return '.';
+}
+
+function formatSourceTooltip(source: string) {
+  if (source === 'manual') {
+    return 'Station-set price';
+  }
+
+  if (source === 'regional_eia') {
+    return 'Regional fallback price';
+  }
+
+  return 'Price source';
 }
 
 export default function GeneralPage() {
