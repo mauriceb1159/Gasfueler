@@ -5,14 +5,14 @@
       <stop offset="0.54" stop-color="#FF7A00"/>
       <stop offset="1" stop-color="#F25A00"/>
     </linearGradient>
-    <linearGradient id="biteBlue" x1="112" y1="12" x2="222" y2="62" gradientUnits="userSpaceOnUse">
+    <linearGradient id="biteBlue" x1="96" y1="12" x2="226" y2="62" gradientUnits="userSpaceOnUse">
       <stop stop-color="#37B8FF"/>
       <stop offset="0.55" stop-color="#157BFF"/>
       <stop offset="1" stop-color="#1757D8"/>
     </linearGradient>
   </defs>
   <text x="8" y="54" fill="url(#gasOrange)" font-family="Arial Black, Arial, sans-serif" font-size="54" font-weight="900" font-style="italic" letter-spacing="-0.06em">Gas</text>
-  <text x="106" y="54" fill="url(#biteBlue)" font-family="Arial Black, Arial, sans-serif" font-size="54" font-weight="900" font-style="italic" letter-spacing="-0.06em">Bite</text>
-  <path d="M177.5 8C180.5 3.7 186.5 3.7 189.5 8L194.4 15C198.4 20.8 194.2 28.7 187.1 28.7H179.9C172.8 28.7 168.6 20.8 172.6 15L177.5 8Z" fill="#FFCC17"/>
-  <path d="M180.8 11.4C182.8 8.6 186.7 8.6 188.7 11.4L191.8 15.9C194.4 19.6 191.7 24.7 187.1 24.7H182.4C177.8 24.7 175.1 19.6 177.7 15.9L180.8 11.4Z" fill="#FF8A00"/>
+  <text x="96" y="54" fill="url(#biteBlue)" font-family="Arial Black, Arial, sans-serif" font-size="54" font-weight="900" font-style="italic" letter-spacing="-0.06em">Bite</text>
+  <path d="M154.5 8C157.5 3.7 163.5 3.7 166.5 8L171.4 15C175.4 20.8 171.2 28.7 164.1 28.7H156.9C149.8 28.7 145.6 20.8 149.6 15L154.5 8Z" fill="#FFCC17"/>
+  <path d="M157.8 11.4C159.8 8.6 163.7 8.6 165.7 11.4L168.8 15.9C171.4 19.6 168.7 24.7 164.1 24.7H159.4C154.8 24.7 152.1 19.6 154.7 15.9L157.8 11.4Z" fill="#FF8A00"/>
 </svg>

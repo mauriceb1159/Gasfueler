@@ -8,6 +8,7 @@ import {
   stationFuelPrices
 } from '@/lib/db/schema';
 import { getRegionalFuelPricesForState } from '@/lib/fuel-pricing/eia';
+import { getGoogleFuelPricesForStation } from '@/lib/fuel-pricing/google';
 
 type EffectiveFuelPrice = Pick<
   StationFuelPrice,
@@ -28,7 +29,7 @@ function dedupeFuelGrades(prices: EffectiveFuelPrice[]) {
 }
 
 export async function getEffectiveFuelPricesForStation(
-  station: Pick<Station, 'id' | 'state'>
+  station: Pick<Station, 'id' | 'name' | 'address' | 'city' | 'state' | 'zip'>
 ) {
   const manualPrices = dedupeFuelGrades(
     await db
@@ -45,13 +46,12 @@ export async function getEffectiveFuelPricesForStation(
       .orderBy(desc(stationFuelPrices.recordedAt))
   );
 
-  const regionalPrices = await getRegionalFuelPricesForState(station.state);
+  const googlePrices = await getGoogleFuelPricesForStation(station);
   const manualGrades = new Set(manualPrices.map((price) => price.fuelGrade));
-
-  const fallbackPrices = regionalPrices
+  const googleFallbackPrices = googlePrices
     .filter((price) => !manualGrades.has(price.fuelGrade))
     .map((price, index) => ({
-      id: -(station.id * 100 + index + 1),
+      id: -(station.id * 1_000 + index + 1),
       stationId: station.id,
       fuelGrade: price.fuelGrade,
       priceCents: price.priceCents,
@@ -59,11 +59,28 @@ export async function getEffectiveFuelPricesForStation(
       recordedAt: price.recordedAt
     }));
 
-  return [...manualPrices, ...fallbackPrices];
+  const regionalPrices = await getRegionalFuelPricesForState(station.state);
+  const takenGrades = new Set([
+    ...manualPrices.map((price) => price.fuelGrade),
+    ...googleFallbackPrices.map((price) => price.fuelGrade)
+  ]);
+
+  const fallbackPrices = regionalPrices
+    .filter((price) => !takenGrades.has(price.fuelGrade))
+    .map((price, index) => ({
+      id: -(station.id * 10_000 + index + 1),
+      stationId: station.id,
+      fuelGrade: price.fuelGrade,
+      priceCents: price.priceCents,
+      source: price.source,
+      recordedAt: price.recordedAt
+    }));
+
+  return [...manualPrices, ...googleFallbackPrices, ...fallbackPrices];
 }
 
 export async function getEffectiveFuelPriceForStationGrade(
-  station: Pick<Station, 'id' | 'state'>,
+  station: Pick<Station, 'id' | 'name' | 'address' | 'city' | 'state' | 'zip'>,
   fuelGrade: string
 ) {
   const prices = await getEffectiveFuelPricesForStation(station);

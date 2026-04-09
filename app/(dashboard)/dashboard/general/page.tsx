@@ -122,9 +122,9 @@ function StationFuelPricing() {
       </CardHeader>
       <CardContent className="space-y-6">
         <p className="text-sm text-muted-foreground">
-          Enter manual prices for your partner stations. These values override
-          the regional fallback feed used in booking, so station-specific
-          updates always win when both are available.
+          Enter the partner-station prices Gasbite should use for booking
+          estimates. These values override the regional fallback feed, so
+          station-specific updates always win when both are available.
         </p>
 
         <form className="space-y-4" action={formAction}>
@@ -197,7 +197,7 @@ function StationFuelPricing() {
 
         <div className="space-y-4">
           <p className="text-sm font-medium text-gray-900">
-            Current partner-station prices
+            Active partner-station estimate prices
           </p>
           {(stationSummaries ?? []).length > 0 ? (
             <div className="space-y-3">
@@ -301,6 +301,10 @@ function formatSourceMarker(source: string) {
     return '*';
   }
 
+  if (source === 'google_places') {
+    return 'G';
+  }
+
   if (source === 'regional_eia') {
     return '~';
   }
@@ -311,6 +315,10 @@ function formatSourceMarker(source: string) {
 function formatSourceTooltip(source: string) {
   if (source === 'manual') {
     return 'Station-set price';
+  }
+
+  if (source === 'google_places') {
+    return 'Google fuel price';
   }
 
   if (source === 'regional_eia') {

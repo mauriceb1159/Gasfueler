@@ -134,17 +134,17 @@ function Header() {
               sizes="170px"
             />
           </div>
-          <div className="relative hidden h-[60px] w-[360px] shrink-0 overflow-hidden sm:block lg:h-[72px] lg:w-[500px]">
+          <div className="relative hidden h-[62px] w-[390px] shrink-0 overflow-hidden sm:block lg:h-[76px] lg:w-[560px]">
             <Image
               src="/logos/gasbite-logo-prod.png"
               alt="GasBite logo"
               fill
               priority
-              className="object-contain object-left mix-blend-multiply opacity-95"
-              sizes="(max-width: 1024px) 360px, 500px"
+              className="object-contain object-left mix-blend-multiply opacity-90"
+              sizes="(max-width: 1024px) 390px, 560px"
               style={{
                 objectPosition: 'left center',
-                filter: 'brightness(1.01) contrast(1.02)'
+                filter: 'brightness(1.015) contrast(1.015) saturate(0.98)'
               }}
             />
           </div>

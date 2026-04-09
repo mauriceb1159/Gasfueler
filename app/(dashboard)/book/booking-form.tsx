@@ -648,11 +648,12 @@ export function BookingForm({
                       ) : null}
                       {station.fuelPrices.length > 0 ? (
                         <span className="rounded-full bg-white px-3 py-1 font-medium text-slate-700">
-                          From {formatCentsPerGallon(getLowestFuelPrice(station.fuelPrices))}
+                          Service pricing from{' '}
+                          {formatCentsPerGallon(getLowestFuelPrice(station.fuelPrices))}
                         </span>
                       ) : (
                         <span className="rounded-full bg-white px-3 py-1 font-medium text-slate-500">
-                          Price unavailable
+                          Estimate pricing unavailable
                         </span>
                       )}
                     </div>
@@ -765,7 +766,7 @@ export function BookingForm({
             {selectedStation ? (
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
                 <p className="text-sm font-semibold text-slate-950">
-                  Current station pricing
+                  Partner station pricing
                 </p>
                 {selectedStation.fuelPrices.length > 0 ? (
                     <div className="mt-3">
@@ -787,21 +788,22 @@ export function BookingForm({
                           </span>
                           <span
                             className="mt-0.5 block text-[10px] uppercase tracking-[0.14em] opacity-70"
-                            title={formatFuelPriceTooltip(price.source)}
-                            aria-label={formatFuelPriceTooltip(price.source)}
+                            title={formatBookingFuelPriceTooltip(price.source)}
+                            aria-label={formatBookingFuelPriceTooltip(price.source)}
                           >
-                            {formatFuelPriceMarker(price.source)}
+                            {formatBookingFuelPriceMarker(price.source)}
                           </span>
                         </button>
                       ))}
                       </div>
                       <p className="mt-3 text-xs leading-5 text-slate-500">
-                        Tap a fuel grade here to update the estimate.
+                        Tap a fuel grade to update the booking estimate. These are
+                        Gasbite partner-station prices used for checkout planning.
                       </p>
                     </div>
                 ) : (
                   <p className="mt-2 text-sm text-slate-600">
-                    Price unavailable for this partner station right now.
+                    Pricing is unavailable for this partner station right now.
                   </p>
                 )}
               </div>
@@ -1000,11 +1002,11 @@ export function BookingForm({
           </p>
           <p className="mt-2">
             {selectedFuelPrice
-              ? `${formatFuelGrade(fuelGrade)} is currently ${formatCentsPerGallon(
+              ? `${formatFuelGrade(fuelGrade)} is estimated at ${formatCentsPerGallon(
                   selectedFuelPrice.priceCents
-                )} at ${selectedStation?.name}.`
+                )} for ${selectedStation?.name}.`
               : bookingMode === 'fuel_only'
-              ? 'Add a current station fuel price to unlock gallon-based estimates.'
+              ? 'Add a partner-station fuel price to unlock gallon-based estimates.'
               : 'Build the bag first, then confirm fuel details before checkout.'}
           </p>
           <div className="mt-4 rounded-2xl border border-white/70 bg-white/80 p-4">
@@ -1079,9 +1081,9 @@ export function BookingForm({
             </div>
           ) : null}
           <p className="mt-3 text-xs leading-5 text-slate-500">
-            Fuel pump prices already reflect the station&apos;s posted fuel taxes.
-            Any additional taxes on service fees or market items can be added
-            later at checkout once we finalize that flow.
+            These booking estimates use Gasbite partner-station pricing rather than
+            live Google Maps pump data. Taxes and final charge details can still be
+            finalized at checkout.
           </p>
         </div>
       </aside>
@@ -1261,6 +1263,38 @@ function formatCurrency(cents: number) {
 
 function formatCentsPerGallon(cents: number) {
   return `${formatCurrency(cents)}/gal`;
+}
+
+function formatBookingFuelPriceMarker(source: string) {
+  if (source === 'manual') {
+    return '*';
+  }
+
+  if (source === 'google_places') {
+    return 'G';
+  }
+
+  if (source === 'regional_eia') {
+    return '~';
+  }
+
+  return '.';
+}
+
+function formatBookingFuelPriceTooltip(source: string) {
+  if (source === 'manual') {
+    return 'Station-set price';
+  }
+
+  if (source === 'google_places') {
+    return 'Google fuel price';
+  }
+
+  if (source === 'regional_eia') {
+    return 'Regional fallback price';
+  }
+
+  return 'Price source';
 }
 
 function formatFuelPriceMarker(source: string) {
