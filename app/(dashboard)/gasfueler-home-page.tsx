@@ -150,16 +150,21 @@ export function GasFuelerHomePage({
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-12">
           <div className="max-w-2xl">
             <div className="relative h-[92px] w-[320px] overflow-hidden sm:h-[118px] sm:w-[430px] lg:-mt-6 lg:h-[152px] lg:w-[560px]">
+              <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-r from-orange-50/80 via-white/30 to-cyan-50/75 blur-xl" />
               <Image
                 src="/logos/gasbite-logo-shared.jpg"
                 alt="GasBite logo"
                 fill
                 priority
-                className="object-contain object-left mix-blend-darken opacity-90"
+                className="relative z-10 object-contain object-left mix-blend-darken opacity-90"
                 sizes="(max-width: 640px) 320px, (max-width: 1024px) 430px, 560px"
                 style={{
                   objectPosition: 'left center',
-                  filter: 'brightness(1.02) contrast(1.02) saturate(1)'
+                  filter: 'brightness(1.02) contrast(1.02) saturate(1)',
+                  WebkitMaskImage:
+                    'radial-gradient(ellipse 92% 88% at 42% 50%, black 64%, rgba(0,0,0,0.88) 76%, transparent 100%)',
+                  maskImage:
+                    'radial-gradient(ellipse 92% 88% at 42% 50%, black 64%, rgba(0,0,0,0.88) 76%, transparent 100%)'
                 }}
               />
             </div>
