@@ -201,7 +201,7 @@ export function MarketForm({
           </section>
 
           <section className="space-y-4">
-            <SectionTitle icon={ShoppingBag} title="Build your bag" />
+            <SectionTitle icon={ShoppingCart} title="Build your cart" />
             <div className="space-y-5 rounded-[1.5rem] border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
               <div className="rounded-[1.35rem] border border-white/80 bg-white p-5 shadow-sm">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
