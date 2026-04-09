@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import {
   ArrowRight,
@@ -148,12 +149,22 @@ export function GasFuelerHomePage({
 
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-12">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/80 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-600 shadow-sm backdrop-blur sm:px-4 sm:text-xs sm:tracking-[0.24em]">
-              <Sparkles className="h-4 w-4" />
-              GasBite
+            <div className="relative h-[76px] w-[280px] overflow-hidden sm:h-[96px] sm:w-[360px] lg:h-[112px] lg:w-[430px]">
+              <Image
+                src="/logos/gasbite-logo-shared.jpg"
+                alt="GasBite logo"
+                fill
+                priority
+                className="object-contain object-left mix-blend-multiply opacity-95"
+                sizes="(max-width: 640px) 280px, (max-width: 1024px) 360px, 430px"
+                style={{
+                  objectPosition: 'left center',
+                  filter: 'brightness(1.01) contrast(1.01) saturate(0.99)'
+                }}
+              />
             </div>
 
-            <h1 className="mt-6 text-4xl font-semibold tracking-[-0.05em] text-slate-950 sm:mt-8 sm:text-5xl lg:text-7xl">
+            <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-slate-950 sm:mt-6 sm:text-5xl lg:text-7xl">
               Full-service fueling,
               <span className="block bg-gradient-to-r from-orange-500 via-amber-500 to-cyan-500 bg-clip-text text-transparent">
                 rebuilt for modern drivers.
