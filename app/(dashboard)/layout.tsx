@@ -95,7 +95,7 @@ function Header() {
         <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
           <div className="relative h-12 w-[220px] shrink-0 overflow-hidden sm:hidden">
             <Image
-              src="/logos/gasbite-mobile-wordmark.svg"
+              src="/logos/gasbite-mobile-wordmark-v2.svg"
               alt="GasBite logo"
               fill
               className="object-contain object-left"
