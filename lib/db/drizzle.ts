@@ -16,6 +16,7 @@ export const client = postgres(process.env.POSTGRES_URL, {
   prepare: false,
   max: 1,
   idle_timeout: 20,
-  connect_timeout: 30
+  connect_timeout: 30,
+  ssl: 'require'
 });
 export const db = drizzle(client, { schema });
