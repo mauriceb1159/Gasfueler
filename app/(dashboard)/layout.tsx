@@ -33,12 +33,6 @@ function UserMenu() {
   if (!user) {
     return (
       <>
-        <Link
-          href="/pricing"
-          className="hidden text-sm font-medium text-gray-700 hover:text-gray-900 sm:inline"
-        >
-          Pricing
-        </Link>
         <Button
           asChild
           className="h-9 rounded-full px-3 text-xs sm:h-10 sm:px-4 sm:text-sm"
@@ -90,29 +84,28 @@ function UserMenu() {
 
 function Header() {
   return (
-    <header className="sticky top-0 z-40">
-      <div className="mx-auto mt-4 flex max-w-7xl items-center justify-between rounded-full border border-white/60 bg-white/75 px-3 py-3 shadow-[0_18px_60px_-28px_rgba(15,23,42,0.55)] backdrop-blur-xl sm:px-6 lg:px-8">
-        <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <div className="relative h-12 w-[220px] shrink-0 overflow-hidden sm:h-14 sm:w-[380px] sm:max-w-[66vw] lg:h-[64px] lg:w-[500px] lg:max-w-[58vw]">
+    <header className="sticky top-0 z-40 px-3 pt-4 sm:px-4 lg:px-6">
+      <div className="mx-auto flex h-[64px] max-w-7xl items-center justify-between rounded-full border border-white/60 bg-white/75 px-3 shadow-[0_18px_60px_-28px_rgba(15,23,42,0.55)] backdrop-blur-xl sm:h-[72px] sm:px-5 lg:px-6">
+        <Link href="/" className="flex min-w-0 shrink-0 items-center">
+          <div className="relative h-[48px] w-[220px] shrink-0 sm:h-[56px] sm:w-[300px] lg:h-[64px] lg:w-[380px]">
             <Image
               src="/logos/gasbite-logo-prod.png"
               alt="GasBite logo"
               fill
-              className="object-contain object-left"
               priority
-              sizes="(max-width: 640px) 220px, (max-width: 1024px) 380px, 500px"
-              style={{ objectPosition: 'left center' }}
+              className="object-contain object-left"
+              sizes="(max-width: 640px) 220px, (max-width: 1024px) 300px, 380px"
             />
           </div>
         </Link>
-        <div className="ml-3 flex shrink-0 items-center space-x-3 sm:space-x-4">
+        <div className="ml-3 flex shrink-0 items-center gap-2 sm:ml-6 sm:gap-4">
           <Link
             href="/book"
-            className="text-xs font-medium text-gray-700 hover:text-gray-900 sm:text-sm"
+            className="text-sm font-medium text-gray-700 transition-colors hover:text-gray-900"
           >
             Book
           </Link>
-          <Suspense fallback={<div className="h-9" />}>
+          <Suspense fallback={<div className="h-9 w-9" />}>
             <UserMenu />
           </Suspense>
         </div>
