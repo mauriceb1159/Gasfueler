@@ -1,0 +1,51 @@
+<svg width="700" height="170" viewBox="0 0 700 170" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gasbite-orange-v3" x1="44" y1="42" x2="612" y2="144" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF8C1A"/>
+      <stop offset="1" stop-color="#FFAE1A"/>
+    </linearGradient>
+    <linearGradient id="gasbite-blue-v3" x1="353" y1="14" x2="353" y2="128" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2F7DEB"/>
+      <stop offset="1" stop-color="#1658C9"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(20 18)">
+    <text
+      x="0"
+      y="118"
+      fill="url(#gasbite-orange-v3)"
+      font-family="Trebuchet MS, Arial, sans-serif"
+      font-size="122"
+      font-weight="700"
+      letter-spacing="-5"
+    >gas</text>
+
+    <text
+      x="266"
+      y="118"
+      fill="url(#gasbite-orange-v3)"
+      font-family="Trebuchet MS, Arial, sans-serif"
+      font-size="122"
+      font-weight="700"
+      letter-spacing="-6"
+    >b</text>
+
+    <rect x="374" y="44" width="25" height="76" rx="12.5" fill="url(#gasbite-blue-v3)"/>
+
+    <path
+      d="M386.5 0C403 28.5 411 40.8 411 53C411 69.2 400.2 81.5 386.5 81.5C372.8 81.5 362 69.2 362 53C362 40.8 370 28.5 386.5 0Z"
+      fill="url(#gasbite-blue-v3)"
+    />
+
+    <text
+      x="414"
+      y="118"
+      fill="url(#gasbite-orange-v3)"
+      font-family="Trebuchet MS, Arial, sans-serif"
+      font-size="122"
+      font-weight="700"
+      letter-spacing="-6"
+    >te</text>
+  </g>
+</svg>

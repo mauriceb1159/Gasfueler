@@ -137,6 +137,11 @@ function StationFuelPricing() {
             ~ Regional fallback
           </span>
         </div>
+        <p className="text-xs leading-5 text-slate-500">
+          Google-backed prices can refresh on roughly a daily cadence. Gasbite uses
+          station-set prices first, then Google, then the regional fallback only
+          when nothing better is available.
+        </p>
 
         <form className="space-y-4" action={formAction}>
           <div>
