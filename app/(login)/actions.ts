@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { db } from '@/lib/db/drizzle';
 import {
   User,
@@ -17,6 +17,12 @@ import {
   invitations
 } from '@/lib/db/schema';
 import { comparePasswords, hashPassword, setSession } from '@/lib/auth/session';
+import {
+  consumePasswordResetToken,
+  getActivePasswordResetToken,
+  invalidatePasswordResetTokensForUser,
+  issuePasswordResetToken
+} from '@/lib/auth/password-reset';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createCheckoutSession } from '@/lib/payments/stripe';
@@ -236,6 +242,97 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
     };
   }
 });
+
+const requestPasswordResetSchema = z.object({
+  email: z.string().email().min(3).max(255)
+});
+
+export const requestPasswordReset = validatedAction(
+  requestPasswordResetSchema,
+  async (data) => {
+    const [foundUser] = await db
+      .select({ id: users.id, email: users.email })
+      .from(users)
+      .where(and(eq(users.email, data.email), isNull(users.deletedAt)))
+      .limit(1);
+
+    let resetUrl: string | undefined;
+
+    if (foundUser) {
+      const { token } = await issuePasswordResetToken(foundUser.id);
+      const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+      resetUrl = `${baseUrl}/reset-password?token=${token}`;
+      console.info(`[password-reset] ${foundUser.email}: ${resetUrl}`);
+    }
+
+    return {
+      success:
+        'If an account with that email exists, we sent password reset instructions.',
+      ...(process.env.NODE_ENV !== 'production' && resetUrl
+        ? { resetUrl }
+        : {})
+    };
+  }
+);
+
+const resetPasswordWithTokenSchema = z
+  .object({
+    token: z.string().min(1),
+    newPassword: z.string().min(8).max(100),
+    confirmPassword: z.string().min(8).max(100)
+  })
+  .superRefine((data, ctx) => {
+    if (data.newPassword !== data.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'New password and confirmation password do not match.',
+        path: ['confirmPassword']
+      });
+    }
+  });
+
+export const resetPasswordWithToken = validatedAction(
+  resetPasswordWithTokenSchema,
+  async (data) => {
+    const activeToken = await getActivePasswordResetToken(data.token);
+
+    if (!activeToken) {
+      return {
+        error: 'That reset link is invalid or has expired.',
+        token: data.token
+      };
+    }
+
+    const isSamePassword = await comparePasswords(
+      data.newPassword,
+      activeToken.user.passwordHash
+    );
+
+    if (isSamePassword) {
+      return {
+        error: 'Choose a password that is different from your current password.',
+        token: data.token
+      };
+    }
+
+    const newPasswordHash = await hashPassword(data.newPassword);
+    const userWithTeam = await getUserWithTeam(activeToken.user.id);
+
+    await Promise.all([
+      db
+        .update(users)
+        .set({ passwordHash: newPasswordHash })
+        .where(eq(users.id, activeToken.user.id)),
+      consumePasswordResetToken(data.token),
+      invalidatePasswordResetTokensForUser(activeToken.user.id),
+      logActivity(userWithTeam?.teamId, activeToken.user.id, ActivityType.UPDATE_PASSWORD)
+    ]);
+
+    return {
+      success: 'Password reset successfully. You can sign in with your new password now.'
+    };
+  }
+);
 
 export async function signOut() {
   const user = (await getUser()) as User;

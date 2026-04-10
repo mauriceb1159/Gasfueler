@@ -105,7 +105,7 @@ export async function getGoogleFuelPricesForStation(station: {
       maxResultCount: 1,
       includedType: 'gas_station'
     }),
-    next: { revalidate: 60 * 60 * 24 }
+    cache: 'no-store'
   });
 
   if (!response.ok) {

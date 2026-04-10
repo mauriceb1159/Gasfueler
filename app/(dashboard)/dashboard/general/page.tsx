@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useActionState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,10 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import { updateAccount } from '@/app/(login)/actions';
-import { User } from '@/lib/db/schema';
+import { StationFuelPriceMode, User } from '@/lib/db/schema';
 import useSWR from 'swr';
 import { Suspense } from 'react';
-import { saveStationFuelPrices } from './actions';
+import { saveStationFuelPriceMode, saveStationFuelPrices } from './actions';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -34,6 +34,7 @@ type StationRecord = {
   name: string;
   city: string;
   state: string;
+  fuelPriceMode: string;
   fuelPrices: StationPricingRecord[];
 };
 
@@ -93,18 +94,29 @@ function AccountFormWithData({ state }: { state: ActionState }) {
 function StationFuelPricing() {
   const { data: user } = useSWR<User>('/api/user', fetcher);
   const { data: stations, mutate } = useSWR<StationRecord[]>('/api/stations', fetcher);
-  const [state, formAction, isPending] = useActionState<ActionState, FormData>(
+  const [priceState, priceFormAction, isPricePending] = useActionState<ActionState, FormData>(
     saveStationFuelPrices,
     {}
   );
+  const [modeState, modeFormAction, isModePending] = useActionState<ActionState, FormData>(
+    saveStationFuelPriceMode,
+    {}
+  );
   const isOwner = user?.role === 'owner';
+  const [selectedStationId, setSelectedStationId] = useState('');
   const defaultStationId = stations?.[0]?.id ? String(stations[0].id) : '';
 
   useEffect(() => {
-    if (state.success) {
+    if (!selectedStationId && defaultStationId) {
+      setSelectedStationId(defaultStationId);
+    }
+  }, [defaultStationId, selectedStationId]);
+
+  useEffect(() => {
+    if (priceState.success || modeState.success) {
       mutate();
     }
-  }, [mutate, state.success]);
+  }, [modeState.success, mutate, priceState.success]);
 
   const stationSummaries = useMemo(
     () =>
@@ -114,6 +126,15 @@ function StationFuelPricing() {
       })),
     [stations]
   );
+  const selectedStation = useMemo(
+    () =>
+      (stations ?? []).find((station) => String(station.id) === selectedStationId) ??
+      null,
+    [selectedStationId, stations]
+  );
+  const pricingModeLabel = selectedStation?.fuelPriceMode === StationFuelPriceMode.GOOGLE_FIRST
+    ? 'Google first'
+    : 'Manual first';
 
   return (
     <Card className="mt-8">
@@ -143,25 +164,68 @@ function StationFuelPricing() {
           when nothing better is available.
         </p>
 
-        <form className="space-y-4" action={formAction}>
-          <div>
-            <Label htmlFor="stationId" className="mb-2">
-              Partner station
-            </Label>
-            <select
-              id="stationId"
-              name="stationId"
-              defaultValue={defaultStationId}
-              className="flex h-12 w-full rounded-2xl border border-input bg-white px-4 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-              disabled={!isOwner || isPending || !stations?.length}
-            >
-              {(stations ?? []).map((station) => (
-                <option key={station.id} value={station.id}>
-                  {station.name} - {station.city}, {station.state}
-                </option>
-              ))}
-            </select>
+        <div className="space-y-2">
+          <Label htmlFor="stationId" className="mb-2">
+            Partner station
+          </Label>
+          <select
+            id="stationId"
+            value={selectedStationId}
+            onChange={(event) => setSelectedStationId(event.target.value)}
+            className="flex h-12 w-full rounded-2xl border border-input bg-white px-4 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            disabled={!isOwner || (!stations?.length && !defaultStationId)}
+          >
+            {(stations ?? []).map((station) => (
+              <option key={station.id} value={station.id}>
+                {station.name} - {station.city}, {station.state}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <form className="space-y-4 rounded-3xl border border-slate-200 bg-slate-50/80 p-4" action={modeFormAction}>
+          <input type="hidden" name="stationId" value={selectedStationId} />
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="space-y-2">
+              <Label htmlFor="fuelPriceMode">Fuel price source priority</Label>
+              <select
+                id="fuelPriceMode"
+                name="fuelPriceMode"
+                defaultValue={selectedStation?.fuelPriceMode ?? StationFuelPriceMode.MANUAL_FIRST}
+                key={`${selectedStationId}-${selectedStation?.fuelPriceMode ?? 'manual_first'}`}
+                className="flex h-12 min-w-[240px] rounded-2xl border border-input bg-white px-4 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                disabled={!isOwner || isModePending || !selectedStationId}
+              >
+                <option value={StationFuelPriceMode.MANUAL_FIRST}>Manual first</option>
+                <option value={StationFuelPriceMode.GOOGLE_FIRST}>Google first</option>
+              </select>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+              Current mode: <span className="font-semibold text-slate-950">{pricingModeLabel}</span>
+            </div>
           </div>
+
+          {modeState.error && <p className="text-sm text-red-500">{modeState.error}</p>}
+          {modeState.success && <p className="text-sm text-green-600">{modeState.success}</p>}
+
+          <Button
+            type="submit"
+            className="bg-slate-900 text-white hover:bg-slate-800"
+            disabled={!isOwner || isModePending || !selectedStationId}
+          >
+            {isModePending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving source...
+              </>
+            ) : (
+              'Save Pricing Source'
+            )}
+          </Button>
+        </form>
+
+        <form className="space-y-4" action={priceFormAction}>
+          <input type="hidden" name="stationId" value={selectedStationId} />
 
           <div className="grid gap-4 sm:grid-cols-2">
             <PriceField
@@ -190,17 +254,17 @@ function StationFuelPricing() {
             />
           </div>
 
-          {state.error && <p className="text-red-500 text-sm">{state.error}</p>}
-          {state.success && (
-            <p className="text-green-600 text-sm">{state.success}</p>
+          {priceState.error && <p className="text-red-500 text-sm">{priceState.error}</p>}
+          {priceState.success && (
+            <p className="text-green-600 text-sm">{priceState.success}</p>
           )}
 
           <Button
             type="submit"
             className="bg-orange-500 hover:bg-orange-600 text-white"
-            disabled={isPending || !isOwner}
+            disabled={isPricePending || !isOwner || !selectedStationId}
           >
-            {isPending ? (
+            {isPricePending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Saving prices...
@@ -222,9 +286,16 @@ function StationFuelPricing() {
                   key={station.id}
                   className="rounded-2xl border border-gray-200 bg-gray-50 p-4"
                 >
-                  <p className="font-medium text-gray-900">
-                    {station.name} - {station.city}, {station.state}
-                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-medium text-gray-900">
+                      {station.name} - {station.city}, {station.state}
+                    </p>
+                    <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                      {station.fuelPriceMode === StationFuelPriceMode.GOOGLE_FIRST
+                        ? 'Google first'
+                        : 'Manual first'}
+                    </span>
+                  </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {station.latestPrices.length > 0 ? (
                       station.latestPrices.map((price) => (

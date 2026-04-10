@@ -69,6 +69,17 @@ export const invitations = pgTable('invitations', {
   status: varchar('status', { length: 20 }).notNull().default('pending'),
 });
 
+export const passwordResetTokens = pgTable('password_reset_tokens', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id),
+  tokenHash: varchar('token_hash', { length: 64 }).notNull().unique(),
+  expiresAt: timestamp('expires_at').notNull(),
+  usedAt: timestamp('used_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
 export const contactInquiries = pgTable('contact_inquiries', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 100 }).notNull(),
@@ -90,6 +101,9 @@ export const stations = pgTable('stations', {
   longitude: varchar('longitude', { length: 30 }),
   active: boolean('active').notNull().default(true),
   supportsSnacks: boolean('supports_snacks').notNull().default(false),
+  fuelPriceMode: varchar('fuel_price_mode', { length: 30 })
+    .notNull()
+    .default('manual_first'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
@@ -300,6 +314,7 @@ export const teamsRelations = relations(teams, ({ many }) => ({
 export const usersRelations = relations(users, ({ many }) => ({
   teamMembers: many(teamMembers),
   invitationsSent: many(invitations),
+  passwordResetTokens: many(passwordResetTokens),
   vehicles: many(vehicles),
   orders: many(orders),
   fuelRequests: many(fuelRequests),
@@ -432,6 +447,16 @@ export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
   }),
 }));
 
+export const passwordResetTokensRelations = relations(
+  passwordResetTokens,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [passwordResetTokens.userId],
+      references: [users.id],
+    }),
+  })
+);
+
 export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
   user: one(users, {
     fields: [vehicles.userId],
@@ -500,6 +525,8 @@ export type ActivityLog = typeof activityLogs.$inferSelect;
 export type NewActivityLog = typeof activityLogs.$inferInsert;
 export type Invitation = typeof invitations.$inferSelect;
 export type NewInvitation = typeof invitations.$inferInsert;
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type NewPasswordResetToken = typeof passwordResetTokens.$inferInsert;
 export type ContactInquiry = typeof contactInquiries.$inferSelect;
 export type NewContactInquiry = typeof contactInquiries.$inferInsert;
 export type Station = typeof stations.$inferSelect;
@@ -588,6 +615,11 @@ export enum OrderType {
   FUEL_SERVICE = 'fuel_service',
   STORE_ONLY = 'store_only',
   MIXED = 'mixed',
+}
+
+export enum StationFuelPriceMode {
+  MANUAL_FIRST = 'manual_first',
+  GOOGLE_FIRST = 'google_first',
 }
 
 export enum PickupMode {

@@ -4,7 +4,11 @@ import { z } from 'zod';
 
 import { validatedActionWithUser } from '@/lib/auth/middleware';
 import { db } from '@/lib/db/drizzle';
-import { stationFuelPrices, stations } from '@/lib/db/schema';
+import {
+  stationFuelPrices,
+  stations,
+  StationFuelPriceMode
+} from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 const fuelPriceSchema = z
@@ -44,6 +48,14 @@ function parsePriceToCents(value?: string) {
 
   return Math.round(numericValue * 100);
 }
+
+const fuelPriceModeSchema = z.object({
+  stationId: z.coerce.number().int().positive(),
+  fuelPriceMode: z.enum([
+    StationFuelPriceMode.MANUAL_FIRST,
+    StationFuelPriceMode.GOOGLE_FIRST
+  ])
+});
 
 export const saveStationFuelPrices = validatedActionWithUser(
   fuelPriceSchema,
@@ -86,6 +98,41 @@ export const saveStationFuelPrices = validatedActionWithUser(
       success: `Saved ${entries.length} fuel price${
         entries.length === 1 ? '' : 's'
       } for ${station.name}.`
+    };
+  }
+);
+
+export const saveStationFuelPriceMode = validatedActionWithUser(
+  fuelPriceModeSchema,
+  async (data, _, user) => {
+    if (user.role !== 'owner') {
+      return { error: 'Only owners can update fuel price source settings.' };
+    }
+
+    const [station] = await db
+      .select({ id: stations.id, name: stations.name })
+      .from(stations)
+      .where(eq(stations.id, data.stationId))
+      .limit(1);
+
+    if (!station) {
+      return { error: 'That station could not be found.' };
+    }
+
+    await db
+      .update(stations)
+      .set({
+        fuelPriceMode: data.fuelPriceMode,
+        updatedAt: new Date()
+      })
+      .where(eq(stations.id, station.id));
+
+    return {
+      success: `${station.name} now uses ${
+        data.fuelPriceMode === StationFuelPriceMode.GOOGLE_FIRST
+          ? 'Google-first'
+          : 'manual-first'
+      } fuel pricing.`
     };
   }
 );
