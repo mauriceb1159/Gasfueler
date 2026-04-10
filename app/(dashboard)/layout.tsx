@@ -130,9 +130,12 @@ function Header() {
               alt="GasBite logo"
               fill
               priority
-              className="object-contain object-left mix-blend-multiply"
+              className="object-contain object-left mix-blend-multiply scale-[1.38] sm:scale-[1.42] lg:scale-[1.5]"
               sizes="(max-width: 640px) 230px, (max-width: 1024px) 320px, 430px"
-              style={{ objectPosition: 'left center' }}
+              style={{
+                objectPosition: 'left center',
+                transformOrigin: 'left center'
+              }}
             />
           </div>
         </Link>
