@@ -6,9 +6,11 @@ import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Activity,
+  CalendarClock,
   ClipboardCheck,
   Menu,
   Package,
+  PanelsTopLeft,
   Settings,
   Shield,
   Users
@@ -25,6 +27,8 @@ export default function DashboardLayout({
   const navItems = [
     { href: '/dashboard', icon: Users, label: 'Team' },
     { href: '/dashboard/general', icon: Settings, label: 'General' },
+    { href: '/dashboard/store', icon: PanelsTopLeft, label: 'Store Back Office' },
+    { href: '/dashboard/service-slots', icon: CalendarClock, label: 'Service Slots' },
     { href: '/dashboard/fulfillment', icon: ClipboardCheck, label: 'Fulfillment' },
     { href: '/dashboard/store-orders', icon: Package, label: 'Store Orders' },
     { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
