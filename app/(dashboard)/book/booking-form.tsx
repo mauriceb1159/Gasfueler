@@ -104,6 +104,7 @@ export function BookingForm({
   const [requestedGallons, setRequestedGallons] = useState('');
   const [requestedDollarAmount, setRequestedDollarAmount] = useState('');
   const [selectedVehicleId, setSelectedVehicleId] = useState('');
+  const [selectedSlotId, setSelectedSlotId] = useState('');
   const [vehicleClass, setVehicleClass] = useState('suv');
   const [selectedStoreItems, setSelectedStoreItems] = useState<
     Record<number, number>
@@ -275,6 +276,18 @@ export function BookingForm({
     groups[categoryKey].items.push(item);
     return groups;
   }, {});
+
+  useEffect(() => {
+    const nextSlotId = selectedSlots[0] ? String(selectedSlots[0].id) : '';
+
+    setSelectedSlotId((currentSlotId) => {
+      if (currentSlotId && selectedSlots.some((slot) => String(slot.id) === currentSlotId)) {
+        return currentSlotId;
+      }
+
+      return nextSlotId;
+    });
+  }, [selectedSlots]);
 
   useEffect(() => {
     const visibleStoreItemIds = new Set(selectedStationStoreItems.map((item) => item.id));
@@ -821,7 +834,8 @@ export function BookingForm({
               <select
                 id="slotId"
                 name="slotId"
-                defaultValue={String(selectedSlots[0]?.id ?? '')}
+                value={selectedSlotId}
+                onChange={(event) => setSelectedSlotId(event.target.value)}
                 disabled={Boolean(selectedNearbyStation)}
                 className="flex h-12 w-full rounded-2xl border border-input bg-white px-4 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:rounded-full"
               >
