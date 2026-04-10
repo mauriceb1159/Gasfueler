@@ -124,14 +124,14 @@ function Header() {
     <header className="sticky top-0 z-40 px-3 pt-4 sm:px-4 lg:px-6">
       <div className="mx-auto flex h-[62px] max-w-7xl items-center justify-between rounded-full border border-white/60 bg-white/75 px-3 shadow-[0_18px_60px_-28px_rgba(15,23,42,0.55)] backdrop-blur-xl sm:h-[74px] sm:px-5 lg:h-[80px] lg:px-6">
         <Link href="/" className="flex min-w-0 flex-1 items-center">
-          <div className="relative h-[50px] w-[250px] max-w-[68vw] shrink-0 overflow-hidden sm:h-[66px] sm:w-[350px] sm:max-w-none lg:h-[78px] lg:w-[470px]">
+          <div className="relative h-[54px] w-[320px] max-w-[82vw] shrink-0 overflow-hidden sm:h-[74px] sm:w-[440px] sm:max-w-none lg:h-[86px] lg:w-[590px]">
             <Image
               src="/logos/gasbite-logo-shared.jpg"
               alt="GasBite logo"
               fill
               priority
-              className="object-contain object-left mix-blend-multiply scale-[1.55] sm:scale-[1.62] lg:scale-[1.7]"
-              sizes="(max-width: 640px) 250px, (max-width: 1024px) 350px, 470px"
+              className="object-contain object-left mix-blend-multiply scale-[1.98] sm:scale-[2.06] lg:scale-[2.14]"
+              sizes="(max-width: 640px) 320px, (max-width: 1024px) 440px, 590px"
               style={{
                 objectPosition: 'left center',
                 transformOrigin: 'left center'
