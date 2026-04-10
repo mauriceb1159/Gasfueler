@@ -791,8 +791,16 @@ export function BookingForm({
                       <span className="rounded-full bg-orange-100 px-3 py-1 font-medium text-orange-700">
                         {station.serviceSlots.length} open slots
                       </span>
-                      <span className="rounded-full bg-slate-950 px-3 py-1 font-medium text-white">
-                        Bookable now
+                      <span
+                        className={`rounded-full px-3 py-1 font-medium ${
+                          station.serviceSlots.length > 0
+                            ? 'bg-slate-950 text-white'
+                            : 'bg-slate-200 text-slate-700'
+                        }`}
+                      >
+                        {station.serviceSlots.length > 0
+                          ? 'Bookable now'
+                          : 'No live slots yet'}
                       </span>
                       {station.supportsSnacks ? (
                         <span className="rounded-full bg-emerald-100 px-3 py-1 font-medium text-emerald-700">
@@ -967,16 +975,29 @@ export function BookingForm({
                 name="slotId"
                 value={selectedSlotId}
                 onChange={(event) => setSelectedSlotId(event.target.value)}
-                disabled={Boolean(selectedNearbyStation)}
+                disabled={Boolean(selectedNearbyStation) || selectedSlots.length === 0}
                 className="flex h-12 w-full rounded-2xl border border-input bg-white px-4 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:rounded-full"
               >
-                {selectedSlots.map((slot) => (
-                  <option key={slot.id} value={slot.id}>
-                    {formatSlot(slot.startAt, slot.endAt)}
-                  </option>
-                ))}
+                {selectedNearbyStation ? (
+                  <option value="">Choose a Gasbite partner station first</option>
+                ) : selectedSlots.length === 0 ? (
+                  <option value="">No open service slots available yet</option>
+                ) : (
+                  selectedSlots.map((slot) => (
+                    <option key={slot.id} value={slot.id}>
+                      {formatSlot(slot.startAt, slot.endAt)}
+                    </option>
+                  ))
+                )}
               </select>
             </Field>
+            {!selectedNearbyStation && selectedStation && selectedSlots.length === 0 ? (
+              <p className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
+                This partner station does not have an open booking window yet.
+                Add or reopen a slot in the scheduling dashboard, then refresh
+                this page.
+              </p>
+            ) : null}
             <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
               Choose the station first, then shape the stop around fuel only,
               fuel plus store pickup, or a store-first bag build.
