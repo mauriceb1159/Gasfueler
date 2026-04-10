@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <rect width="200" height="200" rx="32" fill="#ECFEFF"/>
+  <rect x="42" y="58" width="116" height="84" rx="20" fill="#0F766E"/>
+  <rect x="54" y="70" width="92" height="60" rx="16" fill="#14B8A6"/>
+  <circle cx="82" cy="100" r="14" fill="#CCFBF1"/>
+  <circle cx="100" cy="100" r="14" fill="#99F6E4"/>
+  <circle cx="118" cy="100" r="14" fill="#5EEAD4"/>
+  <text x="100" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#115E59">MINT</text>
+</svg>

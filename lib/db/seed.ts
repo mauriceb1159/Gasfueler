@@ -381,6 +381,185 @@ async function ensureStationStoreCatalog() {
   }
 }
 
+async function ensureStationSpecificCatalogs() {
+  const [extraMileStation] = await db
+    .select({
+      id: stations.id
+    })
+    .from(stations)
+    .where(eq(stations.name, 'EXTRAMILE #97947'))
+    .limit(1);
+
+  if (!extraMileStation) {
+    return;
+  }
+
+  const snacksCategory = await ensureStoreCategory({
+    name: 'Snacks',
+    slug: 'snacks',
+    sortOrder: 1
+  });
+  const candyCategory = await ensureStoreCategory({
+    name: 'Candy',
+    slug: 'candy',
+    sortOrder: 2
+  });
+  const bakeryCategory = await ensureStoreCategory({
+    name: 'Bakery',
+    slug: 'bakery',
+    sortOrder: 3
+  });
+  const gumCategory = await ensureStoreCategory({
+    name: 'Gum & Mints',
+    slug: 'gum-mints',
+    sortOrder: 4
+  });
+
+  const extraMileCatalog = [
+    {
+      categoryId: snacksCategory.id,
+      name: 'Barcel Takis Fuego',
+      slug: 'extramile-barcel-takis-fuego',
+      description: 'Rolled tortilla chips with a hot chile lime kick.',
+      imageUrl: '/store-items/snack-chips.svg',
+      basePriceCents: 329
+    },
+    {
+      categoryId: bakeryCategory.id,
+      name: 'Bon Appetit Apple Turnover Danish',
+      slug: 'extramile-bon-appetit-apple-turnover-danish',
+      description: 'Flaky pastry with apple filling for a quick sweet bite.',
+      imageUrl: '/store-items/pastry-baked.svg',
+      basePriceCents: 349
+    },
+    {
+      categoryId: bakeryCategory.id,
+      name: 'Bon Appetit Banana Bread',
+      slug: 'extramile-bon-appetit-banana-bread',
+      description: 'Soft banana bread loaf for an easy grab-and-go breakfast.',
+      imageUrl: '/store-items/pastry-baked.svg',
+      basePriceCents: 329
+    },
+    {
+      categoryId: bakeryCategory.id,
+      name: 'Bon Appetit Cheese Croissant Danish',
+      slug: 'extramile-bon-appetit-cheese-croissant-danish',
+      description: 'Buttery pastry with a sweet cheese center.',
+      imageUrl: '/store-items/pastry-baked.svg',
+      basePriceCents: 369
+    },
+    {
+      categoryId: bakeryCategory.id,
+      name: 'Bon Appetit Cheese Danish',
+      slug: 'extramile-bon-appetit-cheese-danish',
+      description: 'Classic cheese danish for a quick bakery pick.',
+      imageUrl: '/store-items/pastry-baked.svg',
+      basePriceCents: 349
+    },
+    {
+      categoryId: snacksCategory.id,
+      name: 'Cheetos Flamin Hot',
+      slug: 'extramile-cheetos-flamin-hot',
+      description: 'Spicy crunchy cheese snacks with classic heat.',
+      imageUrl: '/store-items/snack-chips.svg',
+      basePriceCents: 289
+    },
+    {
+      categoryId: snacksCategory.id,
+      name: 'Cheetos Flamin Hot Lime',
+      slug: 'extramile-cheetos-flamin-hot-lime',
+      description: 'Flamin Hot crunch with a bright lime finish.',
+      imageUrl: '/store-items/snack-chips.svg',
+      basePriceCents: 289
+    },
+    {
+      categoryId: snacksCategory.id,
+      name: "Chester's Flamin' Hot Fries",
+      slug: 'extramile-chesters-flamin-hot-fries',
+      description: 'Crunchy spicy fries for a quick snack stop.',
+      imageUrl: '/store-items/snack-chips.svg',
+      basePriceCents: 289
+    },
+    {
+      categoryId: snacksCategory.id,
+      name: 'Doritos Nacho Cheese',
+      slug: 'extramile-doritos-nacho-cheese',
+      description: 'Bold nacho tortilla chips in a shareable bag.',
+      imageUrl: '/store-items/snack-chips.svg',
+      basePriceCents: 299
+    },
+    {
+      categoryId: gumCategory.id,
+      name: 'Extra Polar Ice',
+      slug: 'extramile-extra-polar-ice',
+      description: 'Mint gum for a fresh finish on the road.',
+      imageUrl: '/store-items/gum-pack.svg',
+      basePriceCents: 219
+    },
+    {
+      categoryId: candyCategory.id,
+      name: 'Life Savers Gummies',
+      slug: 'extramile-life-savers-gummies',
+      description: 'Fruity gummy candy in a resealable share-size bag.',
+      imageUrl: '/store-items/candy-share.svg',
+      basePriceCents: 329
+    },
+    {
+      categoryId: candyCategory.id,
+      name: 'Skittles Share Size',
+      slug: 'extramile-skittles-share-size',
+      description: 'Fruit candy share bag for the ride.',
+      imageUrl: '/store-items/candy-share.svg',
+      basePriceCents: 329
+    },
+    {
+      categoryId: candyCategory.id,
+      name: 'Twix Share Size',
+      slug: 'extramile-twix-share-size',
+      description: 'Cookie bar share bag with caramel and chocolate.',
+      imageUrl: '/store-items/candy-share.svg',
+      basePriceCents: 349
+    }
+  ];
+
+  for (const catalogItem of extraMileCatalog) {
+    const item = await ensureStoreItem(catalogItem);
+
+    const [existingStationItem] = await db
+      .select()
+      .from(stationStoreItems)
+      .where(
+        and(
+          eq(stationStoreItems.stationId, extraMileStation.id),
+          eq(stationStoreItems.storeItemId, item.id)
+        )
+      )
+      .limit(1);
+
+    if (!existingStationItem) {
+      await db.insert(stationStoreItems).values({
+        stationId: extraMileStation.id,
+        storeItemId: item.id,
+        priceCents: item.basePriceCents,
+        active: true,
+        inventoryCount: 24
+      });
+    } else {
+      await db
+        .update(stationStoreItems)
+        .set({
+          priceCents: item.basePriceCents,
+          active: true,
+          inventoryCount: 24,
+          updatedAt: new Date()
+        })
+        .where(eq(stationStoreItems.id, existingStationItem.id));
+    }
+  }
+
+  console.log('EXTRAMILE #97947 catalog ensured.');
+}
+
 async function seed() {
   const email = 'test@test.com';
   const password = 'Fuelup2026!';
@@ -473,6 +652,7 @@ async function seed() {
   });
 
   await ensureStationStoreCatalog();
+  await ensureStationSpecificCatalogs();
 
   if (shouldSkipStripeSeed()) {
     console.log(

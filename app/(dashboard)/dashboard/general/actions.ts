@@ -8,11 +8,14 @@ import {
   serviceSlots,
   ServiceSlotStatus,
   stationHours,
+  stationStoreItems,
   stationFuelPrices,
   stations,
-  StationFuelPriceMode
+  StationFuelPriceMode,
+  storeCategories,
+  storeItems
 } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 const fuelPriceSchema = z
   .object({
@@ -67,6 +70,274 @@ const createPartnerStationSchema = z.object({
   state: z.string().trim().min(2).max(50),
   zip: z.string().trim().min(5).max(20)
 });
+
+const EXTRAMILE_97947_NAME = 'EXTRAMILE #97947';
+
+async function ensureStoreCategory({
+  name,
+  slug,
+  sortOrder
+}: {
+  name: string;
+  slug: string;
+  sortOrder: number;
+}) {
+  let [category] = await db
+    .select()
+    .from(storeCategories)
+    .where(eq(storeCategories.slug, slug))
+    .limit(1);
+
+  if (!category) {
+    [category] = await db
+      .insert(storeCategories)
+      .values({
+        name,
+        slug,
+        sortOrder,
+        active: true
+      })
+      .returning();
+  }
+
+  return category;
+}
+
+async function ensureStoreItem({
+  categoryId,
+  name,
+  slug,
+  description,
+  imageUrl,
+  basePriceCents
+}: {
+  categoryId: number;
+  name: string;
+  slug: string;
+  description: string;
+  imageUrl: string;
+  basePriceCents: number;
+}) {
+  let [item] = await db
+    .select()
+    .from(storeItems)
+    .where(eq(storeItems.slug, slug))
+    .limit(1);
+
+  if (!item) {
+    [item] = await db
+      .insert(storeItems)
+      .values({
+        categoryId,
+        name,
+        slug,
+        description,
+        imageUrl,
+        basePriceCents,
+        active: true
+      })
+      .returning();
+  } else {
+    [item] = await db
+      .update(storeItems)
+      .set({
+        categoryId,
+        name,
+        description,
+        imageUrl,
+        basePriceCents,
+        active: true,
+        updatedAt: new Date()
+      })
+      .where(eq(storeItems.id, item.id))
+      .returning();
+  }
+
+  return item;
+}
+
+async function ensureStationStoreItem({
+  stationId,
+  storeItemId,
+  priceCents,
+  inventoryCount = 24
+}: {
+  stationId: number;
+  storeItemId: number;
+  priceCents: number;
+  inventoryCount?: number;
+}) {
+  const [existingStationItem] = await db
+    .select()
+    .from(stationStoreItems)
+    .where(
+      and(
+        eq(stationStoreItems.stationId, stationId),
+        eq(stationStoreItems.storeItemId, storeItemId)
+      )
+    )
+    .limit(1);
+
+  if (!existingStationItem) {
+    await db.insert(stationStoreItems).values({
+      stationId,
+      storeItemId,
+      priceCents,
+      active: true,
+      inventoryCount
+    });
+    return;
+  }
+
+  await db
+    .update(stationStoreItems)
+    .set({
+      priceCents,
+      active: true,
+      inventoryCount,
+      updatedAt: new Date()
+    })
+    .where(eq(stationStoreItems.id, existingStationItem.id));
+}
+
+async function ensureExtraMile97947Catalog(stationId: number) {
+  const snacksCategory = await ensureStoreCategory({
+    name: 'Snacks',
+    slug: 'snacks',
+    sortOrder: 1
+  });
+  const candyCategory = await ensureStoreCategory({
+    name: 'Candy',
+    slug: 'candy',
+    sortOrder: 2
+  });
+  const bakeryCategory = await ensureStoreCategory({
+    name: 'Bakery',
+    slug: 'bakery',
+    sortOrder: 3
+  });
+  const gumCategory = await ensureStoreCategory({
+    name: 'Gum & Mints',
+    slug: 'gum-mints',
+    sortOrder: 4
+  });
+
+  const catalog = [
+    {
+      categoryId: snacksCategory.id,
+      name: 'Barcel Takis Fuego',
+      slug: 'extramile-barcel-takis-fuego',
+      description: 'Rolled tortilla chips with a hot chile lime kick.',
+      imageUrl: '/store-items/snack-chips.svg',
+      basePriceCents: 329
+    },
+    {
+      categoryId: bakeryCategory.id,
+      name: 'Bon Appetit Apple Turnover Danish',
+      slug: 'extramile-bon-appetit-apple-turnover-danish',
+      description: 'Flaky pastry with apple filling for a quick sweet bite.',
+      imageUrl: '/store-items/pastry-baked.svg',
+      basePriceCents: 349
+    },
+    {
+      categoryId: bakeryCategory.id,
+      name: 'Bon Appetit Banana Bread',
+      slug: 'extramile-bon-appetit-banana-bread',
+      description: 'Soft banana bread loaf for an easy grab-and-go breakfast.',
+      imageUrl: '/store-items/pastry-baked.svg',
+      basePriceCents: 329
+    },
+    {
+      categoryId: bakeryCategory.id,
+      name: 'Bon Appetit Cheese Croissant Danish',
+      slug: 'extramile-bon-appetit-cheese-croissant-danish',
+      description: 'Buttery pastry with a sweet cheese center.',
+      imageUrl: '/store-items/pastry-baked.svg',
+      basePriceCents: 369
+    },
+    {
+      categoryId: bakeryCategory.id,
+      name: 'Bon Appetit Cheese Danish',
+      slug: 'extramile-bon-appetit-cheese-danish',
+      description: 'Classic cheese danish for a quick bakery pick.',
+      imageUrl: '/store-items/pastry-baked.svg',
+      basePriceCents: 349
+    },
+    {
+      categoryId: snacksCategory.id,
+      name: 'Cheetos Flamin Hot',
+      slug: 'extramile-cheetos-flamin-hot',
+      description: 'Spicy crunchy cheese snacks with classic heat.',
+      imageUrl: '/store-items/snack-chips.svg',
+      basePriceCents: 289
+    },
+    {
+      categoryId: snacksCategory.id,
+      name: 'Cheetos Flamin Hot Lime',
+      slug: 'extramile-cheetos-flamin-hot-lime',
+      description: 'Flamin Hot crunch with a bright lime finish.',
+      imageUrl: '/store-items/snack-chips.svg',
+      basePriceCents: 289
+    },
+    {
+      categoryId: snacksCategory.id,
+      name: "Chester's Flamin' Hot Fries",
+      slug: 'extramile-chesters-flamin-hot-fries',
+      description: 'Crunchy spicy fries for a quick snack stop.',
+      imageUrl: '/store-items/snack-chips.svg',
+      basePriceCents: 289
+    },
+    {
+      categoryId: snacksCategory.id,
+      name: 'Doritos Nacho Cheese',
+      slug: 'extramile-doritos-nacho-cheese',
+      description: 'Bold nacho tortilla chips in a shareable bag.',
+      imageUrl: '/store-items/snack-chips.svg',
+      basePriceCents: 299
+    },
+    {
+      categoryId: gumCategory.id,
+      name: 'Extra Polar Ice',
+      slug: 'extramile-extra-polar-ice',
+      description: 'Mint gum for a fresh finish on the road.',
+      imageUrl: '/store-items/gum-pack.svg',
+      basePriceCents: 219
+    },
+    {
+      categoryId: candyCategory.id,
+      name: 'Life Savers Gummies',
+      slug: 'extramile-life-savers-gummies',
+      description: 'Fruity gummy candy in a resealable share-size bag.',
+      imageUrl: '/store-items/candy-share.svg',
+      basePriceCents: 329
+    },
+    {
+      categoryId: candyCategory.id,
+      name: 'Skittles Share Size',
+      slug: 'extramile-skittles-share-size',
+      description: 'Fruit candy share bag for the ride.',
+      imageUrl: '/store-items/candy-share.svg',
+      basePriceCents: 329
+    },
+    {
+      categoryId: candyCategory.id,
+      name: 'Twix Share Size',
+      slug: 'extramile-twix-share-size',
+      description: 'Cookie bar share bag with caramel and chocolate.',
+      imageUrl: '/store-items/candy-share.svg',
+      basePriceCents: 349
+    }
+  ];
+
+  for (const catalogItem of catalog) {
+    const item = await ensureStoreItem(catalogItem);
+    await ensureStationStoreItem({
+      stationId,
+      storeItemId: item.id,
+      priceCents: item.basePriceCents
+    });
+  }
+}
 
 export const saveStationFuelPrices = validatedActionWithUser(
   fuelPriceSchema,
@@ -170,6 +441,10 @@ export const createPartnerStation = validatedActionWithUser(
       .limit(1);
 
     if (existingStation) {
+      if (normalizedInput.name === EXTRAMILE_97947_NAME) {
+        await ensureExtraMile97947Catalog(existingStation.id);
+      }
+
       return {
         success: `${existingStation.name} already exists.`
       };
@@ -237,6 +512,10 @@ export const createPartnerStation = validatedActionWithUser(
         };
       })
     );
+
+    if (normalizedInput.name === EXTRAMILE_97947_NAME) {
+      await ensureExtraMile97947Catalog(station.id);
+    }
 
     return {
       success: `${station.name} is now added as a partner station.`
