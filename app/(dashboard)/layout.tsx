@@ -123,22 +123,24 @@ function Header() {
   return (
     <header className="sticky top-0 z-40 px-3 pt-4 sm:px-4 lg:px-6">
       <div className="mx-auto flex h-[62px] max-w-7xl items-center justify-between rounded-full border border-white/60 bg-white/75 px-3 shadow-[0_18px_60px_-28px_rgba(15,23,42,0.55)] backdrop-blur-xl sm:h-[74px] sm:px-5 lg:h-[80px] lg:px-6">
-        <Link href="/" className="flex min-w-0 shrink-0 items-center">
-          <div className="relative h-[52px] w-[300px] max-w-[72vw] shrink-0 overflow-hidden sm:h-[70px] sm:w-[420px] sm:max-w-none lg:h-[76px] lg:w-[590px]">
-            <Image
-              src="/logos/gasbite-logo-shared.jpg"
-              alt="GasBite logo"
-              fill
-              priority
-              className="object-contain object-left mix-blend-multiply scale-[2] sm:scale-[2.08] lg:scale-[2.1]"
-              sizes="(max-width: 640px) 300px, (max-width: 1024px) 420px, 590px"
-              style={{
-                objectPosition: 'left center',
-                transformOrigin: 'left center'
-              }}
-            />
-          </div>
-        </Link>
+        <div className="min-w-0 flex-1">
+          <Link href="/" className="flex w-fit shrink-0 items-center">
+            <div className="relative h-[52px] w-[300px] max-w-[72vw] shrink-0 overflow-hidden sm:h-[70px] sm:w-[420px] sm:max-w-none lg:h-[76px] lg:w-[590px]">
+              <Image
+                src="/logos/gasbite-logo-shared.jpg"
+                alt="GasBite logo"
+                fill
+                priority
+                className="object-contain object-left mix-blend-multiply scale-[2] sm:scale-[2.08] lg:scale-[2.1]"
+                sizes="(max-width: 640px) 300px, (max-width: 1024px) 420px, 590px"
+                style={{
+                  objectPosition: 'left center',
+                  transformOrigin: 'left center'
+                }}
+              />
+            </div>
+          </Link>
+        </div>
         <div className="relative z-10 ml-2 flex shrink-0 items-center gap-1.5 sm:ml-6 sm:gap-4">
           {showMarketCart ? <MarketCartButton cart={marketCart} /> : null}
           <Link

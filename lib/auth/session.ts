@@ -5,6 +5,7 @@ import { NewUser } from '@/lib/db/schema';
 
 const key = new TextEncoder().encode(process.env.AUTH_SECRET);
 const SALT_ROUNDS = 10;
+const isSecureCookie = process.env.NODE_ENV === 'production';
 
 export async function hashPassword(password: string) {
   return hash(password, SALT_ROUNDS);
@@ -53,7 +54,7 @@ export async function setSession(user: NewUser) {
   (await cookies()).set('session', encryptedSession, {
     expires: expiresInOneDay,
     httpOnly: true,
-    secure: true,
+    secure: isSecureCookie,
     sameSite: 'lax',
   });
 }

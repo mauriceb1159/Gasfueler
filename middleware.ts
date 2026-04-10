@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 import { signToken, verifyToken } from '@/lib/auth/session';
 
 const protectedRoutes = '/dashboard';
+const isSecureCookie = process.env.NODE_ENV === 'production';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -27,7 +28,7 @@ export async function middleware(request: NextRequest) {
           expires: expiresInOneDay.toISOString()
         }),
         httpOnly: true,
-        secure: true,
+        secure: isSecureCookie,
         sameSite: 'lax',
         expires: expiresInOneDay
       });
