@@ -143,7 +143,7 @@ function Header() {
           {showMarketCart ? <MarketCartButton cart={marketCart} /> : null}
           <Link
             href="/book"
-            className="text-[11px] font-medium text-gray-700 transition-colors hover:text-gray-900 sm:text-sm"
+            className="text-[13px] font-medium text-gray-700 transition-colors hover:text-gray-900 sm:text-sm"
           >
             Book
           </Link>
