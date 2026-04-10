@@ -284,6 +284,7 @@ export function BookingForm({
   const isCombinedStoreStep = isCombinedFlow && combinedFlowStep === 'store';
   const showStoreSection = bookingMode !== 'fuel_only';
   const storeFirst = bookingMode === 'store_first';
+  const showFuelChoices = bookingMode !== 'store_first';
   const serviceFee = getServiceFeeForVehicleClass(effectiveVehicleClass);
   const addonSubtotal = selectedStationStoreItems.reduce((sum, item) => {
     const quantity = selectedStoreItems[item.id] ?? 0;
@@ -1060,7 +1061,7 @@ export function BookingForm({
                 below to continue.
               </p>
             ) : null}
-            {selectedStation ? (
+            {selectedStation && showFuelChoices ? (
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
                 <p className="text-sm font-semibold text-slate-950">
                   Partner station pricing
@@ -1135,8 +1136,9 @@ export function BookingForm({
               </p>
             ) : null}
             <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-              Choose the station first, then shape the stop around fuel only,
-              fuel plus store pickup, or a store-first bag build.
+              {storeFirst
+                ? 'Choose the station and pickup window here, then build the bag before returning to fueling details.'
+                : 'Choose the station first, then shape the stop around fuel only, fuel plus store pickup, or a store-first bag build.'}
             </p>
           </div>
         </div>
@@ -1152,7 +1154,7 @@ export function BookingForm({
         />
         ) : null}
 
-        {(!isCombinedFlow || isCombinedFuelStep) ? (
+        {showFuelChoices && (!isCombinedFlow || isCombinedFuelStep) ? (
         <section className="space-y-4">
         <SectionTitle icon={Fuel} title="Fuel details" />
         <div className="grid gap-4 sm:grid-cols-2">
