@@ -400,6 +400,20 @@ export function BookingForm({
         requestedDollarAmountNumber > 0;
   const canContinueToStoreStep =
     hasValidCombinedStation && hasValidCombinedSlot && hasValidCombinedFuelAmount;
+  const missingFuelStepRequirements = [
+    selectedNearbyStation
+      ? 'Switch from the discovery-only station to a Gasbite partner station.'
+      : !selectedStation
+      ? 'Choose a Gasbite partner station.'
+      : null,
+    !hasValidCombinedSlot ? 'Pick a service slot.' : null,
+    requestType === 'gallons' && !hasValidCombinedFuelAmount
+      ? 'Enter the number of gallons.'
+      : null,
+    requestType === 'dollar_amount' && !hasValidCombinedFuelAmount
+      ? 'Enter the fuel dollar amount.'
+      : null
+  ].filter((item): item is string => item !== null);
 
   function continueToStoreStep() {
     if (selectedNearbyStation) {
@@ -679,10 +693,14 @@ export function BookingForm({
         ) : null}
 
         {isCombinedFuelStep && !canContinueToStoreStep ? (
-          <p className="text-sm text-slate-500">
-            Pick a partner station, choose a service slot, and finish any required
-            fuel amount details to unlock the snack step.
-          </p>
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <p className="font-semibold">Still needed before snacks</p>
+            <div className="mt-2 space-y-1.5">
+              {missingFuelStepRequirements.map((requirement) => (
+                <p key={requirement}>{`• ${requirement}`}</p>
+              ))}
+            </div>
+          </div>
         ) : null}
 
         {showStoreSection && storeFirst ? storeSection : null}
