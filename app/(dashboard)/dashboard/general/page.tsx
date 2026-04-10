@@ -11,7 +11,11 @@ import { updateAccount } from '@/app/(login)/actions';
 import { StationFuelPriceMode, User } from '@/lib/db/schema';
 import useSWR from 'swr';
 import { Suspense } from 'react';
-import { saveStationFuelPriceMode, saveStationFuelPrices } from './actions';
+import {
+  createPartnerStation,
+  saveStationFuelPriceMode,
+  saveStationFuelPrices
+} from './actions';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -420,6 +424,10 @@ export default function GeneralPage() {
     updateAccount,
     {}
   );
+  const [stationState, stationFormAction, isStationPending] = useActionState<
+    ActionState,
+    FormData
+  >(createPartnerStation, {});
 
   return (
     <section className="flex-1 p-4 lg:p-8">
@@ -454,6 +462,99 @@ export default function GeneralPage() {
                 </>
               ) : (
                 'Save Changes'
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>Add Partner Station</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form className="space-y-4" action={stationFormAction}>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="stationName" className="mb-2">
+                  Station name
+                </Label>
+                <Input
+                  id="stationName"
+                  name="name"
+                  placeholder="EXTRAMILE #97947"
+                  defaultValue="EXTRAMILE #97947"
+                />
+              </div>
+              <div>
+                <Label htmlFor="stationZip" className="mb-2">
+                  ZIP code
+                </Label>
+                <Input
+                  id="stationZip"
+                  name="zip"
+                  placeholder="95682-8455"
+                  defaultValue="95682-8455"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="stationAddress" className="mb-2">
+                Street address
+              </Label>
+              <Input
+                id="stationAddress"
+                name="address"
+                placeholder="3381 COACH LN"
+                defaultValue="3381 COACH LN"
+              />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="stationCity" className="mb-2">
+                  City
+                </Label>
+                <Input
+                  id="stationCity"
+                  name="city"
+                  placeholder="CAMERON PARK"
+                  defaultValue="CAMERON PARK"
+                />
+              </div>
+              <div>
+                <Label htmlFor="stationState" className="mb-2">
+                  State
+                </Label>
+                <Input
+                  id="stationState"
+                  name="state"
+                  placeholder="CA"
+                  defaultValue="CA"
+                />
+              </div>
+            </div>
+
+            {stationState.error && (
+              <p className="text-sm text-red-500">{stationState.error}</p>
+            )}
+            {stationState.success && (
+              <p className="text-sm text-green-600">{stationState.success}</p>
+            )}
+
+            <Button
+              type="submit"
+              className="bg-slate-900 text-white hover:bg-slate-800"
+              disabled={isStationPending}
+            >
+              {isStationPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Adding station...
+                </>
+              ) : (
+                'Add Partner Station'
               )}
             </Button>
           </form>

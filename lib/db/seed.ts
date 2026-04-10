@@ -68,8 +68,8 @@ async function ensureDemoStation({
   city,
   state,
   zip,
-  latitude,
-  longitude,
+  latitude = null,
+  longitude = null,
   supportsSnacks = true
 }: {
   name: string;
@@ -77,8 +77,8 @@ async function ensureDemoStation({
   city: string;
   state: string;
   zip: string;
-  latitude: string;
-  longitude: string;
+  latitude?: string | null;
+  longitude?: string | null;
   supportsSnacks?: boolean;
 }) {
   let [station] = await db
@@ -462,6 +462,14 @@ async function seed() {
     zip: '95762',
     latitude: '38.6857',
     longitude: '-121.0822'
+  });
+
+  await ensureDemoStation({
+    name: 'EXTRAMILE #97947',
+    address: '3381 COACH LN',
+    city: 'CAMERON PARK',
+    state: 'CA',
+    zip: '95682-8455'
   });
 
   await ensureStationStoreCatalog();

@@ -5,6 +5,9 @@ import { z } from 'zod';
 import { validatedActionWithUser } from '@/lib/auth/middleware';
 import { db } from '@/lib/db/drizzle';
 import {
+  serviceSlots,
+  ServiceSlotStatus,
+  stationHours,
   stationFuelPrices,
   stations,
   StationFuelPriceMode
@@ -55,6 +58,14 @@ const fuelPriceModeSchema = z.object({
     StationFuelPriceMode.MANUAL_FIRST,
     StationFuelPriceMode.GOOGLE_FIRST
   ])
+});
+
+const createPartnerStationSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  address: z.string().trim().min(5).max(255),
+  city: z.string().trim().min(2).max(100),
+  state: z.string().trim().min(2).max(50),
+  zip: z.string().trim().min(5).max(20)
 });
 
 export const saveStationFuelPrices = validatedActionWithUser(
@@ -133,6 +144,102 @@ export const saveStationFuelPriceMode = validatedActionWithUser(
           ? 'Google-first'
           : 'manual-first'
       } fuel pricing.`
+    };
+  }
+);
+
+export const createPartnerStation = validatedActionWithUser(
+  createPartnerStationSchema,
+  async (data, _, user) => {
+    if (user.role !== 'owner') {
+      return { error: 'Only owners can add partner stations.' };
+    }
+
+    const normalizedInput = {
+      name: data.name.trim(),
+      address: data.address.trim(),
+      city: data.city.trim(),
+      state: data.state.trim().toUpperCase(),
+      zip: data.zip.trim()
+    };
+
+    const [existingStation] = await db
+      .select({ id: stations.id, name: stations.name })
+      .from(stations)
+      .where(eq(stations.name, normalizedInput.name))
+      .limit(1);
+
+    if (existingStation) {
+      return {
+        success: `${existingStation.name} already exists.`
+      };
+    }
+
+    const [station] = await db
+      .insert(stations)
+      .values({
+        ...normalizedInput,
+        active: true,
+        supportsSnacks: true,
+        fuelPriceMode: StationFuelPriceMode.MANUAL_FIRST
+      })
+      .returning({ id: stations.id, name: stations.name });
+
+    await db.insert(stationHours).values(
+      Array.from({ length: 7 }, (_, dayOfWeek) => ({
+        stationId: station.id,
+        dayOfWeek,
+        openTime: '07:00',
+        closeTime: '21:00'
+      }))
+    );
+
+    await db.insert(stationFuelPrices).values([
+      {
+        stationId: station.id,
+        fuelGrade: 'regular',
+        priceCents: 459,
+        source: 'manual'
+      },
+      {
+        stationId: station.id,
+        fuelGrade: 'midgrade',
+        priceCents: 489,
+        source: 'manual'
+      },
+      {
+        stationId: station.id,
+        fuelGrade: 'premium',
+        priceCents: 519,
+        source: 'manual'
+      }
+    ]);
+
+    const nextMorning = new Date();
+    nextMorning.setDate(nextMorning.getDate() + 1);
+    nextMorning.setHours(9, 0, 0, 0);
+
+    await db.insert(serviceSlots).values(
+      Array.from({ length: 6 }, (_, index) => {
+        const startAt = new Date(nextMorning);
+        startAt.setHours(nextMorning.getHours() + index * 2);
+
+        const endAt = new Date(startAt);
+        endAt.setMinutes(endAt.getMinutes() + 45);
+
+        return {
+          stationId: station.id,
+          startAt,
+          endAt,
+          capacity: 2,
+          bookedCount: 0,
+          status: ServiceSlotStatus.OPEN
+        };
+      })
+    );
+
+    return {
+      success: `${station.name} is now added as a partner station.`
     };
   }
 );
