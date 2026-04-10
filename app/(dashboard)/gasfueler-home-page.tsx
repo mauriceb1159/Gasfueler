@@ -182,6 +182,25 @@ export function GasFuelerHomePage({
             </div>
 
             <HeroServiceCard className="mt-4 sm:hidden" />
+
+            <div className="mt-6 hidden gap-4 sm:grid lg:grid-cols-2">
+              <div className="rounded-[1.35rem] border border-white/70 bg-white/80 p-4 shadow-[0_18px_45px_-30px_rgba(15,23,42,0.55)] backdrop-blur-xl">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-orange-600">
+                  Concierge Stop
+                </p>
+                <p className="mt-2 text-lg font-semibold text-slate-950">
+                  Attendants handle the pump while the driver stays put.
+                </p>
+              </div>
+              <div className="rounded-[1.35rem] border border-white/70 bg-white/72 p-4 shadow-[0_18px_45px_-30px_rgba(15,23,42,0.5)] backdrop-blur-xl">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-700">
+                  Add-On Basket
+                </p>
+                <p className="mt-2 text-lg font-semibold text-slate-950">
+                  Drinks and snacks reach the window in the same stop.
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="relative">
