@@ -79,6 +79,47 @@ type NearbyGasStation = {
 type BookingMode = 'fuel_only' | 'fuel_and_store' | 'store_first';
 type CombinedFlowStep = 'fuel' | 'store';
 
+const BOOKING_MODE_CONTENT: Record<
+  BookingMode,
+  {
+    title: string;
+    subtitle: string;
+    fields: string[];
+    outcome: string;
+  }
+> = {
+  fuel_only: {
+    title: 'Fuel-only stop',
+    subtitle: 'Keep the stop focused on the pump-side booking details.',
+    fields: [
+      'Choose a partner station and live pickup window',
+      'Select fuel grade and request type',
+      'Finish with vehicle details and service estimate'
+    ],
+    outcome: 'Customers move straight through fuel scheduling without seeing extra market decisions.'
+  },
+  fuel_and_store: {
+    title: 'Fuel + store stop',
+    subtitle: 'Guide the customer through fuel first, then unlock the bag step.',
+    fields: [
+      'Start with station, slot, and fuel details',
+      'Continue into snacks, drinks, and convenience items',
+      'Review one combined stop before checkout'
+    ],
+    outcome: 'This creates a two-step flow where the store menu appears only after the fuel step is valid.'
+  },
+  store_first: {
+    title: 'Store-first stop',
+    subtitle: 'Lead with the catalog and keep the booking details nearby after that.',
+    fields: [
+      'Open the station catalog immediately',
+      'Let customers build the bag before final booking details',
+      'Finish with station selection, slot, and fuel request'
+    ],
+    outcome: 'Best for snack-led pickups where the market order is the main reason for the stop.'
+  }
+};
+
 export function BookingForm({
   stations,
   vehicles,
@@ -284,6 +325,35 @@ export function BookingForm({
     groups[categoryKey].items.push(item);
     return groups;
   }, {});
+  const selectedModeContent = BOOKING_MODE_CONTENT[bookingMode];
+  const selectedStationSummary = selectedNearbyStation
+    ? `${selectedNearbyStation.name} - discovery only`
+    : selectedStation
+    ? `${selectedStation.name} - ${selectedStation.city}, ${selectedStation.state}`
+    : 'Choose a partner station';
+  const selectedSlotSummary = selectedNearbyStation
+    ? 'Choose a Gasbite partner station first'
+    : selectedSlots.length > 0 && selectedSlotId
+    ? formatSlot(
+        selectedSlots.find((slot) => String(slot.id) === selectedSlotId)?.startAt ??
+          selectedSlots[0].startAt,
+        selectedSlots.find((slot) => String(slot.id) === selectedSlotId)?.endAt ??
+          selectedSlots[0].endAt
+      )
+    : 'Pick a live service slot';
+  const fuelPlanSummary =
+    requestType === 'fill_tank'
+      ? `${formatFuelGrade(fuelGrade)} - Fill tank`
+      : requestType === 'gallons' && requestedGallons
+      ? `${formatFuelGrade(fuelGrade)} - ${requestedGallons} gallons`
+      : requestType === 'dollar_amount' && requestedDollarAmount
+      ? `${formatFuelGrade(fuelGrade)} - $${requestedDollarAmount}`
+      : `${formatFuelGrade(fuelGrade)} - Add amount details`;
+  const vehicleSummary = selectedVehicleRecord
+    ? selectedVehicleRecord.nickname || selectedVehicleRecord.licensePlate
+    : selectedVehicleId
+    ? 'Saved vehicle selected'
+    : 'Add or choose a vehicle';
 
   useEffect(() => {
     const nextSlotId = selectedSlots[0] ? String(selectedSlots[0].id) : '';
@@ -661,6 +731,39 @@ export function BookingForm({
               onSelect={() => setBookingMode('store_first')}
             />
           </div>
+          <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-2xl">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Selected flow
+                </p>
+                <h3 className="mt-2 text-lg font-semibold text-slate-950">
+                  {selectedModeContent.title}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  {selectedModeContent.subtitle}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-white bg-white px-4 py-3 text-sm text-slate-600 shadow-sm lg:max-w-sm">
+                {selectedModeContent.outcome}
+              </div>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              {selectedModeContent.fields.map((field, index) => (
+                <div
+                  key={field}
+                  className="rounded-[1.15rem] border border-slate-200 bg-white px-4 py-3"
+                >
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                    Step {index + 1}
+                  </p>
+                  <p className="mt-1 text-sm font-medium leading-6 text-slate-900">
+                    {field}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
 
         {isCombinedFlow ? (
@@ -1006,6 +1109,15 @@ export function BookingForm({
           </div>
         </div>
         </section>
+        ) : isCombinedStoreStep ? (
+        <CollapsedFlowSection
+          title="Station & pickup window"
+          description="Fuel details are locked in for this step, but you can jump back if you need to change them."
+          values={[
+            { label: 'Station', value: selectedStationSummary },
+            { label: 'Slot', value: selectedSlotSummary }
+          ]}
+        />
         ) : null}
 
         {(!isCombinedFlow || isCombinedFuelStep) ? (
@@ -1065,6 +1177,15 @@ export function BookingForm({
           </Field>
         </div>
         </section>
+        ) : isCombinedStoreStep ? (
+        <CollapsedFlowSection
+          title="Fuel details"
+          description="The store step is open now, so the fuel request is tucked away into a quick summary."
+          values={[
+            { label: 'Fuel plan', value: fuelPlanSummary },
+            { label: 'Estimate', value: formatEstimate(estimatedFuelCost) }
+          ]}
+        />
         ) : null}
 
         {(!isCombinedFlow || isCombinedFuelStep) ? (
@@ -1148,6 +1269,15 @@ export function BookingForm({
           />
         </Field>
         </section>
+        ) : isCombinedStoreStep ? (
+        <CollapsedFlowSection
+          title="Vehicle details"
+          description="Vehicle info is saved for this stop and can be edited from the fuel step if needed."
+          values={[
+            { label: 'Vehicle', value: vehicleSummary },
+            { label: 'Class', value: formatVehicleClass(effectiveVehicleClass) }
+          ]}
+        />
         ) : null}
 
         {isCombinedStoreStep ? (
@@ -1179,6 +1309,34 @@ export function BookingForm({
                 label="Fuel plan"
                 value={`${formatFuelGrade(fuelGrade)} • ${formatEstimate(estimatedFuelCost)}`}
               />
+            </div>
+          </section>
+        ) : null}
+
+        {isCombinedFuelStep ? (
+          <section className="space-y-4 rounded-[1.5rem] border border-dashed border-orange-200 bg-orange-50/70 p-4 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700">
+                  Store step locked
+                </p>
+                <h3 className="mt-1 text-lg font-semibold text-slate-950">
+                  Snacks open after the fuel step is complete
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Once station, slot, and fuel details are ready, the market menu expands with the right partner-station catalog.
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <StoreStat
+                  label="Next step"
+                  value={selectedStationStoreItems.length > 0 ? `${selectedStationStoreItems.length} items ready` : 'Catalog pending'}
+                />
+                <StoreStat
+                  label="Bag"
+                  value={`${selectedStoreItemCount} item${selectedStoreItemCount === 1 ? '' : 's'}`}
+                />
+              </div>
             </div>
           </section>
         ) : null}
@@ -1414,6 +1572,41 @@ function StepPill({
     >
       {label}
     </span>
+  );
+}
+
+function CollapsedFlowSection({
+  title,
+  description,
+  values
+}: {
+  title: string;
+  description: string;
+  values: { label: string; value: string }[];
+}) {
+  return (
+    <section className="space-y-4 rounded-[1.5rem] border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+          Collapsed for current step
+        </p>
+        <h3 className="mt-1 text-lg font-semibold text-slate-950">{title}</h3>
+        <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {values.map((entry) => (
+          <div
+            key={entry.label}
+            className="rounded-[1.15rem] border border-white bg-white px-4 py-3 shadow-sm"
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+              {entry.label}
+            </p>
+            <p className="mt-1 text-sm font-medium text-slate-950">{entry.value}</p>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
