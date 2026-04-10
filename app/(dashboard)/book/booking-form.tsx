@@ -77,6 +77,7 @@ type NearbyGasStation = {
 };
 
 type BookingMode = 'fuel_only' | 'fuel_and_store' | 'store_first';
+type CombinedFlowStep = 'fuel' | 'store';
 
 export function BookingForm({
   stations,
@@ -99,12 +100,15 @@ export function BookingForm({
   const [selectedNearbyStation, setSelectedNearbyStation] =
     useState<NearbyGasStation | null>(null);
   const [bookingMode, setBookingMode] = useState<BookingMode>('fuel_only');
+  const [combinedFlowStep, setCombinedFlowStep] =
+    useState<CombinedFlowStep>('fuel');
   const [fuelGrade, setFuelGrade] = useState('regular');
   const [requestType, setRequestType] = useState('fill_tank');
   const [requestedGallons, setRequestedGallons] = useState('');
   const [requestedDollarAmount, setRequestedDollarAmount] = useState('');
   const [selectedVehicleId, setSelectedVehicleId] = useState('');
   const [selectedSlotId, setSelectedSlotId] = useState('');
+  const [fuelStepError, setFuelStepError] = useState<string | null>(null);
   const [vehicleClass, setVehicleClass] = useState('suv');
   const [selectedStoreItems, setSelectedStoreItems] = useState<
     Record<number, number>
@@ -226,6 +230,9 @@ export function BookingForm({
   const selectedVehicleRecord =
     vehicles.find((vehicle) => String(vehicle.id) === selectedVehicleId) ?? null;
   const effectiveVehicleClass = vehicleClass || 'suv';
+  const isCombinedFlow = bookingMode === 'fuel_and_store';
+  const isCombinedFuelStep = isCombinedFlow && combinedFlowStep === 'fuel';
+  const isCombinedStoreStep = isCombinedFlow && combinedFlowStep === 'store';
   const showStoreSection = bookingMode !== 'fuel_only';
   const storeFirst = bookingMode === 'store_first';
   const serviceFee = getServiceFeeForVehicleClass(effectiveVehicleClass);
@@ -311,6 +318,26 @@ export function BookingForm({
     }
   }, [bookingMode, selectedStoreItems]);
 
+  useEffect(() => {
+    if (bookingMode !== 'fuel_and_store') {
+      setCombinedFlowStep('fuel');
+    }
+  }, [bookingMode]);
+
+  useEffect(() => {
+    if (fuelStepError) {
+      setFuelStepError(null);
+    }
+  }, [
+    fuelStepError,
+    requestType,
+    requestedGallons,
+    requestedDollarAmount,
+    selectedNearbyStation,
+    selectedSlotId,
+    selectedStationId
+  ]);
+
   function handleUseLocation() {
     if (!navigator.geolocation) {
       setLocationStatus('unsupported');
@@ -360,6 +387,54 @@ export function BookingForm({
 
   if (stations.length === 0) {
     return <EmptyBookingState />;
+  }
+
+  const hasValidCombinedStation = Boolean(selectedStation) && !selectedNearbyStation;
+  const hasValidCombinedSlot = Boolean(selectedSlotId);
+  const hasValidCombinedFuelAmount =
+    requestType === 'fill_tank'
+      ? true
+      : requestType === 'gallons'
+      ? Number.isFinite(requestedGallonsNumber) && requestedGallonsNumber > 0
+      : Number.isFinite(requestedDollarAmountNumber) &&
+        requestedDollarAmountNumber > 0;
+  const canContinueToStoreStep =
+    hasValidCombinedStation && hasValidCombinedSlot && hasValidCombinedFuelAmount;
+
+  function continueToStoreStep() {
+    if (selectedNearbyStation) {
+      setFuelStepError('Choose a Gasbite partner station with a live service slot before continuing.');
+      return;
+    }
+
+    if (!selectedStation) {
+      setFuelStepError('Select a partner station before continuing to the snack step.');
+      return;
+    }
+
+    if (!selectedSlotId) {
+      setFuelStepError('Choose a pickup window before continuing to snacks.');
+      return;
+    }
+
+    if (
+      requestType === 'gallons' &&
+      (!Number.isFinite(requestedGallonsNumber) || requestedGallonsNumber <= 0)
+    ) {
+      setFuelStepError('Enter the number of gallons for this stop before continuing.');
+      return;
+    }
+
+    if (
+      requestType === 'dollar_amount' &&
+      (!Number.isFinite(requestedDollarAmountNumber) || requestedDollarAmountNumber <= 0)
+    ) {
+      setFuelStepError('Enter the dollar amount for this stop before continuing.');
+      return;
+    }
+
+    setFuelStepError(null);
+    setCombinedFlowStep('store');
   }
 
   const submitLabel =
@@ -573,8 +648,46 @@ export function BookingForm({
           </div>
         </section>
 
+        {isCombinedFlow ? (
+          <section className="rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Fuel + store flow
+                </p>
+                <p className="mt-1 text-sm text-slate-600">
+                  Finish the fuel stop first, then complete the snack order on the
+                  next step.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <StepPill
+                  active={combinedFlowStep === 'fuel'}
+                  complete={combinedFlowStep === 'store'}
+                  label="1. Fuel"
+                />
+                <StepPill active={combinedFlowStep === 'store'} label="2. Store" />
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        {isCombinedFuelStep && fuelStepError ? (
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {fuelStepError}
+          </div>
+        ) : null}
+
+        {isCombinedFuelStep && !canContinueToStoreStep ? (
+          <p className="text-sm text-slate-500">
+            Pick a partner station, choose a service slot, and finish any required
+            fuel amount details to unlock the snack step.
+          </p>
+        ) : null}
+
         {showStoreSection && storeFirst ? storeSection : null}
 
+        {(!isCombinedFlow || isCombinedFuelStep) ? (
         <section className="space-y-4">
         <SectionTitle icon={MapPinned} title="Station & pickup window" />
         <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
@@ -853,7 +966,9 @@ export function BookingForm({
           </div>
         </div>
         </section>
+        ) : null}
 
+        {(!isCombinedFlow || isCombinedFuelStep) ? (
         <section className="space-y-4">
         <SectionTitle icon={Fuel} title="Fuel details" />
         <div className="grid gap-4 sm:grid-cols-2">
@@ -910,7 +1025,9 @@ export function BookingForm({
           </Field>
         </div>
         </section>
+        ) : null}
 
+        {(!isCombinedFlow || isCombinedFuelStep) ? (
         <section className="space-y-4">
         <SectionTitle icon={Navigation} title="Vehicle details" />
         <Field label="Saved vehicle" htmlFor="vehicleId">
@@ -991,8 +1108,42 @@ export function BookingForm({
           />
         </Field>
         </section>
+        ) : null}
 
-        {showStoreSection && !storeFirst ? storeSection : null}
+        {isCombinedStoreStep ? (
+          <section className="space-y-4 rounded-[1.5rem] border border-slate-200 bg-white p-4 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Fuel locked in
+                </p>
+                <h3 className="mt-1 text-lg font-semibold text-slate-950">
+                  Add snacks and extras
+                </h3>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-full"
+                onClick={() => setCombinedFlowStep('fuel')}
+              >
+                Back to fuel
+              </Button>
+            </div>
+            <div className="grid gap-3 rounded-[1.25rem] border border-slate-100 bg-slate-50/80 p-4 sm:grid-cols-2">
+              <StoreStat
+                label="Station"
+                value={selectedStation ? selectedStation.name : 'Choose a station'}
+              />
+              <StoreStat
+                label="Fuel plan"
+                value={`${formatFuelGrade(fuelGrade)} • ${formatEstimate(estimatedFuelCost)}`}
+              />
+            </div>
+          </section>
+        ) : null}
+
+        {showStoreSection && !storeFirst && !isCombinedFuelStep ? storeSection : null}
 
         <Field label="Arrival or special instructions" htmlFor="specialInstructions">
         <textarea
@@ -1004,12 +1155,35 @@ export function BookingForm({
         />
         </Field>
 
-        <Button
-          type="submit"
-          className="h-12 w-full rounded-full bg-slate-950 px-6 text-white hover:bg-slate-800 sm:w-auto"
-        >
-          {submitLabel}
-        </Button>
+        {isCombinedFuelStep ? (
+          <Button
+            type="button"
+            className="h-12 w-full rounded-full bg-slate-950 px-6 text-white hover:bg-slate-800 sm:w-auto"
+            disabled={!canContinueToStoreStep}
+            onClick={continueToStoreStep}
+          >
+            Continue to snacks
+          </Button>
+        ) : (
+          <div className="flex flex-col gap-3 sm:flex-row">
+            {isCombinedStoreStep ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="h-12 rounded-full px-6 sm:w-auto"
+                onClick={() => setCombinedFlowStep('fuel')}
+              >
+                Back to fuel
+              </Button>
+            ) : null}
+            <Button
+              type="submit"
+              className="h-12 w-full rounded-full bg-slate-950 px-6 text-white hover:bg-slate-800 sm:w-auto"
+            >
+              {submitLabel}
+            </Button>
+          </div>
+        )}
       </div>
 
       <aside className="mt-6 lg:mt-0">
@@ -1112,20 +1286,25 @@ export function BookingForm({
   );
 }
 
-export function EmptyBookingState() {
+export function EmptyBookingState({
+  title = 'No stations are loaded yet',
+  description = 'The booking flow is wired to the real station and slot tables. Add your first partner station and service slots, then this page will immediately become usable for customer reservations.',
+  footnote = 'This is intentional for the MVP: real scheduling data first, then customer bookings.'
+}: {
+  title?: string;
+  description?: string;
+  footnote?: string;
+}) {
   return (
     <div className="rounded-[1.5rem] border border-dashed border-orange-200 bg-orange-50/70 p-6 text-slate-700 sm:rounded-[1.75rem] sm:p-8">
       <h2 className="text-xl font-semibold text-slate-950 sm:text-2xl">
-        No stations are loaded yet
+        {title}
       </h2>
       <p className="mt-3 max-w-2xl leading-7">
-        The booking flow is wired to the real station and slot tables. Add your
-        first partner station and service slots, then this page will immediately
-        become usable for customer reservations.
+        {description}
       </p>
       <p className="mt-4 text-sm text-slate-500">
-        This is intentional for the MVP: real scheduling data first, then
-        customer bookings.
+        {footnote}
       </p>
     </div>
   );
@@ -1171,6 +1350,30 @@ function StoreStat({ label, value }: { label: string; value: string }) {
       </p>
       <p className="mt-1 text-sm font-semibold text-slate-950">{value}</p>
     </div>
+  );
+}
+
+function StepPill({
+  active,
+  complete = false,
+  label
+}: {
+  active: boolean;
+  complete?: boolean;
+  label: string;
+}) {
+  return (
+    <span
+      className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+        active
+          ? 'bg-slate-950 text-white'
+          : complete
+          ? 'bg-emerald-100 text-emerald-700'
+          : 'bg-white text-slate-500'
+      }`}
+    >
+      {label}
+    </span>
   );
 }
 

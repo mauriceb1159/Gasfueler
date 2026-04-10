@@ -1,4 +1,4 @@
-import { desc, and, eq, isNull, asc, gt } from 'drizzle-orm';
+import { desc, and, eq, isNull, asc, gt, lt } from 'drizzle-orm';
 import { db } from './drizzle';
 import {
   activityLogs,
@@ -156,15 +156,33 @@ export async function getTeamForUser() {
 }
 
 export async function getVehiclesForUser(userId: number) {
-  return db
-    .select()
-    .from(vehicles)
-    .where(eq(vehicles.userId, userId))
-    .orderBy(desc(vehicles.updatedAt));
+  try {
+    return await db
+      .select()
+      .from(vehicles)
+      .where(eq(vehicles.userId, userId))
+      .orderBy(desc(vehicles.updatedAt));
+  } catch (error) {
+    if (!isBookableFlowSchemaError(error)) {
+      throw error;
+    }
+
+    console.warn('Vehicles schema is not ready for booking flow:', error);
+    return [];
+  }
 }
 
 export async function getBookableStations() {
-  await ensureUpcomingServiceSlotsForActiveStations();
+  try {
+    await ensureUpcomingServiceSlotsForActiveStations();
+  } catch (error) {
+    if (!isBookableFlowSchemaError(error)) {
+      throw error;
+    }
+
+    console.warn('Booking schema is not ready while ensuring service slots:', error);
+    return [];
+  }
 
   try {
     const stationsResult = await db.query.stations.findMany({
@@ -202,6 +220,11 @@ export async function getBookableStations() {
       }))
     );
   } catch (error) {
+    if (isBookableFlowSchemaError(error) && !isMissingFuelPricesTableError(error)) {
+      console.warn('Booking schema is not ready while loading stations:', error);
+      return [];
+    }
+
     if (!isMissingFuelPricesTableError(error)) {
       throw error;
     }
@@ -275,6 +298,28 @@ export async function getStationsForPricing() {
       }))
     );
   }
+}
+
+export async function getStationsForServiceSlotManagement() {
+  await ensureUpcomingServiceSlotsForActiveStations();
+
+  const now = new Date();
+  const windowEnd = new Date(now);
+  windowEnd.setDate(windowEnd.getDate() + 14);
+
+  return db.query.stations.findMany({
+    where: eq(stations.active, true),
+    with: {
+      stationHours: {
+        orderBy: asc(stationHours.dayOfWeek)
+      },
+      serviceSlots: {
+        where: and(gt(serviceSlots.endAt, now), lt(serviceSlots.startAt, windowEnd)),
+        orderBy: asc(serviceSlots.startAt)
+      }
+    },
+    orderBy: asc(stations.name)
+  });
 }
 
 export async function getStoreStations() {
@@ -423,6 +468,27 @@ function isMissingFuelPricesTableError(error: unknown) {
     error instanceof Error &&
     error.message.toLowerCase().includes('station_fuel_prices')
   );
+}
+
+function isBookableFlowSchemaError(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+
+  return [
+    'stations',
+    'station_hours',
+    'service_slots',
+    'vehicles',
+    'station_store_items',
+    'store_items',
+    'store_categories',
+    'station_fuel_prices',
+    'fuel_price_mode',
+    'vehicle_class'
+  ].some((token) => message.includes(token));
 }
 
 async function ensureUpcomingServiceSlotsForActiveStations() {

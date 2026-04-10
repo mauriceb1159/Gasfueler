@@ -17,11 +17,20 @@ export default async function BookPage({
   }
 
   const params = searchParams ? await searchParams : undefined;
+  let stations = [] as Awaited<ReturnType<typeof getBookableStations>>;
+  let vehicles = [] as Awaited<ReturnType<typeof getVehiclesForUser>>;
+  let loadError: string | undefined;
 
-  const [stations, vehicles] = await Promise.all([
-    getBookableStations(),
-    getVehiclesForUser(user.id)
-  ]);
+  try {
+    [stations, vehicles] = await Promise.all([
+      getBookableStations(),
+      getVehiclesForUser(user.id)
+    ]);
+  } catch (error) {
+    console.error('Failed to load booking page data:', error);
+    loadError =
+      'Booking is temporarily unavailable while station scheduling data is being set up. Please try again shortly.';
+  }
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#fff8f1_0%,#ffffff_60%)] px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
@@ -49,7 +58,13 @@ export default async function BookPage({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {stations.length === 0 ? (
+              {loadError ? (
+                <EmptyBookingState
+                  title="Booking is temporarily unavailable"
+                  description={loadError}
+                  footnote="If this is a fresh deploy, make sure the booking tables and seed data have been applied in the production database."
+                />
+              ) : stations.length === 0 ? (
                 <EmptyBookingState />
               ) : (
                 <BookingForm
