@@ -357,7 +357,18 @@ export function BookingForm({
       : 'Save stop';
   const storeSection = (
     <section className="space-y-4">
-      <SectionTitle icon={ShoppingBag} title="Market pickup" />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <SectionTitle icon={ShoppingBag} title="Market pickup" />
+        <div className="inline-flex items-center gap-3 self-start rounded-full border border-orange-200 bg-white px-4 py-2 text-sm shadow-sm">
+          <span className="inline-flex items-center gap-2 font-medium text-slate-700">
+            <ShoppingBag className="h-4 w-4 text-orange-600" />
+            Bag {selectedStoreItemCount}
+          </span>
+          <span className="font-semibold text-slate-950">
+            {formatCurrency(addonSubtotal)}
+          </span>
+        </div>
+      </div>
       {selectedStationStoreItems.length > 0 ? (
         <div className="space-y-5 rounded-[1.5rem] border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
           <div className="rounded-[1.4rem] border border-white/80 bg-white p-5 shadow-sm">
@@ -371,11 +382,11 @@ export function BookingForm({
                 </h3>
                 <p className="max-w-2xl text-sm leading-6 text-slate-600">
                   {storeFirst
-                    ? 'Build the order first, then finish the quick station and fueling details before checkout.'
+                    ? 'Build the bag first, then finish station and fueling details before checkout.'
                     : 'Upgrade this stop with a few grab-and-go items so everything is ready at the pump.'}
                 </p>
               </div>
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[280px]">
                 <StoreStat
                   label="Catalog"
                   value={`${selectedStationStoreItems.length} items`}
@@ -386,13 +397,9 @@ export function BookingForm({
                     lowestStorePrice !== null ? formatCurrency(lowestStorePrice) : 'TBD'
                   }
                 />
-                <StoreStat
-                  label="In bag"
-                  value={`${selectedStoreItemCount} item${selectedStoreItemCount === 1 ? '' : 's'}`}
-                />
               </div>
             </div>
-            {featuredStoreItem ? (
+            {featuredStoreItem && !storeFirst ? (
               <div className="mt-4 rounded-[1.25rem] border border-slate-100 bg-gradient-to-r from-orange-50 via-white to-amber-50 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                   Featured pick
@@ -552,6 +559,8 @@ export function BookingForm({
             />
           </div>
         </section>
+
+        {showStoreSection && storeFirst ? storeSection : null}
 
         <section className="space-y-4">
         <SectionTitle icon={MapPinned} title="Station & pickup window" />
@@ -830,8 +839,6 @@ export function BookingForm({
           </div>
         </div>
         </section>
-
-        {showStoreSection && storeFirst ? storeSection : null}
 
         <section className="space-y-4">
         <SectionTitle icon={Fuel} title="Fuel details" />

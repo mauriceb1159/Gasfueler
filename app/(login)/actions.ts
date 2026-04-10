@@ -23,6 +23,7 @@ import {
   invalidatePasswordResetTokensForUser,
   issuePasswordResetToken
 } from '@/lib/auth/password-reset';
+import { sendPasswordResetEmail } from '@/lib/email/password-reset';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createCheckoutSession } from '@/lib/payments/stripe';
@@ -262,6 +263,11 @@ export const requestPasswordReset = validatedAction(
       const { token } = await issuePasswordResetToken(foundUser.id);
       const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
       resetUrl = `${baseUrl}/reset-password?token=${token}`;
+      try {
+        await sendPasswordResetEmail(foundUser.email, resetUrl);
+      } catch (error) {
+        console.error('Password reset email failed:', error);
+      }
       console.info(`[password-reset] ${foundUser.email}: ${resetUrl}`);
     }
 
