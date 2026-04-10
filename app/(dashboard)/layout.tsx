@@ -124,14 +124,14 @@ function Header() {
     <header className="sticky top-0 z-40 px-3 pt-4 sm:px-4 lg:px-6">
       <div className="mx-auto flex h-[62px] max-w-7xl items-center justify-between rounded-full border border-white/60 bg-white/75 px-3 shadow-[0_18px_60px_-28px_rgba(15,23,42,0.55)] backdrop-blur-xl sm:h-[74px] sm:px-5 lg:h-[80px] lg:px-6">
         <Link href="/" className="flex min-w-0 flex-1 items-center">
-          <div className="relative h-[54px] w-[320px] max-w-[82vw] shrink-0 overflow-hidden sm:h-[74px] sm:w-[440px] sm:max-w-none lg:h-[86px] lg:w-[590px]">
+          <div className="relative h-[52px] w-[300px] max-w-[72vw] shrink-0 overflow-hidden sm:h-[70px] sm:w-[420px] sm:max-w-none lg:h-[76px] lg:w-[590px]">
             <Image
               src="/logos/gasbite-logo-shared.jpg"
               alt="GasBite logo"
               fill
               priority
-              className="object-contain object-left mix-blend-multiply scale-[1.98] sm:scale-[2.06] lg:scale-[2.14]"
-              sizes="(max-width: 640px) 320px, (max-width: 1024px) 440px, 590px"
+              className="object-contain object-left mix-blend-multiply scale-[2] sm:scale-[2.08] lg:scale-[2.1]"
+              sizes="(max-width: 640px) 300px, (max-width: 1024px) 420px, 590px"
               style={{
                 objectPosition: 'left center',
                 transformOrigin: 'left center'
@@ -143,7 +143,7 @@ function Header() {
           {showMarketCart ? <MarketCartButton cart={marketCart} /> : null}
           <Link
             href="/book"
-            className="hidden text-xs font-medium text-gray-700 transition-colors hover:text-gray-900 sm:inline sm:text-sm"
+            className="text-[11px] font-medium text-gray-700 transition-colors hover:text-gray-900 sm:text-sm"
           >
             Book
           </Link>
