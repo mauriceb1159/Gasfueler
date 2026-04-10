@@ -123,24 +123,24 @@ function Header() {
   return (
     <header className="sticky top-0 z-40 px-3 pt-4 sm:px-4 lg:px-6">
       <div className="mx-auto flex h-[62px] max-w-7xl items-center justify-between rounded-full border border-white/60 bg-white/75 px-3 shadow-[0_18px_60px_-28px_rgba(15,23,42,0.55)] backdrop-blur-xl sm:h-[74px] sm:px-5 lg:h-[80px] lg:px-6">
-        <Link href="/" className="flex min-w-0 shrink-0 items-center">
-          <div className="relative h-[46px] w-[205px] shrink-0 overflow-hidden sm:h-[58px] sm:w-[290px] lg:h-[68px] lg:w-[380px]">
+        <Link href="/" className="flex min-w-0 flex-1 items-center">
+          <div className="relative h-[48px] w-[230px] max-w-[62vw] shrink-0 overflow-hidden sm:h-[62px] sm:w-[320px] sm:max-w-none lg:h-[74px] lg:w-[430px]">
             <Image
               src="/logos/gasbite-logo-shared.jpg"
               alt="GasBite logo"
               fill
               priority
               className="object-contain object-left mix-blend-multiply"
-              sizes="(max-width: 640px) 205px, (max-width: 1024px) 290px, 380px"
+              sizes="(max-width: 640px) 230px, (max-width: 1024px) 320px, 430px"
               style={{ objectPosition: 'left center' }}
             />
           </div>
         </Link>
-        <div className="ml-2 flex shrink-0 items-center gap-2 sm:ml-6 sm:gap-4">
+        <div className="ml-2 flex shrink-0 items-center gap-1.5 sm:ml-6 sm:gap-4">
           {showMarketCart ? <MarketCartButton cart={marketCart} /> : null}
           <Link
             href="/book"
-            className="text-xs font-medium text-gray-700 transition-colors hover:text-gray-900 sm:text-sm"
+            className="hidden text-xs font-medium text-gray-700 transition-colors hover:text-gray-900 sm:inline sm:text-sm"
           >
             Book
           </Link>
