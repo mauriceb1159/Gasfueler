@@ -4,6 +4,7 @@ import {
   activityLogs,
   fuelRequests,
   orders,
+  stationHours,
   stationStoreItems,
   serviceSlots,
   stationFuelPrices,
@@ -16,6 +17,11 @@ import {
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth/session';
 import { getEffectiveFuelPricesForStation } from '@/lib/fuel-pricing';
+
+const MIN_OPEN_SERVICE_SLOTS = 6;
+const SLOT_DURATION_MINUTES = 45;
+const SLOT_INTERVAL_MINUTES = 120;
+const SLOT_GENERATION_DAYS = 7;
 
 export async function getUser() {
   const sessionCookie = (await cookies()).get('session');
@@ -158,6 +164,8 @@ export async function getVehiclesForUser(userId: number) {
 }
 
 export async function getBookableStations() {
+  await ensureUpcomingServiceSlotsForActiveStations();
+
   try {
     const stationsResult = await db.query.stations.findMany({
       where: eq(stations.active, true),
@@ -415,4 +423,122 @@ function isMissingFuelPricesTableError(error: unknown) {
     error instanceof Error &&
     error.message.toLowerCase().includes('station_fuel_prices')
   );
+}
+
+async function ensureUpcomingServiceSlotsForActiveStations() {
+  const activeStations = await db.query.stations.findMany({
+    where: eq(stations.active, true),
+    with: {
+      stationHours: {
+        orderBy: asc(stationHours.dayOfWeek)
+      }
+    }
+  });
+
+  await Promise.all(
+    activeStations.map((station) => ensureUpcomingServiceSlotsForStation(station))
+  );
+}
+
+async function ensureUpcomingServiceSlotsForStation(station: {
+  id: number;
+  stationHours: {
+    dayOfWeek: number;
+    openTime: string;
+    closeTime: string;
+  }[];
+}) {
+  const now = new Date();
+  const existingFutureSlots = await db
+    .select({
+      startAt: serviceSlots.startAt,
+      endAt: serviceSlots.endAt,
+      status: serviceSlots.status
+    })
+    .from(serviceSlots)
+    .where(and(eq(serviceSlots.stationId, station.id), gt(serviceSlots.endAt, now)))
+    .orderBy(asc(serviceSlots.startAt));
+
+  const openFutureSlotCount = existingFutureSlots.filter(
+    (slot) => slot.status === 'open'
+  ).length;
+
+  if (openFutureSlotCount >= MIN_OPEN_SERVICE_SLOTS) {
+    return;
+  }
+
+  const existingStartTimes = new Set(
+    existingFutureSlots.map((slot) => slot.startAt.getTime())
+  );
+  const slotsToCreate: {
+    stationId: number;
+    startAt: Date;
+    endAt: Date;
+    capacity: number;
+    bookedCount: number;
+    status: string;
+  }[] = [];
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+
+  for (let dayOffset = 0; dayOffset < SLOT_GENERATION_DAYS; dayOffset += 1) {
+    if (openFutureSlotCount + slotsToCreate.length >= MIN_OPEN_SERVICE_SLOTS) {
+      break;
+    }
+
+    const slotDate = new Date(today);
+    slotDate.setDate(slotDate.getDate() + dayOffset);
+
+    const hoursForDay = station.stationHours.find(
+      (hours) => hours.dayOfWeek === slotDate.getDay()
+    );
+
+    if (!hoursForDay) {
+      continue;
+    }
+
+    const openAt = applyTimeToDate(slotDate, hoursForDay.openTime);
+    const closeAt = applyTimeToDate(slotDate, hoursForDay.closeTime);
+
+    for (
+      let startAt = new Date(openAt);
+      startAt < closeAt &&
+      openFutureSlotCount + slotsToCreate.length < MIN_OPEN_SERVICE_SLOTS;
+      startAt = addMinutes(startAt, SLOT_INTERVAL_MINUTES)
+    ) {
+      const endAt = addMinutes(startAt, SLOT_DURATION_MINUTES);
+      const startTime = startAt.getTime();
+
+      if (startAt <= now || endAt > closeAt || existingStartTimes.has(startTime)) {
+        continue;
+      }
+
+      slotsToCreate.push({
+        stationId: station.id,
+        startAt,
+        endAt,
+        capacity: 2,
+        bookedCount: 0,
+        status: 'open'
+      });
+      existingStartTimes.add(startTime);
+    }
+  }
+
+  if (slotsToCreate.length > 0) {
+    await db.insert(serviceSlots).values(slotsToCreate);
+  }
+}
+
+function applyTimeToDate(date: Date, time: string) {
+  const [hours, minutes] = time.split(':').map(Number);
+  const nextDate = new Date(date);
+  nextDate.setHours(hours || 0, minutes || 0, 0, 0);
+  return nextDate;
+}
+
+function addMinutes(date: Date, minutes: number) {
+  const nextDate = new Date(date);
+  nextDate.setMinutes(nextDate.getMinutes() + minutes);
+  return nextDate;
 }
