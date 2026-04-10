@@ -126,11 +126,11 @@ function Header() {
         <Link href="/" className="flex min-w-0 shrink-0 items-center">
           <div className="relative h-[48px] w-[195px] shrink-0 overflow-hidden sm:h-[58px] sm:w-[280px] lg:h-[68px] lg:w-[360px]">
             <Image
-              src="/logos/gasbite-logo-remake-v2.svg"
+              src="/logos/gasbite-logo-shared.jpg"
               alt="GasBite logo"
               fill
               priority
-              className="object-contain object-left"
+              className="object-contain object-left mix-blend-multiply"
               sizes="(max-width: 640px) 195px, (max-width: 1024px) 280px, 360px"
               style={{ objectPosition: 'left center' }}
             />
