@@ -149,6 +149,7 @@ export function BookingForm({
   const [requestedDollarAmount, setRequestedDollarAmount] = useState('');
   const [selectedVehicleId, setSelectedVehicleId] = useState('');
   const [selectedSlotId, setSelectedSlotId] = useState('');
+  const [isStationPickerOpen, setIsStationPickerOpen] = useState(true);
   const [fuelStepError, setFuelStepError] = useState<string | null>(null);
   const [vehicleClass, setVehicleClass] = useState('suv');
   const [selectedStoreItems, setSelectedStoreItems] = useState<
@@ -193,6 +194,12 @@ export function BookingForm({
       setSelectedStationId(visibleStations[0]?.id ?? null);
     }
   }, [selectedStationId, visibleStations]);
+
+  useEffect(() => {
+    if (selectedStationId || selectedNearbyStation) {
+      setIsStationPickerOpen(false);
+    }
+  }, [selectedNearbyStation, selectedStationId]);
 
   useEffect(() => {
     if (!coords) {
@@ -814,193 +821,218 @@ export function BookingForm({
         <SectionTitle icon={MapPinned} title="Station & pickup window" />
         <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
           <div className="space-y-4 rounded-[1.25rem] border border-orange-100 bg-orange-50/70 p-4 sm:rounded-[1.5rem]">
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <div className="flex items-center justify-between gap-3 rounded-[1.1rem] border border-white/80 bg-white/80 px-4 py-3">
+              <div>
+                <p className="text-sm font-semibold text-slate-950">Station picker</p>
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  {selectedNearbyStation
+                    ? `${selectedNearbyStation.name} selected from nearby discovery`
+                    : selectedStation
+                    ? `${selectedStation.name} is selected`
+                    : 'Open the toggle to choose a station'}
+                </p>
+              </div>
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 w-full rounded-full bg-white sm:w-auto"
-                onClick={handleUseLocation}
+                className="rounded-full bg-white"
+                onClick={() => setIsStationPickerOpen((current) => !current)}
               >
-                <Navigation className="mr-2 h-4 w-4" />
-                Use my location
+                {isStationPickerOpen ? 'Hide stations' : 'Select a station'}
               </Button>
-              <div className="relative min-w-[180px] flex-1">
-                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <Input
-                  value={zipFilter}
-                  onChange={(event) => setZipFilter(event.target.value)}
-                  placeholder="Filter by ZIP"
-                  className="h-11 rounded-full bg-white pl-10"
-                />
-              </div>
             </div>
-            <p className="text-sm text-slate-600">
-              {locationStatus === 'granted'
-                ? 'Stations are sorted by distance from your current location.'
-                : locationStatus === 'denied'
-                ? 'Location access was denied. You can still search by ZIP code.'
-                : locationStatus === 'unsupported'
-                ? 'This browser does not support location access. Use ZIP code instead.'
-                : 'Use location for nearest stations, or enter a ZIP code manually.'}
-            </p>
-            <div>
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-slate-950">
-                    Gasbite partner stations
-                  </p>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">
-                    These are the stations you can book right now with live
-                    service slots.
-                  </p>
-                </div>
-                {locationStatus === 'granted' ? (
-                  <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                    Sorted by distance
-                  </span>
-                ) : null}
-              </div>
-              <div className="space-y-3">
-                {visibleStations.map((station) => (
-                  <button
-                    key={station.id}
+
+            {isStationPickerOpen ? (
+              <>
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                  <Button
                     type="button"
-                    onClick={() => {
-                      setSelectedStationId(station.id);
-                      setSelectedNearbyStation(null);
-                    }}
-                    className={`w-full rounded-[1.25rem] border p-4 text-left transition sm:p-5 ${
-                      selectedStationId === station.id
-                        ? 'border-slate-950 bg-white shadow-sm'
-                        : 'border-orange-100 bg-white/80 hover:border-orange-200'
-                    }`}
+                    variant="outline"
+                    className="h-11 w-full rounded-full bg-white sm:w-auto"
+                    onClick={handleUseLocation}
                   >
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="min-w-0">
-                        <p className="font-semibold text-slate-950">{station.name}</p>
-                        <p className="mt-1 text-sm text-slate-600">
-                          {station.address}, {station.city}, {station.state}
-                        </p>
-                      </div>
-                      {station.distanceMiles !== null ? (
-                        <span className="inline-flex w-fit rounded-full bg-slate-950 px-3 py-1 text-xs font-semibold text-white">
-                          {station.distanceMiles.toFixed(1)} mi
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
-                      <span className="rounded-full bg-slate-100 px-3 py-1 font-medium">
-                        ZIP {station.zip}
-                      </span>
-                      <span className="rounded-full bg-orange-100 px-3 py-1 font-medium text-orange-700">
-                        {station.serviceSlots.length} open slots
-                      </span>
-                      <span
-                        className={`rounded-full px-3 py-1 font-medium ${
-                          station.serviceSlots.length > 0
-                            ? 'bg-slate-950 text-white'
-                            : 'bg-slate-200 text-slate-700'
-                        }`}
-                      >
-                        {station.serviceSlots.length > 0
-                          ? 'Bookable now'
-                          : 'No live slots yet'}
-                      </span>
-                      {station.supportsSnacks ? (
-                        <span className="rounded-full bg-emerald-100 px-3 py-1 font-medium text-emerald-700">
-                          Snack pickup available
-                        </span>
-                      ) : null}
-                      {station.fuelPrices.length > 0 ? (
-                        <span className="rounded-full bg-white px-3 py-1 font-medium text-slate-700">
-                          Service pricing from{' '}
-                          {formatCentsPerGallon(getLowestFuelPrice(station.fuelPrices))}
-                        </span>
-                      ) : (
-                        <span className="rounded-full bg-white px-3 py-1 font-medium text-slate-500">
-                          Estimate pricing unavailable
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {locationStatus === 'granted' ? (
-              <div className="rounded-[1.25rem] border border-slate-200 bg-white/90 p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-950">
-                      More nearby gas stations
-                    </p>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">
-                      Real stations discovered with Google Places. These are for
-                      discovery today, not direct booking yet.
-                    </p>
+                    <Navigation className="mr-2 h-4 w-4" />
+                    Use my location
+                  </Button>
+                  <div className="relative min-w-[180px] flex-1">
+                    <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <Input
+                      value={zipFilter}
+                      onChange={(event) => setZipFilter(event.target.value)}
+                      placeholder="Filter by ZIP"
+                      className="h-11 rounded-full bg-white pl-10"
+                    />
                   </div>
-                  {nearbyStatus === 'loading' ? (
-                    <span className="text-xs font-medium text-orange-600">
-                      Loading...
-                    </span>
-                  ) : null}
                 </div>
-
-                {nearbyStatus === 'ready' && nearbyStations.length > 0 ? (
-                  <div className="mt-4 space-y-3">
-                    {nearbyStations.map((station) => (
+                <p className="text-sm text-slate-600">
+                  {locationStatus === 'granted'
+                    ? 'Stations are sorted by distance from your current location.'
+                    : locationStatus === 'denied'
+                    ? 'Location access was denied. You can still search by ZIP code.'
+                    : locationStatus === 'unsupported'
+                    ? 'This browser does not support location access. Use ZIP code instead.'
+                    : 'Use location for nearest stations, or enter a ZIP code manually.'}
+                </p>
+                <div>
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-950">
+                        Gasbite partner stations
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-slate-500">
+                        These are the stations you can book right now with live
+                        service slots.
+                      </p>
+                    </div>
+                    {locationStatus === 'granted' ? (
+                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                        Sorted by distance
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="space-y-3">
+                    {visibleStations.map((station) => (
                       <button
                         key={station.id}
                         type="button"
-                        onClick={() => setSelectedNearbyStation(station)}
-                        className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
-                          selectedNearbyStation?.id === station.id
+                        onClick={() => {
+                          setSelectedStationId(station.id);
+                          setSelectedNearbyStation(null);
+                        }}
+                        className={`w-full rounded-[1.25rem] border p-4 text-left transition sm:p-5 ${
+                          selectedStationId === station.id
                             ? 'border-slate-950 bg-white shadow-sm'
-                            : 'border-slate-200 bg-slate-50 hover:border-orange-200'
+                            : 'border-orange-100 bg-white/80 hover:border-orange-200'
                         }`}
                       >
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                          <div>
-                            <p className="font-medium text-slate-950">{station.name}</p>
-                            <p className="mt-1 text-sm leading-6 text-slate-600">
-                              {station.address}
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-slate-950">{station.name}</p>
+                            <p className="mt-1 text-sm text-slate-600">
+                              {station.address}, {station.city}, {station.state}
                             </p>
                           </div>
-                          {station.googleMapsUri ? (
-                            <a
-                              href={station.googleMapsUri}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-sm font-medium text-orange-700 underline-offset-4 hover:underline"
-                            >
-                              Open in Maps
-                            </a>
+                          {station.distanceMiles !== null ? (
+                            <span className="inline-flex w-fit rounded-full bg-slate-950 px-3 py-1 text-xs font-semibold text-white">
+                              {station.distanceMiles.toFixed(1)} mi
+                            </span>
                           ) : null}
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
+                          <span className="rounded-full bg-slate-100 px-3 py-1 font-medium">
+                            ZIP {station.zip}
+                          </span>
+                          <span className="rounded-full bg-orange-100 px-3 py-1 font-medium text-orange-700">
+                            {station.serviceSlots.length} open slots
+                          </span>
+                          <span
+                            className={`rounded-full px-3 py-1 font-medium ${
+                              station.serviceSlots.length > 0
+                                ? 'bg-slate-950 text-white'
+                                : 'bg-slate-200 text-slate-700'
+                            }`}
+                          >
+                            {station.serviceSlots.length > 0
+                              ? 'Bookable now'
+                              : 'No live slots yet'}
+                          </span>
+                          {station.supportsSnacks ? (
+                            <span className="rounded-full bg-emerald-100 px-3 py-1 font-medium text-emerald-700">
+                              Snack pickup available
+                            </span>
+                          ) : null}
+                          {station.fuelPrices.length > 0 ? (
+                            <span className="rounded-full bg-white px-3 py-1 font-medium text-slate-700">
+                              Service pricing from{' '}
+                              {formatCentsPerGallon(getLowestFuelPrice(station.fuelPrices))}
+                            </span>
+                          ) : (
+                            <span className="rounded-full bg-white px-3 py-1 font-medium text-slate-500">
+                              Estimate pricing unavailable
+                            </span>
+                          )}
                         </div>
                       </button>
                     ))}
                   </div>
-                ) : null}
+                </div>
 
-                {nearbyStatus === 'ready' && nearbyStations.length === 0 ? (
-                  <p className="mt-4 text-sm text-slate-600">
-                    No nearby gas stations were returned for this location yet.
-                  </p>
-                ) : null}
+                {locationStatus === 'granted' ? (
+                  <div className="rounded-[1.25rem] border border-slate-200 bg-white/90 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-950">
+                          More nearby gas stations
+                        </p>
+                        <p className="mt-1 text-xs leading-5 text-slate-500">
+                          Real stations discovered with Google Places. These are for
+                          discovery today, not direct booking yet.
+                        </p>
+                      </div>
+                      {nearbyStatus === 'loading' ? (
+                        <span className="text-xs font-medium text-orange-600">
+                          Loading...
+                        </span>
+                      ) : null}
+                    </div>
 
-                {nearbyStatus === 'unconfigured' ? (
-                  <p className="mt-4 text-sm text-slate-600">
-                    Nearby real-world station search will appear once
-                    `GOOGLE_MAPS_API_KEY` is added.
-                  </p>
-                ) : null}
+                    {nearbyStatus === 'ready' && nearbyStations.length > 0 ? (
+                      <div className="mt-4 space-y-3">
+                        {nearbyStations.map((station) => (
+                          <button
+                            key={station.id}
+                            type="button"
+                            onClick={() => setSelectedNearbyStation(station)}
+                            className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
+                              selectedNearbyStation?.id === station.id
+                                ? 'border-slate-950 bg-white shadow-sm'
+                                : 'border-slate-200 bg-slate-50 hover:border-orange-200'
+                            }`}
+                          >
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                              <div>
+                                <p className="font-medium text-slate-950">{station.name}</p>
+                                <p className="mt-1 text-sm leading-6 text-slate-600">
+                                  {station.address}
+                                </p>
+                              </div>
+                              {station.googleMapsUri ? (
+                                <a
+                                  href={station.googleMapsUri}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-sm font-medium text-orange-700 underline-offset-4 hover:underline"
+                                >
+                                  Open in Maps
+                                </a>
+                              ) : null}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
 
-                {nearbyStatus === 'error' ? (
-                  <p className="mt-4 text-sm text-red-700">
-                    We couldn&apos;t load nearby gas stations right now.
-                  </p>
+                    {nearbyStatus === 'ready' && nearbyStations.length === 0 ? (
+                      <p className="mt-4 text-sm text-slate-600">
+                        No nearby gas stations were returned for this location yet.
+                      </p>
+                    ) : null}
+
+                    {nearbyStatus === 'unconfigured' ? (
+                      <p className="mt-4 text-sm text-slate-600">
+                        Nearby real-world station search will appear once
+                        `GOOGLE_MAPS_API_KEY` is added.
+                      </p>
+                    ) : null}
+
+                    {nearbyStatus === 'error' ? (
+                      <p className="mt-4 text-sm text-red-700">
+                        We couldn&apos;t load nearby gas stations right now.
+                      </p>
+                    ) : null}
+                  </div>
                 ) : null}
-              </div>
+              </>
             ) : null}
           </div>
 
