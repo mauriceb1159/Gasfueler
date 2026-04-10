@@ -46,7 +46,7 @@ export const createServiceSlot = validatedActionWithUser(
       return { error: 'That station could not be found.' };
     }
 
-    const startAt = new Date(`${data.slotDate}T${data.startTime}:00`);
+    const startAt = parseLocalSlotDateTime(data.slotDate, data.startTime);
 
     if (Number.isNaN(startAt.getTime())) {
       return { error: 'Enter a valid slot date and time.' };
@@ -130,3 +130,20 @@ export const updateServiceSlotStatus = validatedActionWithUser(
     return { success: 'Service slot updated.' };
   }
 );
+
+function parseLocalSlotDateTime(slotDate: string, startTime: string) {
+  const [year, month, day] = slotDate.split('-').map(Number);
+  const [hours, minutes] = startTime.split(':').map(Number);
+
+  if (
+    !Number.isFinite(year) ||
+    !Number.isFinite(month) ||
+    !Number.isFinite(day) ||
+    !Number.isFinite(hours) ||
+    !Number.isFinite(minutes)
+  ) {
+    return new Date(Number.NaN);
+  }
+
+  return new Date(year, month - 1, day, hours, minutes, 0, 0);
+}

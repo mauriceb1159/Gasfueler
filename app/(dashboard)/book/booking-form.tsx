@@ -124,7 +124,8 @@ export function BookingForm({
       )
       .map((station) => ({
         ...station,
-        distanceMiles: coords
+        distanceMiles:
+          coords && station.latitude && station.longitude
           ? getDistanceMiles(
               coords.lat,
               coords.lng,
