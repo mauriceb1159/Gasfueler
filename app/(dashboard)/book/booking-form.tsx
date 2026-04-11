@@ -189,11 +189,36 @@ export function BookingForm({
     });
   }, [coords, stations, zipFilter]);
 
+  const preferredStoreFirstStationId = useMemo(
+    () => visibleStations.find((station) => station.stationStoreItems.length > 0)?.id ?? null,
+    [visibleStations]
+  );
+
   useEffect(() => {
     if (!visibleStations.find((station) => station.id === selectedStationId)) {
       setSelectedStationId(visibleStations[0]?.id ?? null);
     }
   }, [selectedStationId, visibleStations]);
+
+  useEffect(() => {
+    if (
+      bookingMode === 'store_first' &&
+      preferredStoreFirstStationId &&
+      (!selectedStationId ||
+        !visibleStations.find(
+          (station) =>
+            station.id === selectedStationId && station.stationStoreItems.length > 0
+        ))
+    ) {
+      setSelectedStationId(preferredStoreFirstStationId);
+      setSelectedNearbyStation(null);
+    }
+  }, [
+    bookingMode,
+    preferredStoreFirstStationId,
+    selectedStationId,
+    visibleStations
+  ]);
 
   useEffect(() => {
     if (selectedStationId || selectedNearbyStation) {
@@ -270,6 +295,7 @@ export function BookingForm({
   const selectedStation =
     visibleStations.find((station) => station.id === selectedStationId) ?? null;
   const selectedSlots = selectedStation?.serviceSlots ?? [];
+  const selectedNextSlot = selectedSlots[0] ?? null;
   const selectedStationStoreItems = selectedStation?.stationStoreItems ?? [];
   const selectedFuelPrice = selectedStation?.fuelPrices.find(
     (price) => price.fuelGrade === fuelGrade
@@ -348,6 +374,8 @@ export function BookingForm({
         selectedSlots.find((slot) => String(slot.id) === selectedSlotId)?.endAt ??
           selectedSlots[0].endAt
       )
+    : selectedNextSlot
+    ? `Next available: ${formatSlot(selectedNextSlot.startAt, selectedNextSlot.endAt)}`
     : 'Pick a live service slot';
   const fuelPlanSummary =
     requestType === 'fill_tank'
@@ -362,6 +390,7 @@ export function BookingForm({
     : selectedVehicleId
     ? 'Saved vehicle selected'
     : 'Add or choose a vehicle';
+  const selectedStationHasStoreCatalog = selectedStationStoreItems.length > 0;
 
   useEffect(() => {
     const nextSlotId = selectedSlots[0] ? String(selectedSlots[0].id) : '';
@@ -937,12 +966,12 @@ export function BookingForm({
                               ? 'Bookable now'
                               : 'No live slots yet'}
                           </span>
-                          {station.supportsSnacks ? (
-                            <span className="rounded-full bg-emerald-100 px-3 py-1 font-medium text-emerald-700">
-                              Snack pickup available
-                            </span>
-                          ) : null}
-                          {station.fuelPrices.length > 0 ? (
+                      {station.supportsSnacks ? (
+                        <span className="rounded-full bg-emerald-100 px-3 py-1 font-medium text-emerald-700">
+                          Snack pickup available
+                        </span>
+                      ) : null}
+                          {station.fuelPrices.length > 0 && !storeFirst ? (
                             <span className="rounded-full bg-white px-3 py-1 font-medium text-slate-700">
                               Service pricing from{' '}
                               {formatCentsPerGallon(getLowestFuelPrice(station.fuelPrices))}
@@ -952,6 +981,24 @@ export function BookingForm({
                               Estimate pricing unavailable
                             </span>
                           )}
+                        </div>
+                        <div className="mt-3 rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                            Next available
+                          </p>
+                          <p className="mt-1 text-sm font-semibold text-slate-950">
+                            {station.serviceSlots[0]
+                              ? formatSlot(
+                                  station.serviceSlots[0].startAt,
+                                  station.serviceSlots[0].endAt
+                                )
+                              : 'No live service window yet'}
+                          </p>
+                          <p className="mt-1 text-xs leading-5 text-slate-500">
+                            {station.serviceSlots[0]
+                              ? 'Customers can book this stop immediately, or choose another upcoming window below.'
+                              : 'Open or create a slot in the scheduling dashboard to make this station bookable.'}
+                          </p>
                         </div>
                       </button>
                     ))}
@@ -1106,6 +1153,19 @@ export function BookingForm({
                 )}
               </div>
             ) : null}
+            {!selectedNearbyStation && selectedStation && selectedNextSlot ? (
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700">
+                  Recommended slot
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-950">
+                  {formatSlot(selectedNextSlot.startAt, selectedNextSlot.endAt)}
+                </p>
+                <p className="mt-1 text-xs leading-5 text-slate-600">
+                  This is the soonest live booking window at {selectedStation.name}.
+                </p>
+              </div>
+            ) : null}
             <Field label="Service slot" htmlFor="slotId">
               <select
                 id="slotId"
@@ -1137,7 +1197,7 @@ export function BookingForm({
             ) : null}
             <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
               {storeFirst
-                ? 'Choose the station and pickup window here, then build the bag before returning to fueling details.'
+                ? 'Choose the station and pickup window here. Store-first will automatically aim at stations with a live market catalog.'
                 : 'Choose the station first, then shape the stop around fuel only, fuel plus store pickup, or a store-first bag build.'}
             </p>
           </div>
@@ -1428,7 +1488,13 @@ export function BookingForm({
               : 'Order summary'}
           </p>
           <p className="mt-2">
-            {selectedFuelPrice
+            {bookingMode === 'store_first'
+              ? selectedStationHasStoreCatalog
+                ? `${selectedStation?.name} has ${selectedStationStoreItems.length} market item${
+                    selectedStationStoreItems.length === 1 ? '' : 's'
+                  } ready for pickup.`
+                : 'Choose a station with a live market catalog to start building the bag.'
+              : selectedFuelPrice
               ? `${formatFuelGrade(fuelGrade)} is estimated at ${formatCentsPerGallon(
                   selectedFuelPrice.priceCents
                 )} for ${selectedStation?.name}.`
@@ -1444,15 +1510,19 @@ export function BookingForm({
               </span>
             </div>
             <div className="mt-2 flex items-center justify-between gap-4">
-              <span className="text-slate-600">Fuel subtotal</span>
+              <span className="text-slate-600">
+                {bookingMode === 'store_first' ? 'Fuel subtotal later' : 'Fuel subtotal'}
+              </span>
               <span className="font-semibold text-slate-950">
-                {formatEstimate(estimatedFuelCost)}
+                {bookingMode === 'store_first' ? 'Added later' : formatEstimate(estimatedFuelCost)}
               </span>
             </div>
             <div className="mt-2 flex items-center justify-between gap-4">
-              <span className="text-slate-600">Service fee</span>
+              <span className="text-slate-600">
+                {bookingMode === 'store_first' ? 'Service fee later' : 'Service fee'}
+              </span>
               <span className="font-semibold text-slate-950">
-                {formatCurrency(serviceFee)}
+                {bookingMode === 'store_first' ? 'Added later' : formatCurrency(serviceFee)}
               </span>
             </div>
             <div className="mt-2 flex items-center justify-between gap-4">
@@ -1464,9 +1534,11 @@ export function BookingForm({
               </span>
             </div>
             <div className="mt-2 flex items-center justify-between gap-4">
-              <span className="text-slate-600">Estimated tax</span>
+              <span className="text-slate-600">
+                {bookingMode === 'store_first' ? 'Estimated tax later' : 'Estimated tax'}
+              </span>
               <span className="font-semibold text-slate-950">
-                {formatTaxLabel(estimatedFuelCost)}
+                {bookingMode === 'store_first' ? 'Calculated later' : formatTaxLabel(estimatedFuelCost)}
               </span>
             </div>
             <div className="mt-3 border-t border-orange-100 pt-3">
