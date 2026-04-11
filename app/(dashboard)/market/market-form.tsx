@@ -807,7 +807,7 @@ function ProductVisual({
 }) {
   const theme = getProductVisualTheme(item);
   const isFeatured = size === 'featured';
-  const imageUrl = item.storeItem.imageUrl || getCatalogImageFallback(item.storeItem.slug);
+  const imageUrl = resolveCatalogImageUrl(item.storeItem.imageUrl, item.storeItem.slug);
 
   if (imageUrl) {
     return (
@@ -964,6 +964,8 @@ function getProductVisualTheme(item: StoreStation['stationStoreItems'][number]) 
 function getCatalogImageFallback(slug: string) {
   const catalogImages: Record<string, string> = {
     'kettle-chips': '/store-items/kettle-chips.svg',
+    'doritos-nacho-cheese': '/store-items/doritos-nacho.jpg',
+    'extramile-doritos-nacho-cheese': '/store-items/doritos-nacho.jpg',
     'protein-bar': '/store-items/protein-bar.svg',
     'cold-brew-coffee': '/store-items/cold-brew-coffee.svg',
     'sparkling-water': '/store-items/sparkling-water.svg',
@@ -972,6 +974,19 @@ function getCatalogImageFallback(slug: string) {
   };
 
   return catalogImages[slug] ?? '';
+}
+
+function resolveCatalogImageUrl(imageUrl: string | null, slug: string) {
+  const normalizedImageUrl = imageUrl?.trim() || '';
+
+  if (
+    normalizedImageUrl &&
+    normalizedImageUrl !== '/store-items/item.svg'
+  ) {
+    return normalizedImageUrl;
+  }
+
+  return getCatalogImageFallback(slug);
 }
 
 const collectionOptions = [
