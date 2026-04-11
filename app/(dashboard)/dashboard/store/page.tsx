@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { redirect } from 'next/navigation';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,6 +68,23 @@ export default async function StoreBackOfficePage({
     (sum, station) => sum + station.stationStoreItems.length,
     0
   );
+
+  const productAssignments = new Map<
+    number,
+    { stationName: string; priceCents: number; active: boolean }[]
+  >();
+
+  for (const station of stations) {
+    for (const stationItem of station.stationStoreItems) {
+      const assignments = productAssignments.get(stationItem.storeItemId) ?? [];
+      assignments.push({
+        stationName: station.name,
+        priceCents: stationItem.priceCents,
+        active: stationItem.active
+      });
+      productAssignments.set(stationItem.storeItemId, assignments);
+    }
+  }
 
   const isOwner = user.role === 'owner';
 
@@ -294,6 +312,43 @@ export default async function StoreBackOfficePage({
               {products.map((product) => (
                 <Card key={product.id}>
                   <CardContent className="p-5">
+                    <div className="mb-4 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="flex items-center gap-4">
+                        <ProductPreview
+                          imageUrl={product.imageUrl}
+                          name={product.name}
+                        />
+                        <div>
+                          <p className="font-semibold text-slate-950">{product.name}</p>
+                          <p className="mt-1 text-sm text-slate-500">{product.slug}</p>
+                          <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-400">
+                            Product data
+                          </p>
+                        </div>
+                      </div>
+                      <div className="space-y-1 text-sm text-slate-600">
+                        <p>
+                          Base price:{' '}
+                          <span className="font-medium text-slate-950">
+                            ${(product.basePriceCents / 100).toFixed(2)}
+                          </span>
+                        </p>
+                        <p>
+                          Image path:{' '}
+                          <span className="font-mono text-xs text-slate-950">
+                            {product.imageUrl || '(none)'}
+                          </span>
+                        </p>
+                        <p>
+                          Used by{' '}
+                          <span className="font-medium text-slate-950">
+                            {productAssignments.get(product.id)?.length ?? 0}
+                          </span>{' '}
+                          station
+                          {(productAssignments.get(product.id)?.length ?? 0) === 1 ? '' : 's'}
+                        </p>
+                      </div>
+                    </div>
                     <form action={updateStoreProduct} className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                       <input type="hidden" name="productId" value={product.id} />
                       <Field id={`product-name-${product.id}`} label="Name" name="name" placeholder="Name" defaultValue={product.name} />
@@ -345,9 +400,20 @@ export default async function StoreBackOfficePage({
                         />
                       </div>
                       <div className="md:col-span-2 xl:col-span-3 flex items-center justify-between gap-3">
-                        <p className="text-xs uppercase tracking-[0.16em] text-slate-400">
-                          {product.category?.name ?? 'Uncategorized'}
-                        </p>
+                        <div className="space-y-1">
+                          <p className="text-xs uppercase tracking-[0.16em] text-slate-400">
+                            {product.category?.name ?? 'Uncategorized'}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            Station usage:{' '}
+                            {productAssignments.get(product.id)?.length
+                              ? productAssignments
+                                  .get(product.id)!
+                                  .map((assignment) => assignment.stationName)
+                                  .join(', ')
+                              : 'Not assigned to any station yet'}
+                          </p>
+                        </div>
                         <Button type="submit" variant="outline">
                           Save Product
                         </Button>
@@ -385,10 +451,26 @@ export default async function StoreBackOfficePage({
                         >
                           <input type="hidden" name="stationStoreItemId" value={item.id} />
                           <div className="xl:col-span-2">
-                            <p className="font-semibold text-slate-950">{item.storeItem.name}</p>
-                            <p className="mt-1 text-sm text-slate-500">
-                              {item.storeItem.category?.name ?? 'Uncategorized'}
-                            </p>
+                            <div className="flex items-center gap-3">
+                              <ProductPreview
+                                imageUrl={item.storeItem.imageUrl}
+                                name={item.storeItem.name}
+                                size="sm"
+                              />
+                              <div>
+                                <p className="font-semibold text-slate-950">
+                                  {item.storeItem.name}
+                                </p>
+                                <p className="mt-1 text-sm text-slate-500">
+                                  {item.storeItem.category?.name ?? 'Uncategorized'}
+                                </p>
+                                <p className="mt-1 text-xs text-slate-500">
+                                  Product base price: $
+                                  {(item.storeItem.basePriceCents / 100).toFixed(2)} • Image:{' '}
+                                  {item.storeItem.imageUrl || '(none)'}
+                                </p>
+                              </div>
+                            </div>
                           </div>
                           <Field
                             id={`station-price-${item.id}`}
@@ -441,6 +523,43 @@ function MetricCard({ label, value }: { label: string; value: string }) {
         <p className="mt-2 text-2xl font-semibold text-slate-950">{value}</p>
       </CardContent>
     </Card>
+  );
+}
+
+function ProductPreview({
+  imageUrl,
+  name,
+  size = 'lg'
+}: {
+  imageUrl: string | null;
+  name: string;
+  size?: 'sm' | 'lg';
+}) {
+  const dimensions =
+    size === 'sm'
+      ? 'relative h-12 w-12 overflow-hidden rounded-2xl border border-slate-200 bg-white'
+      : 'relative h-20 w-20 overflow-hidden rounded-3xl border border-slate-200 bg-white';
+
+  if (imageUrl) {
+    return (
+      <div className={dimensions}>
+        <Image
+          src={imageUrl}
+          alt={name}
+          fill
+          className="object-contain p-2"
+          sizes={size === 'sm' ? '48px' : '80px'}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`${dimensions} flex items-center justify-center bg-slate-100 text-sm font-semibold uppercase text-slate-500`}
+    >
+      {name.charAt(0)}
+    </div>
   );
 }
 
