@@ -292,7 +292,7 @@ async function ensureExtraMile97947Catalog(stationId: number) {
       name: 'Doritos Nacho Cheese',
       slug: 'extramile-doritos-nacho-cheese',
       description: 'Bold nacho tortilla chips in a shareable bag.',
-      imageUrl: '/store-items/snack-chips.svg',
+      imageUrl: '/store-items/doritos-nacho.jpg',
       basePriceCents: 299
     },
     {
