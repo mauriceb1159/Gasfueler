@@ -8,11 +8,17 @@ import {
   Navigation,
   Search,
   ShoppingBag,
+  ShoppingCart,
   Store
 } from 'lucide-react';
 
 import { submitFuelRequest, submitStoreFirstOrder } from './actions';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -573,19 +579,78 @@ export function BookingForm({
       : bookingMode === 'store_first'
       ? 'Place store order'
       : 'Save stop';
+  const storeFirstCartSummary = (
+    <StoreFirstCartSummary
+      pickupMode={pickupMode}
+      subtotal={addonSubtotal}
+      selectedItemCount={selectedStoreItemCount}
+      stationName={selectedStation?.name ?? null}
+      catalogCount={selectedStationStoreItems.length}
+      bagItems={selectedStationStoreItems
+        .filter((item) => (selectedStoreItems[item.id] ?? 0) > 0)
+        .map((item) => ({
+          id: item.id,
+          name: item.storeItem.name,
+          quantity: selectedStoreItems[item.id] ?? 0,
+          subtotal: item.priceCents * (selectedStoreItems[item.id] ?? 0)
+        }))}
+    />
+  );
   const storeSection = (
     <section className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div
+        className={
+          storeFirst
+            ? 'sticky top-24 z-20 -mx-1 flex flex-col gap-3 rounded-[1.4rem] bg-white/92 px-1 py-2 backdrop-blur sm:flex-row sm:items-center sm:justify-between'
+            : 'flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'
+        }
+      >
         <SectionTitle icon={ShoppingBag} title="Market pickup" />
-        <div className="inline-flex items-center gap-3 self-start rounded-full border border-orange-200 bg-white px-4 py-2 text-sm shadow-sm">
-          <span className="inline-flex items-center gap-2 font-medium text-slate-700">
-            <ShoppingBag className="h-4 w-4 text-orange-600" />
-            Bag {selectedStoreItemCount}
-          </span>
-          <span className="font-semibold text-slate-950">
-            {formatCurrency(addonSubtotal)}
-          </span>
-        </div>
+        {storeFirst ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="hidden items-center gap-3 self-start rounded-full border border-orange-200 bg-white px-4 py-2 text-left text-sm shadow-sm transition hover:border-orange-300 hover:bg-orange-50/60 sm:inline-flex"
+              >
+                <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-orange-700">
+                  <ShoppingCart className="h-4 w-4" />
+                  {selectedStoreItemCount > 0 ? (
+                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-slate-950 px-1 text-[10px] font-semibold text-white">
+                      {selectedStoreItemCount}
+                    </span>
+                  ) : null}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    Store summary
+                  </span>
+                  <span className="mt-1 block font-semibold text-slate-950">
+                    {selectedStoreItemCount > 0
+                      ? formatCurrency(addonSubtotal)
+                      : 'Open bag'}
+                  </span>
+                </span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-[360px] rounded-[1.5rem] border border-orange-200 bg-white p-0 shadow-[0_24px_60px_-32px_rgba(15,23,42,0.35)]"
+            >
+              {storeFirstCartSummary}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <div className="inline-flex items-center gap-3 self-start rounded-full border border-orange-200 bg-white px-4 py-2 text-sm shadow-sm">
+            <span className="inline-flex items-center gap-2 font-medium text-slate-700">
+              <ShoppingBag className="h-4 w-4 text-orange-600" />
+              Bag {selectedStoreItemCount}
+            </span>
+            <span className="font-semibold text-slate-950">
+              {formatCurrency(addonSubtotal)}
+            </span>
+          </div>
+        )}
       </div>
       {selectedStationStoreItems.length > 0 ? (
         <div className="space-y-5 rounded-[1.5rem] border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
@@ -740,7 +805,11 @@ export function BookingForm({
   return (
     <form
       action={storeFirst ? submitStoreFirstOrder : submitFuelRequest}
-      className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6"
+      className={
+        storeFirst
+          ? 'space-y-6 pb-24 sm:pb-0'
+          : 'lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6'
+      }
     >
       <input
         type="hidden"
@@ -1568,23 +1637,16 @@ export function BookingForm({
         )}
       </div>
 
+      {!storeFirst ? (
       <aside className="mt-6 lg:mt-0">
         <div className="rounded-[1.5rem] border border-orange-200 bg-orange-50 p-4 text-sm text-slate-700 lg:sticky lg:top-6">
           <p className="font-semibold text-slate-950">
             {bookingMode === 'fuel_only'
               ? 'Fuel stop summary'
-              : bookingMode === 'store_first'
-              ? 'Store-first summary'
               : 'Order summary'}
           </p>
           <p className="mt-2">
-            {bookingMode === 'store_first'
-              ? selectedStationHasStoreCatalog
-                ? `${selectedStation?.name} has ${selectedStationStoreItems.length} market item${
-                    selectedStationStoreItems.length === 1 ? '' : 's'
-                  } ready for pickup.`
-                : 'Choose a station with a live market catalog to start building the bag.'
-              : selectedFuelPrice
+            {selectedFuelPrice
               ? `${formatFuelGrade(fuelGrade)} is estimated at ${formatCentsPerGallon(
                   selectedFuelPrice.priceCents
                 )} for ${selectedStation?.name}.`
@@ -1593,85 +1655,48 @@ export function BookingForm({
               : 'Build the bag first, then confirm fuel details before checkout.'}
           </p>
           <div className="mt-4 rounded-2xl border border-white/70 bg-white/80 p-4">
-            {storeFirst ? (
-              <>
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-slate-600">Pickup timing</span>
-                  <span className="font-semibold text-slate-950">
-                    {formatPickupMode(pickupMode)}
-                  </span>
-                </div>
-                <div className="mt-2 flex items-center justify-between gap-4">
-                  <span className="text-slate-600">Bag subtotal</span>
-                  <span className="font-semibold text-slate-950">
-                    {formatCurrency(addonSubtotal)}
-                  </span>
-                </div>
-                <div className="mt-2 flex items-center justify-between gap-4">
-                  <span className="text-slate-600">Service fee</span>
-                  <span className="font-semibold text-slate-950">$0.00</span>
-                </div>
-                <div className="mt-2 flex items-center justify-between gap-4">
-                  <span className="text-slate-600">Estimated tax</span>
-                  <span className="font-semibold text-slate-950">Included</span>
-                </div>
-                <div className="mt-3 border-t border-orange-100 pt-3">
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-base font-semibold text-slate-950">
-                      Estimated total
-                    </span>
-                    <span className="text-base font-semibold text-slate-950">
-                      {formatCurrency(addonSubtotal)}
-                    </span>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-slate-600">Vehicle type</span>
-                  <span className="font-semibold text-slate-950">
-                    {formatVehicleClass(effectiveVehicleClass)}
-                  </span>
-                </div>
-                <div className="mt-2 flex items-center justify-between gap-4">
-                  <span className="text-slate-600">Fuel subtotal</span>
-                  <span className="font-semibold text-slate-950">
-                    {formatEstimate(estimatedFuelCost)}
-                  </span>
-                </div>
-                <div className="mt-2 flex items-center justify-between gap-4">
-                  <span className="text-slate-600">Service fee</span>
-                  <span className="font-semibold text-slate-950">
-                    {formatCurrency(serviceFee)}
-                  </span>
-                </div>
-                <div className="mt-2 flex items-center justify-between gap-4">
-                  <span className="text-slate-600">
-                    {showStoreSection ? 'Snacks & essentials' : 'Add-ons'}
-                  </span>
-                  <span className="font-semibold text-slate-950">
-                    {showStoreSection ? formatCurrency(addonSubtotal) : 'Not included'}
-                  </span>
-                </div>
-                <div className="mt-2 flex items-center justify-between gap-4">
-                  <span className="text-slate-600">Estimated tax</span>
-                  <span className="font-semibold text-slate-950">
-                    {formatTaxLabel(estimatedFuelCost)}
-                  </span>
-                </div>
-                <div className="mt-3 border-t border-orange-100 pt-3">
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-base font-semibold text-slate-950">
-                      Estimated total
-                    </span>
-                    <span className="text-base font-semibold text-slate-950">
-                      {formatEstimate(estimatedTotal)}
-                    </span>
-                  </div>
-                </div>
-              </>
-            )}
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-slate-600">Vehicle type</span>
+              <span className="font-semibold text-slate-950">
+                {formatVehicleClass(effectiveVehicleClass)}
+              </span>
+            </div>
+            <div className="mt-2 flex items-center justify-between gap-4">
+              <span className="text-slate-600">Fuel subtotal</span>
+              <span className="font-semibold text-slate-950">
+                {formatEstimate(estimatedFuelCost)}
+              </span>
+            </div>
+            <div className="mt-2 flex items-center justify-between gap-4">
+              <span className="text-slate-600">Service fee</span>
+              <span className="font-semibold text-slate-950">
+                {formatCurrency(serviceFee)}
+              </span>
+            </div>
+            <div className="mt-2 flex items-center justify-between gap-4">
+              <span className="text-slate-600">
+                {showStoreSection ? 'Snacks & essentials' : 'Add-ons'}
+              </span>
+              <span className="font-semibold text-slate-950">
+                {showStoreSection ? formatCurrency(addonSubtotal) : 'Not included'}
+              </span>
+            </div>
+            <div className="mt-2 flex items-center justify-between gap-4">
+              <span className="text-slate-600">Estimated tax</span>
+              <span className="font-semibold text-slate-950">
+                {formatTaxLabel(estimatedFuelCost)}
+              </span>
+            </div>
+            <div className="mt-3 border-t border-orange-100 pt-3">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-base font-semibold text-slate-950">
+                  Estimated total
+                </span>
+                <span className="text-base font-semibold text-slate-950">
+                  {formatEstimate(estimatedTotal)}
+                </span>
+              </div>
+            </div>
           </div>
           {showStoreSection &&
           selectedStationStoreItems.some((item) => (selectedStoreItems[item.id] ?? 0) > 0) ? (
@@ -1701,12 +1726,57 @@ export function BookingForm({
             </div>
           ) : null}
           <p className="mt-3 text-xs leading-5 text-slate-500">
-            {storeFirst
-              ? 'Store-first submits a store-only pickup order, so this summary stays focused on the bag and pickup timing.'
-              : 'These booking estimates use Gasbite partner-station pricing rather than live Google Maps pump data. Taxes and final charge details can still be finalized at checkout.'}
+            These booking estimates use Gasbite partner-station pricing rather than
+            live Google Maps pump data. Taxes and final charge details can still be
+            finalized at checkout.
           </p>
         </div>
       </aside>
+      ) : null}
+
+      {storeFirst ? (
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-orange-200 bg-white/95 px-3 py-3 shadow-[0_-18px_45px_-30px_rgba(15,23,42,0.35)] backdrop-blur sm:hidden">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="flex w-full items-center justify-between gap-3 rounded-full border border-orange-200 bg-white px-4 py-3 text-left shadow-sm transition hover:border-orange-300 hover:bg-orange-50/60"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-orange-700">
+                    <ShoppingCart className="h-4 w-4" />
+                    {selectedStoreItemCount > 0 ? (
+                      <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-slate-950 px-1 text-[10px] font-semibold text-white">
+                        {selectedStoreItemCount}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                      Store summary
+                    </span>
+                    <span className="mt-1 block truncate text-sm font-semibold text-slate-950">
+                      {selectedStoreItemCount > 0
+                        ? `${selectedStoreItemCount} item${selectedStoreItemCount === 1 ? '' : 's'} in bag`
+                        : 'Open bag summary'}
+                    </span>
+                  </span>
+                </div>
+                <span className="shrink-0 text-sm font-semibold text-slate-950">
+                  {formatCurrency(addonSubtotal)}
+                </span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              side="top"
+              align="center"
+              className="mb-2 w-[min(92vw,360px)] rounded-[1.5rem] border border-orange-200 bg-white p-0 shadow-[0_24px_60px_-32px_rgba(15,23,42,0.35)]"
+            >
+              {storeFirstCartSummary}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ) : null}
     </form>
   );
 }
@@ -1764,6 +1834,95 @@ function BookingModeCard({
       <p className="mt-3 text-lg font-semibold text-slate-950">{title}</p>
       <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
     </button>
+  );
+}
+
+function StoreFirstCartSummary({
+  pickupMode,
+  subtotal,
+  selectedItemCount,
+  stationName,
+  catalogCount,
+  bagItems
+}: {
+  pickupMode: 'asap' | 'scheduled' | 'on_arrival';
+  subtotal: number;
+  selectedItemCount: number;
+  stationName: string | null;
+  catalogCount: number;
+  bagItems: {
+    id: number;
+    name: string;
+    quantity: number;
+    subtotal: number;
+  }[];
+}) {
+  return (
+    <div className="space-y-4 p-4 text-sm text-slate-700">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+            Store-first summary
+          </p>
+          <p className="mt-1 text-lg font-semibold text-slate-950">
+            {selectedItemCount} item{selectedItemCount === 1 ? '' : 's'}
+          </p>
+        </div>
+        <span className="rounded-full bg-orange-50 px-3 py-1 text-sm font-semibold text-orange-700">
+          {formatCurrency(subtotal)}
+        </span>
+      </div>
+
+      <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-slate-600">Pickup timing</span>
+          <span className="font-semibold text-slate-950">
+            {formatPickupMode(pickupMode)}
+          </span>
+        </div>
+        <div className="mt-2 flex items-center justify-between gap-4">
+          <span className="text-slate-600">Catalog</span>
+          <span className="font-semibold text-slate-950">
+            {stationName ? `${catalogCount} items at ${stationName}` : 'Choose a station'}
+          </span>
+        </div>
+        <div className="mt-2 flex items-center justify-between gap-4">
+          <span className="text-slate-600">Estimated total</span>
+          <span className="font-semibold text-slate-950">
+            {formatCurrency(subtotal)}
+          </span>
+        </div>
+      </div>
+
+      {bagItems.length > 0 ? (
+        <div className="rounded-2xl border border-slate-100 bg-white p-4">
+          <p className="text-sm font-semibold text-slate-950">In your bag</p>
+          <div className="mt-3 space-y-2">
+            {bagItems.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between gap-4 text-sm"
+              >
+                <span className="text-slate-600">
+                  {item.name} x{item.quantity}
+                </span>
+                <span className="font-medium text-slate-950">
+                  {formatCurrency(item.subtotal)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-white/80 px-4 py-5 text-sm text-slate-500">
+          Add a few items and the bag summary will stay tucked up here while the catalog gets the full page width.
+        </div>
+      )}
+
+      <p className="text-xs leading-5 text-slate-500">
+        Store-first stays focused on the bag and pickup timing, so the summary now lives behind the cart trigger to keep more room for products.
+      </p>
+    </div>
   );
 }
 
