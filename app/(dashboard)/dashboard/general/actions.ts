@@ -15,7 +15,7 @@ import {
   storeCategories,
   storeItems
 } from '@/lib/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 
 const fuelPriceSchema = z
   .object({
@@ -109,7 +109,8 @@ async function ensureStoreItem({
   slug,
   description,
   imageUrl,
-  basePriceCents
+  basePriceCents,
+  legacySlugs = []
 }: {
   categoryId: number;
   name: string;
@@ -117,11 +118,13 @@ async function ensureStoreItem({
   description: string;
   imageUrl: string;
   basePriceCents: number;
+  legacySlugs?: string[];
 }) {
+  const candidateSlugs = [slug, ...legacySlugs];
   let [item] = await db
     .select()
     .from(storeItems)
-    .where(eq(storeItems.slug, slug))
+    .where(inArray(storeItems.slug, candidateSlugs))
     .limit(1);
 
   if (!item) {
@@ -143,6 +146,7 @@ async function ensureStoreItem({
       .set({
         categoryId,
         name,
+        slug,
         description,
         imageUrl,
         basePriceCents,
@@ -293,7 +297,8 @@ async function ensureExtraMile97947Catalog(stationId: number) {
       slug: 'extramile-doritos-nacho-cheese',
       description: 'Bold nacho tortilla chips in a shareable bag.',
       imageUrl: '/store-items/doritos-nacho.jpg',
-      basePriceCents: 299
+      basePriceCents: 299,
+      legacySlugs: ['doritos-nacho-cheese']
     },
     {
       categoryId: gumCategory.id,
