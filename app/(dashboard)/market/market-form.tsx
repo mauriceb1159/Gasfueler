@@ -823,7 +823,7 @@ function ProductVisual({
               alt={item.storeItem.name}
               fill
               sizes={isFeatured ? '(min-width: 1536px) 220px, (min-width: 768px) 30vw, 45vw' : '96px'}
-              className="object-cover"
+              className="object-contain p-2"
             />
           </div>
         </div>
