@@ -628,7 +628,7 @@ export function BookingForm({
     <section className="space-y-4">
       <div
         className={
-          <DropdownMenu open={isStoreSummaryOpen} onOpenChange={setIsStoreSummaryOpen}>
+          isStoreSummaryOpen
             ? 'sticky top-24 z-20 -mx-1 flex flex-col gap-3 rounded-[1.4rem] bg-white/92 px-1 py-2 backdrop-blur sm:flex-row sm:items-center sm:justify-between'
             : 'flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'
         }
