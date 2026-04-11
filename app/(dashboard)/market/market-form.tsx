@@ -808,6 +808,7 @@ function ProductVisual({
   const theme = getProductVisualTheme(item);
   const isFeatured = size === 'featured';
   const imageUrl = item.storeItem.imageUrl || getCatalogImageFallback(item.storeItem.slug);
+  const isSvg = Boolean(imageUrl && imageUrl.endsWith('.svg'));
 
   if (imageUrl) {
     return (
@@ -818,13 +819,27 @@ function ProductVisual({
             <div className="absolute left-0 bottom-0 h-16 w-16 rounded-full bg-amber-100 blur-2xl" />
           </div>
           <div className="relative h-full overflow-hidden">
-            <Image
-              src={imageUrl}
-              alt={item.storeItem.name}
-              fill
-              sizes={isFeatured ? '(min-width: 1536px) 220px, (min-width: 768px) 30vw, 45vw' : '96px'}
-              className={isFeatured ? 'object-contain p-1' : 'object-contain p-2'}
-            />
+            {isSvg ? (
+              <img
+                src={imageUrl}
+                alt={item.storeItem.name}
+                loading="lazy"
+                decoding="async"
+                className={isFeatured ? 'h-full w-full object-contain p-1' : 'h-full w-full object-contain p-2'}
+              />
+            ) : (
+              <Image
+                src={imageUrl}
+                alt={item.storeItem.name}
+                fill
+                sizes={
+                  isFeatured
+                    ? '(min-width: 1536px) 220px, (min-width: 768px) 30vw, 45vw'
+                    : '96px'
+                }
+                className={isFeatured ? 'object-contain p-1' : 'object-contain p-2'}
+              />
+            )}
           </div>
         </div>
       </div>
