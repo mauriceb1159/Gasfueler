@@ -694,15 +694,15 @@ function FeaturedStoreItemCard({
         <ProductVisual item={item} size="featured" />
         <div className="absolute inset-x-0 top-0 flex items-start justify-between p-4">
           <span className="rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-orange-700">
-          Featured
-          </span>
-          <span className="rounded-full bg-slate-950/80 px-2.5 py-1 text-xs font-semibold text-white">
-            {formatCurrency(item.priceCents)}
+            Featured
           </span>
         </div>
       </div>
-      <div className="mt-4">
-        <p className="font-semibold text-slate-950">{item.storeItem.name}</p>
+      <div className="mt-3">
+        <p className="text-lg font-semibold text-slate-950">
+          {formatCurrency(item.priceCents)}
+        </p>
+        <p className="mt-2 font-semibold text-slate-950">{item.storeItem.name}</p>
         {item.storeItem.description ? (
           <p className="mt-1 text-sm leading-6 text-slate-500">
             {item.storeItem.description}
@@ -811,19 +811,19 @@ function ProductVisual({
 
   if (imageUrl) {
     return (
-      <div className="relative overflow-hidden rounded-[1.2rem] bg-[linear-gradient(145deg,#fff7ed_0%,#ffffff_45%,#fff1e6_100%)]">
-        <div className={isFeatured ? 'h-28 p-3' : 'h-24 p-2.5'}>
-          <div className="absolute inset-0 opacity-80">
-            <div className="absolute -right-6 top-2 h-20 w-20 rounded-full bg-orange-200/70 blur-2xl" />
-            <div className="absolute left-0 bottom-0 h-14 w-14 rounded-full bg-amber-200/70 blur-xl" />
+      <div className="relative overflow-hidden rounded-[1.2rem] bg-[linear-gradient(180deg,#fff8f3_0%,#ffffff_100%)]">
+        <div className={isFeatured ? 'h-40 p-4' : 'h-24 p-1.5'}>
+          <div className="absolute inset-0 opacity-70">
+            <div className="absolute -right-8 top-3 h-24 w-24 rounded-full bg-orange-100 blur-3xl" />
+            <div className="absolute left-0 bottom-0 h-16 w-16 rounded-full bg-amber-100 blur-2xl" />
           </div>
-          <div className="relative h-full overflow-hidden rounded-[1rem] border border-white/70 bg-white/85 shadow-[0_18px_30px_-18px_rgba(15,23,42,0.6)]">
+          <div className="relative h-full overflow-hidden">
             <Image
               src={imageUrl}
               alt={item.storeItem.name}
               fill
               sizes={isFeatured ? '(min-width: 1536px) 220px, (min-width: 768px) 30vw, 45vw' : '96px'}
-              className="object-contain p-2"
+              className={isFeatured ? 'object-contain p-1' : 'object-contain p-2'}
             />
           </div>
         </div>
