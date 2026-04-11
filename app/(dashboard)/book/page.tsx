@@ -8,7 +8,7 @@ import { getBookableStations, getUser, getVehiclesForUser } from '@/lib/db/queri
 export default async function BookPage({
   searchParams
 }: {
-  searchParams?: Promise<{ error?: string }>;
+  searchParams?: Promise<{ error?: string; success?: string }>;
 }) {
   const user = await getUser();
 
@@ -71,6 +71,7 @@ export default async function BookPage({
                   stations={stations}
                   vehicles={vehicles}
                   initialError={params?.error}
+                  successOrderId={params?.success}
                 />
               )}
             </CardContent>
