@@ -35,6 +35,13 @@ export const storeOrderInputSchema = z
     pickupWindowStart: z.string().optional(),
     pickupWindowEnd: z.string().optional(),
     customerNotes: z.string().max(1000).optional(),
+    storeVehicleMake: z.string().trim().min(1, 'Enter the vehicle make.'),
+    storeVehicleModel: z.string().trim().min(1, 'Enter the vehicle model.'),
+    storeVehicleColor: z.string().trim().min(1, 'Enter the vehicle color.'),
+    storeVehicleLicensePlate: z
+      .string()
+      .trim()
+      .min(1, 'Enter the license plate.'),
     selectedStoreItems: storeOrderSelectedItemsFieldSchema
   })
   .superRefine((data, ctx) => {
@@ -139,6 +146,18 @@ export async function createStoreOrderForUser(
     0
   );
 
+  const vehicleSummary = [
+    input.storeVehicleMake,
+    input.storeVehicleModel,
+    input.storeVehicleColor
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const vehiclePlate = input.storeVehicleLicensePlate?.trim();
+  const baseNotes = input.customerNotes?.trim() || '';
+  const vehicleNotes = `Vehicle: ${vehicleSummary}${vehiclePlate ? `, Plate ${vehiclePlate}` : ''}.`;
+  const mergedNotes = [vehicleNotes, baseNotes].filter(Boolean).join(' ');
+
   const newOrder: NewOrder = {
     userId: user.id,
     stationId: station.id,
@@ -147,7 +166,7 @@ export async function createStoreOrderForUser(
     pickupMode: input.pickupMode,
     pickupWindowStart,
     pickupWindowEnd,
-    customerNotes: input.customerNotes?.trim() || null,
+    customerNotes: mergedNotes || null,
     fulfillmentStatus: OrderFulfillmentStatus.DRAFT,
     fuelSubtotal: 0,
     storeSubtotal,

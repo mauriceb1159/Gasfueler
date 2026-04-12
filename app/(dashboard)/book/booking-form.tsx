@@ -1379,6 +1379,48 @@ export function BookingForm({
                     </Field>
                   </div>
                 ) : null}
+                <div className="rounded-[1.2rem] border border-slate-200 bg-white/90 p-4">
+                  <p className="text-sm font-semibold text-slate-950">
+                    Vehicle for pickup
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    Required for store-only pickup so attendants can match the car.
+                  </p>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <Field label="Make" htmlFor="storeVehicleMake">
+                      <Input
+                        id="storeVehicleMake"
+                        name="storeVehicleMake"
+                        placeholder="Toyota"
+                        required
+                      />
+                    </Field>
+                    <Field label="Model" htmlFor="storeVehicleModel">
+                      <Input
+                        id="storeVehicleModel"
+                        name="storeVehicleModel"
+                        placeholder="Highlander"
+                        required
+                      />
+                    </Field>
+                    <Field label="Color" htmlFor="storeVehicleColor">
+                      <Input
+                        id="storeVehicleColor"
+                        name="storeVehicleColor"
+                        placeholder="Gray"
+                        required
+                      />
+                    </Field>
+                    <Field label="License plate" htmlFor="storeVehicleLicensePlate">
+                      <Input
+                        id="storeVehicleLicensePlate"
+                        name="storeVehicleLicensePlate"
+                        placeholder="ABC-1234"
+                        required
+                      />
+                    </Field>
+                  </div>
+                </div>
               </section>
             )}
             <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
