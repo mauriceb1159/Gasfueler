@@ -635,7 +635,10 @@ export function BookingForm({
       >
         <SectionTitle icon={ShoppingBag} title="Market pickup" />
         {storeFirst ? (
-          <DropdownMenu>
+          <DropdownMenu
+            open={isStoreSummaryOpen}
+            onOpenChange={setIsStoreSummaryOpen}
+          >
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
@@ -663,7 +666,7 @@ export function BookingForm({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="hidden sm:block w-[360px] rounded-[1.5rem] border border-orange-200 bg-white p-0 shadow-[0_24px_60px_-32px_rgba(15,23,42,0.35)]"
+              className="hidden w-[360px] max-h-[70vh] overflow-y-auto rounded-[1.5rem] border border-orange-200 bg-white p-0 shadow-[0_24px_60px_-32px_rgba(15,23,42,0.35)] sm:block"
             >
               {storeFirstCartSummary}
             </DropdownMenuContent>
@@ -1815,8 +1818,14 @@ export function BookingForm({
       ) : null}
 
       {storeFirst ? (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-orange-200 bg-white/95 px-3 py-3 shadow-[0_-18px_45px_-30px_rgba(15,23,42,0.35)] backdrop-blur sm:hidden">
-          <DropdownMenu>
+        <div
+          className="fixed inset-x-0 bottom-0 z-30 border-t border-orange-200 bg-white/95 px-3 py-3 shadow-[0_-18px_45px_-30px_rgba(15,23,42,0.35)] backdrop-blur sm:hidden"
+          style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+        >
+          <DropdownMenu
+            open={isStoreSummaryOpen}
+            onOpenChange={setIsStoreSummaryOpen}
+          >
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
@@ -1850,7 +1859,7 @@ export function BookingForm({
             <DropdownMenuContent
               side="top"
               align="center"
-              className="mb-2 w-[min(92vw,360px)] rounded-[1.5rem] border border-orange-200 bg-white p-0 shadow-[0_24px_60px_-32px_rgba(15,23,42,0.35)]"
+              className="mb-2 w-[min(92vw,360px)] max-h-[70vh] overflow-y-auto rounded-[1.5rem] border border-orange-200 bg-white p-0 shadow-[0_24px_60px_-32px_rgba(15,23,42,0.35)]"
             >
               {storeFirstCartSummary}
             </DropdownMenuContent>
