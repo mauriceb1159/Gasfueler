@@ -140,6 +140,10 @@ function RequestCard({
                   <p className="mt-1 text-sm font-normal text-slate-500">
                     {request.user.name || request.user.email} at {request.station.name}
                   </p>
+                  <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-slate-400">
+                    Submitted {formatRelativeTimestamp(request.createdAt)} ·{' '}
+                    {formatTimestamp(request.createdAt)}
+                  </p>
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3">
@@ -170,6 +174,18 @@ function RequestCard({
             <InfoRow label="Fuel grade" value={formatFuelGrade(request.fuelGrade)} />
             <InfoRow label="Requested type" value={formatFuelGrade(request.requestType)} />
             <InfoRow label="Service fee" value={formatCurrency(request.serviceFee)} />
+            <InfoRow
+              label="Submitted"
+              value={`${formatRelativeTimestamp(request.createdAt)} · ${formatTimestamp(
+                request.createdAt
+              )}`}
+            />
+            <InfoRow
+              label={request.completedAt ? 'Completed' : 'Last updated'}
+              value={`${formatRelativeTimestamp(
+                request.completedAt ?? request.updatedAt
+              )} · ${formatTimestamp(request.completedAt ?? request.updatedAt)}`}
+            />
           </div>
 
           {request.status !== FuelRequestStatus.CANCELED &&
@@ -239,4 +255,49 @@ function formatCurrency(cents: number) {
     style: 'currency',
     currency: 'USD'
   }).format(cents / 100);
+}
+
+function formatTimestamp(value: Date | string) {
+  const date = value instanceof Date ? value : new Date(value);
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  }).format(date);
+}
+
+function formatRelativeTimestamp(value: Date | string) {
+  const date = value instanceof Date ? value : new Date(value);
+  const diffMs = date.getTime() - Date.now();
+  const diffMinutes = Math.round(diffMs / (1000 * 60));
+
+  if (Math.abs(diffMinutes) < 1) {
+    return 'just now';
+  }
+
+  if (Math.abs(diffMinutes) < 60) {
+    return new Intl.RelativeTimeFormat('en-US', { numeric: 'auto' }).format(
+      diffMinutes,
+      'minute'
+    );
+  }
+
+  const diffHours = Math.round(diffMinutes / 60);
+
+  if (Math.abs(diffHours) < 24) {
+    return new Intl.RelativeTimeFormat('en-US', { numeric: 'auto' }).format(
+      diffHours,
+      'hour'
+    );
+  }
+
+  const diffDays = Math.round(diffHours / 24);
+
+  return new Intl.RelativeTimeFormat('en-US', { numeric: 'auto' }).format(
+    diffDays,
+    'day'
+  );
 }

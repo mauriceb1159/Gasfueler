@@ -32,6 +32,7 @@ import {
   validatedAction,
   validatedActionWithUser
 } from '@/lib/auth/middleware';
+import { getDashboardUrlForRole, USER_ROLES, type UserRole } from '@/lib/auth/roles';
 
 async function logActivity(
   teamId: number | null | undefined,
@@ -108,17 +109,29 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
     redirect('/book');
   }
 
-  redirect('/dashboard');
+  // Redirect to role-specific dashboard
+  const roleDashboard = getDashboardUrlForRole(foundUser.role as UserRole);
+  redirect(roleDashboard);
 });
 
 const signUpSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
+  role: z.enum([
+    USER_ROLES.END_USER,
+    USER_ROLES.FUEL_DRIVER,
+    USER_ROLES.FUEL_ATTENDANT,
+    USER_ROLES.STORE,
+    USER_ROLES.STORE_BACK_OFFICE,
+    USER_ROLES.DISPATCHER,
+    USER_ROLES.ADMIN,
+    USER_ROLES.MAIN_ADMIN
+  ]).optional().default(USER_ROLES.END_USER),
   inviteId: z.string().optional()
 });
 
 export const signUp = validatedAction(signUpSchema, async (data, formData) => {
-  const { email, password, inviteId } = data;
+  const { email, password, inviteId, role } = data;
   try {
     const existingUser = await db
       .select()
@@ -139,7 +152,7 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
     const newUser: NewUser = {
       email,
       passwordHash,
-      role: 'owner' // Default role, will be overridden if there's an invitation
+      role: role || USER_ROLES.END_USER
     };
 
     const [createdUser] = await db.insert(users).values(newUser).returning();
@@ -206,9 +219,7 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
       }
 
       teamId = createdTeam.id;
-      userRole = 'owner';
-
-      await logActivity(teamId, createdUser.id, ActivityType.CREATE_TEAM);
+      userRole = role || USER_ROLES.END_USER;
     }
 
     const newTeamMember: NewTeamMember = {
@@ -233,7 +244,9 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
       redirect('/book');
     }
 
-    redirect('/dashboard');
+    // Redirect to role-specific dashboard
+    const roleDashboard = getDashboardUrlForRole(createdUser.role as UserRole);
+    redirect(roleDashboard);
   } catch (error) {
     console.error('Sign-up failed:', error);
     return {

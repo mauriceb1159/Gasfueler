@@ -15,8 +15,8 @@ import {
   vehicles
 } from './schema';
 import { cookies } from 'next/headers';
+import { headers } from 'next/headers';
 import { verifyToken } from '@/lib/auth/session';
-import { getEffectiveFuelPricesForStation } from '@/lib/fuel-pricing';
 
 const MIN_OPEN_SERVICE_SLOTS = 6;
 const SLOT_DURATION_MINUTES = 45;
@@ -24,15 +24,21 @@ const SLOT_INTERVAL_MINUTES = 120;
 const SLOT_GENERATION_DAYS = 7;
 
 export async function getUser() {
-  const sessionCookie = (await cookies()).get('session');
-  if (!sessionCookie || !sessionCookie.value) {
+  const sessionCookie = (await cookies()).get('session')?.value;
+  const authorizationHeader = (await headers()).get('authorization');
+  const bearerToken = authorizationHeader?.startsWith('Bearer ')
+    ? authorizationHeader.slice('Bearer '.length).trim()
+    : null;
+  const sessionToken = sessionCookie || bearerToken;
+
+  if (!sessionToken) {
     return null;
   }
 
   let sessionData;
 
   try {
-    sessionData = await verifyToken(sessionCookie.value);
+    sessionData = await verifyToken(sessionToken);
   } catch {
     return null;
   }
@@ -173,6 +179,8 @@ export async function getVehiclesForUser(userId: number) {
 }
 
 export async function getBookableStations() {
+  const { getEffectiveFuelPricesForStation } = await import('@/lib/fuel-pricing');
+
   try {
     await ensureUpcomingServiceSlotsForActiveStations();
   } catch (error) {
@@ -264,6 +272,8 @@ export async function getBookableStations() {
 }
 
 export async function getStationsForPricing() {
+  const { getEffectiveFuelPricesForStation } = await import('@/lib/fuel-pricing');
+
   try {
     const stationsResult = await db.query.stations.findMany({
       where: eq(stations.active, true),

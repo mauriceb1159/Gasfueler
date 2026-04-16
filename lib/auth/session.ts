@@ -1,7 +1,7 @@
 import { compare, hash } from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
-import { NewUser } from '@/lib/db/schema';
+import { NewUser, type User } from '@/lib/db/schema';
 
 const key = new TextEncoder().encode(process.env.AUTH_SECRET);
 const SALT_ROUNDS = 10;
@@ -22,6 +22,22 @@ type SessionData = {
   user: { id: number };
   expires: string;
 };
+
+export async function createSessionToken(user: Pick<User, 'id'>) {
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const session: SessionData = {
+    user: { id: user.id },
+    expires: expiresAt.toISOString(),
+  };
+
+  const token = await signToken(session);
+
+  return {
+    token,
+    expiresAt,
+    session,
+  };
+}
 
 export async function signToken(payload: SessionData) {
   return await new SignJWT(payload)
@@ -45,14 +61,9 @@ export async function getSession() {
 }
 
 export async function setSession(user: NewUser) {
-  const expiresInOneDay = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  const session: SessionData = {
-    user: { id: user.id! },
-    expires: expiresInOneDay.toISOString(),
-  };
-  const encryptedSession = await signToken(session);
-  (await cookies()).set('session', encryptedSession, {
-    expires: expiresInOneDay,
+  const { token, expiresAt } = await createSessionToken({ id: user.id! });
+  (await cookies()).set('session', token, {
+    expires: expiresAt,
     httpOnly: true,
     secure: isSecureCookie,
     sameSite: 'lax',

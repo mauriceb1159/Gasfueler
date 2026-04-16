@@ -1,4 +1,4 @@
-import { stripe } from '../payments/stripe';
+import { getStripeClient } from '../payments/stripe';
 import { db } from './drizzle';
 import {
   serviceSlots,
@@ -18,6 +18,7 @@ import { eq, and, gte } from 'drizzle-orm';
 
 async function createStripeProducts() {
   console.log('Creating Stripe products and prices...');
+  const stripe = getStripeClient();
 
   const baseProduct = await stripe.products.create({
     name: 'Base',

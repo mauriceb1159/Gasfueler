@@ -1,11 +1,15 @@
 import Stripe from 'stripe';
-import { handleSubscriptionChange, stripe } from '@/lib/payments/stripe';
+import {
+  getStripeClient,
+  handleSubscriptionChange
+} from '@/lib/payments/stripe';
 import { NextRequest, NextResponse } from 'next/server';
 import { reconcileStoreOrderPayment } from '@/lib/store-orders';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 export async function POST(request: NextRequest) {
+  const stripe = getStripeClient();
   const payload = await request.text();
   const signature = request.headers.get('stripe-signature') as string;
 

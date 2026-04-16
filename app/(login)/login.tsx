@@ -1,24 +1,97 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CircleIcon, Loader2 } from 'lucide-react';
-import { signIn, signUp } from './actions';
-import { ActionState } from '@/lib/auth/middleware';
+import {
+  USER_ROLES,
+  ROLE_LABELS,
+  ROLE_DESCRIPTIONS,
+  type UserRole
+} from '@/lib/auth/roles';
 
-export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
-  const searchParams = useSearchParams();
-  const redirect = searchParams.get('redirect');
-  const priceId = searchParams.get('priceId');
-  const inviteId = searchParams.get('inviteId');
-  const [state, formAction, pending] = useActionState<ActionState, FormData>(
-    mode === 'signin' ? signIn : signUp,
-    { error: '' }
-  );
+export function Login({
+  mode = 'signin',
+  redirect,
+  priceId,
+  inviteId
+}: {
+  mode?: 'signin' | 'signup';
+  redirect?: string | null;
+  priceId?: string | null;
+  inviteId?: string | null;
+}) {
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState<UserRole>(USER_ROLES.END_USER);
+  const availableRoles = Object.values(USER_ROLES) as UserRole[];
+
+  const authSwitchHref = buildAuthSwitchHref({
+    mode,
+    redirect,
+    priceId,
+    inviteId
+  });
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPending(true);
+    setError('');
+
+    try {
+      const response = await fetch(
+        mode === 'signin' ? '/api/auth/sign-in' : '/api/auth/sign-up',
+        {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify({
+            email,
+            password,
+            ...(mode === 'signup' && { role }),
+            inviteId: inviteId || undefined
+          })
+        }
+      );
+
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        setError(
+          (payload && typeof payload === 'object' && 'error' in payload && payload.error) ||
+            `Unable to continue right now. (${response.status})`
+        );
+        return;
+      }
+
+      if (redirect === 'book') {
+        router.push('/book');
+        router.refresh();
+        return;
+      }
+
+      if (redirect) {
+        router.push(`/${redirect}`);
+        router.refresh();
+        return;
+      }
+
+      router.push('/dashboard');
+      router.refresh();
+    } catch {
+      setError('Unable to continue right now.');
+    } finally {
+      setPending(false);
+    }
+  }
 
   return (
     <div className="min-h-[100dvh] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
@@ -34,7 +107,7 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <form className="space-y-6" action={formAction}>
+        <form className="space-y-6" onSubmit={handleSubmit}>
           <input type="hidden" name="redirect" value={redirect || ''} />
           <input type="hidden" name="priceId" value={priceId || ''} />
           <input type="hidden" name="inviteId" value={inviteId || ''} />
@@ -51,7 +124,8 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
                 name="email"
                 type="email"
                 autoComplete="email"
-                defaultValue={state.email}
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
                 required
                 maxLength={50}
                 className="appearance-none rounded-full relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
@@ -75,7 +149,8 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
                 autoComplete={
                   mode === 'signin' ? 'current-password' : 'new-password'
                 }
-                defaultValue={state.password}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
                 required
                 minLength={8}
                 maxLength={100}
@@ -95,9 +170,33 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
             ) : null}
           </div>
 
-          {state?.error && (
-            <div className="text-red-500 text-sm">{state.error}</div>
+          {mode === 'signup' && (
+            <div>
+              <Label className="block text-sm font-medium text-gray-700">
+                Account Type
+              </Label>
+              <div className="mt-3 grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
+                {availableRoles.map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setRole(r)}
+                    className={`p-3 text-left rounded-lg border-2 transition ${
+                      role === r
+                        ? 'border-orange-500 bg-orange-50'
+                        : 'border-gray-300 bg-white hover:border-orange-300'
+                    }`}
+                  >
+                    <div className="font-medium text-sm">{ROLE_LABELS[r]}</div>
+                    <div className="text-xs text-gray-600 mt-1">
+                      {ROLE_DESCRIPTIONS[r]}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
+          {error && <div className="text-red-500 text-sm">{error}</div>}
 
           <div>
             <Button
@@ -135,9 +234,7 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
 
           <div className="mt-6">
             <Link
-              href={`${mode === 'signin' ? '/sign-up' : '/sign-in'}${
-                redirect ? `?redirect=${redirect}` : ''
-              }${priceId ? `&priceId=${priceId}` : ''}`}
+              href={authSwitchHref}
               className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-full shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             >
               {mode === 'signin'
@@ -149,4 +246,35 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
       </div>
     </div>
   );
+}
+
+function buildAuthSwitchHref({
+  mode,
+  redirect,
+  priceId,
+  inviteId
+}: {
+  mode: 'signin' | 'signup';
+  redirect?: string | null;
+  priceId?: string | null;
+  inviteId?: string | null;
+}) {
+  const pathname = mode === 'signin' ? '/sign-up' : '/sign-in';
+  const params = new URLSearchParams();
+
+  if (redirect) {
+    params.set('redirect', redirect);
+  }
+
+  if (priceId) {
+    params.set('priceId', priceId);
+  }
+
+  if (inviteId) {
+    params.set('inviteId', inviteId);
+  }
+
+  const query = params.toString();
+
+  return query ? `${pathname}?${query}` : pathname;
 }

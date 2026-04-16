@@ -6,6 +6,7 @@ import {
   text,
   timestamp,
   integer,
+  jsonb,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -281,6 +282,84 @@ export const fuelRequests = pgTable('fuel_requests', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+export const drivers = pgTable('drivers', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id),
+  phone: varchar('phone', { length: 30 }),
+  active: boolean('active').notNull().default(true),
+  availabilityStatus: varchar('availability_status', { length: 30 })
+    .notNull()
+    .default('offline'),
+  currentStationId: integer('current_station_id').references(() => stations.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const dispatchJobs = pgTable('dispatch_jobs', {
+  id: serial('id').primaryKey(),
+  fuelRequestId: integer('fuel_request_id').references(() => fuelRequests.id),
+  orderId: integer('order_id').references(() => orders.id),
+  jobType: varchar('job_type', { length: 30 }).notNull(),
+  customerUserId: integer('customer_user_id')
+    .notNull()
+    .references(() => users.id),
+  stationId: integer('station_id')
+    .notNull()
+    .references(() => stations.id),
+  status: varchar('status', { length: 30 }).notNull().default('unassigned'),
+  priority: integer('priority').notNull().default(0),
+  scheduledStartAt: timestamp('scheduled_start_at'),
+  scheduledEndAt: timestamp('scheduled_end_at'),
+  driverNotes: text('driver_notes'),
+  dispatcherNotes: text('dispatcher_notes'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const dispatchAssignments = pgTable('dispatch_assignments', {
+  id: serial('id').primaryKey(),
+  dispatchJobId: integer('dispatch_job_id')
+    .notNull()
+    .references(() => dispatchJobs.id),
+  driverId: integer('driver_id')
+    .notNull()
+    .references(() => drivers.id),
+  assignedByUserId: integer('assigned_by_user_id')
+    .notNull()
+    .references(() => users.id),
+  assignmentStatus: varchar('assignment_status', { length: 30 })
+    .notNull()
+    .default('assigned'),
+  assignedAt: timestamp('assigned_at').notNull().defaultNow(),
+  acceptedAt: timestamp('accepted_at'),
+  declinedAt: timestamp('declined_at'),
+});
+
+export const driverLocations = pgTable('driver_locations', {
+  id: serial('id').primaryKey(),
+  driverId: integer('driver_id')
+    .notNull()
+    .references(() => drivers.id),
+  latitude: varchar('latitude', { length: 30 }).notNull(),
+  longitude: varchar('longitude', { length: 30 }).notNull(),
+  heading: integer('heading'),
+  speed: integer('speed'),
+  capturedAt: timestamp('captured_at').notNull().defaultNow(),
+});
+
+export const dispatchEvents = pgTable('dispatch_events', {
+  id: serial('id').primaryKey(),
+  dispatchJobId: integer('dispatch_job_id')
+    .notNull()
+    .references(() => dispatchJobs.id),
+  actorUserId: integer('actor_user_id').references(() => users.id),
+  eventType: varchar('event_type', { length: 40 }).notNull(),
+  payload: jsonb('payload'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
 export const fuelRequestItems = pgTable('fuel_request_items', {
   id: serial('id').primaryKey(),
   fuelRequestId: integer('fuel_request_id')
@@ -319,6 +398,10 @@ export const usersRelations = relations(users, ({ many }) => ({
   orders: many(orders),
   fuelRequests: many(fuelRequests),
   requestStatusEvents: many(requestStatusEvents),
+  driverProfiles: many(drivers),
+  customerDispatchJobs: many(dispatchJobs),
+  dispatchAssignmentsMade: many(dispatchAssignments),
+  dispatchEvents: many(dispatchEvents),
 }));
 
 export const stationsRelations = relations(stations, ({ many }) => ({
@@ -328,6 +411,8 @@ export const stationsRelations = relations(stations, ({ many }) => ({
   stationStoreItems: many(stationStoreItems),
   orders: many(orders),
   fuelRequests: many(fuelRequests),
+  drivers: many(drivers),
+  dispatchJobs: many(dispatchJobs),
 }));
 
 export const stationHoursRelations = relations(stationHours, ({ one }) => ({
@@ -397,6 +482,7 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
   }),
   fuelRequests: many(fuelRequests),
   orderItems: many(orderItems),
+  dispatchJobs: many(dispatchJobs),
 }));
 
 export const orderItemsRelations = relations(orderItems, ({ one }) => ({
@@ -465,6 +551,19 @@ export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
   fuelRequests: many(fuelRequests),
 }));
 
+export const driversRelations = relations(drivers, ({ one, many }) => ({
+  user: one(users, {
+    fields: [drivers.userId],
+    references: [users.id],
+  }),
+  currentStation: one(stations, {
+    fields: [drivers.currentStationId],
+    references: [stations.id],
+  }),
+  assignments: many(dispatchAssignments),
+  locations: many(driverLocations),
+}));
+
 export const fuelRequestsRelations = relations(fuelRequests, ({ one, many }) => ({
   order: one(orders, {
     fields: [fuelRequests.orderId],
@@ -488,6 +587,64 @@ export const fuelRequestsRelations = relations(fuelRequests, ({ one, many }) => 
   }),
   items: many(fuelRequestItems),
   statusEvents: many(requestStatusEvents),
+  dispatchJobs: many(dispatchJobs),
+}));
+
+export const dispatchJobsRelations = relations(dispatchJobs, ({ one, many }) => ({
+  fuelRequest: one(fuelRequests, {
+    fields: [dispatchJobs.fuelRequestId],
+    references: [fuelRequests.id],
+  }),
+  order: one(orders, {
+    fields: [dispatchJobs.orderId],
+    references: [orders.id],
+  }),
+  customerUser: one(users, {
+    fields: [dispatchJobs.customerUserId],
+    references: [users.id],
+  }),
+  station: one(stations, {
+    fields: [dispatchJobs.stationId],
+    references: [stations.id],
+  }),
+  assignments: many(dispatchAssignments),
+  events: many(dispatchEvents),
+}));
+
+export const dispatchAssignmentsRelations = relations(
+  dispatchAssignments,
+  ({ one }) => ({
+    dispatchJob: one(dispatchJobs, {
+      fields: [dispatchAssignments.dispatchJobId],
+      references: [dispatchJobs.id],
+    }),
+    driver: one(drivers, {
+      fields: [dispatchAssignments.driverId],
+      references: [drivers.id],
+    }),
+    assignedByUser: one(users, {
+      fields: [dispatchAssignments.assignedByUserId],
+      references: [users.id],
+    }),
+  })
+);
+
+export const driverLocationsRelations = relations(driverLocations, ({ one }) => ({
+  driver: one(drivers, {
+    fields: [driverLocations.driverId],
+    references: [drivers.id],
+  }),
+}));
+
+export const dispatchEventsRelations = relations(dispatchEvents, ({ one }) => ({
+  dispatchJob: one(dispatchJobs, {
+    fields: [dispatchEvents.dispatchJobId],
+    references: [dispatchJobs.id],
+  }),
+  actorUser: one(users, {
+    fields: [dispatchEvents.actorUserId],
+    references: [users.id],
+  }),
 }));
 
 export const fuelRequestItemsRelations = relations(fuelRequestItems, ({ one }) => ({
@@ -551,6 +708,16 @@ export type Vehicle = typeof vehicles.$inferSelect;
 export type NewVehicle = typeof vehicles.$inferInsert;
 export type FuelRequest = typeof fuelRequests.$inferSelect;
 export type NewFuelRequest = typeof fuelRequests.$inferInsert;
+export type Driver = typeof drivers.$inferSelect;
+export type NewDriver = typeof drivers.$inferInsert;
+export type DispatchJob = typeof dispatchJobs.$inferSelect;
+export type NewDispatchJob = typeof dispatchJobs.$inferInsert;
+export type DispatchAssignment = typeof dispatchAssignments.$inferSelect;
+export type NewDispatchAssignment = typeof dispatchAssignments.$inferInsert;
+export type DriverLocation = typeof driverLocations.$inferSelect;
+export type NewDriverLocation = typeof driverLocations.$inferInsert;
+export type DispatchEvent = typeof dispatchEvents.$inferSelect;
+export type NewDispatchEvent = typeof dispatchEvents.$inferInsert;
 export type FuelRequestItem = typeof fuelRequestItems.$inferSelect;
 export type NewFuelRequestItem = typeof fuelRequestItems.$inferInsert;
 export type RequestStatusEvent = typeof requestStatusEvents.$inferSelect;
@@ -636,4 +803,35 @@ export enum OrderFulfillmentStatus {
   READY_FOR_PICKUP = 'ready_for_pickup',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
+}
+
+export enum DriverAvailabilityStatus {
+  OFFLINE = 'offline',
+  AVAILABLE = 'available',
+  ON_JOB = 'on_job',
+  BREAK = 'break',
+}
+
+export enum DispatchJobType {
+  FUEL = 'fuel',
+  STORE = 'store',
+  COMBO = 'combo',
+}
+
+export enum DispatchJobStatus {
+  UNASSIGNED = 'unassigned',
+  ASSIGNED = 'assigned',
+  ACCEPTED = 'accepted',
+  EN_ROUTE = 'en_route',
+  ARRIVED = 'arrived',
+  SERVICING = 'servicing',
+  COMPLETED = 'completed',
+  CANCELED = 'canceled',
+}
+
+export enum DispatchAssignmentStatus {
+  ASSIGNED = 'assigned',
+  ACCEPTED = 'accepted',
+  DECLINED = 'declined',
+  REASSIGNED = 'reassigned',
 }

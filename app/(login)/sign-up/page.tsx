@@ -1,10 +1,7 @@
-import { Suspense } from 'react';
+'use client';
+
 import { Login } from '../login';
 
 export default function SignUpPage() {
-  return (
-    <Suspense>
-      <Login mode="signup" />
-    </Suspense>
-  );
+  return <Login mode="signup" />;
 }

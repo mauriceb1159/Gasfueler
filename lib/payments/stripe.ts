@@ -7,16 +7,24 @@ import {
   updateTeamSubscription
 } from '@/lib/db/queries';
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-04-30.basil'
-});
-
 export function hasValidStripeKey() {
   const stripeKey = process.env.STRIPE_SECRET_KEY;
 
   return Boolean(
     stripeKey && stripeKey.trim().length > 0 && !stripeKey.includes('replace_me')
   );
+}
+
+export function getStripeClient() {
+  if (!hasValidStripeKey()) {
+    throw new Error(
+      'Stripe is not configured for local demo mode. Add a real STRIPE_SECRET_KEY to enable checkout.'
+    );
+  }
+
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2025-04-30.basil'
+  });
 }
 
 export async function createStoreOrderCheckoutSession({
@@ -30,11 +38,7 @@ export async function createStoreOrderCheckoutSession({
     unitPrice: number;
   }[];
 }) {
-  if (!hasValidStripeKey()) {
-    throw new Error(
-      'Stripe is not configured for local demo mode. Add a real STRIPE_SECRET_KEY to enable checkout.'
-    );
-  }
+  const stripe = getStripeClient();
 
   const user = await getUser();
 
@@ -76,11 +80,7 @@ export async function createCheckoutSession({
   team: Team | null;
   priceId: string;
 }) {
-  if (!hasValidStripeKey()) {
-    throw new Error(
-      'Stripe is not configured for local demo mode. Add a real STRIPE_SECRET_KEY to enable checkout.'
-    );
-  }
+  const stripe = getStripeClient();
 
   const user = await getUser();
 
@@ -111,11 +111,7 @@ export async function createCheckoutSession({
 }
 
 export async function createCustomerPortalSession(team: Team) {
-  if (!hasValidStripeKey()) {
-    throw new Error(
-      'Stripe is not configured for local demo mode. Add a real STRIPE_SECRET_KEY to enable the customer portal.'
-    );
-  }
+  const stripe = getStripeClient();
 
   if (!team.stripeCustomerId || !team.stripeProductId) {
     redirect('/pricing');
@@ -221,6 +217,8 @@ export async function getStripePrices() {
     return [];
   }
 
+  const stripe = getStripeClient();
+
   const prices = await stripe.prices.list({
     expand: ['data.product'],
     active: true,
@@ -242,6 +240,8 @@ export async function getStripeProducts() {
   if (!hasValidStripeKey()) {
     return [];
   }
+
+  const stripe = getStripeClient();
 
   const products = await stripe.products.list({
     active: true,

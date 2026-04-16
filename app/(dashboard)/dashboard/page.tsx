@@ -228,6 +228,14 @@ function InviteTeamMember() {
                 <Label htmlFor="member">Member</Label>
               </div>
               <div className="flex items-center space-x-2 mt-2">
+                <RadioGroupItem value="attendant" id="attendant" />
+                <Label htmlFor="attendant">Attendant</Label>
+              </div>
+              <div className="flex items-center space-x-2 mt-2">
+                <RadioGroupItem value="store_back_office" id="store_back_office" />
+                <Label htmlFor="store_back_office">Store Back Office</Label>
+              </div>
+              <div className="flex items-center space-x-2 mt-2">
                 <RadioGroupItem value="owner" id="owner" />
                 <Label htmlFor="owner">Owner</Label>
               </div>

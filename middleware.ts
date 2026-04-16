@@ -1,47 +1,11 @@
-import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { signToken, verifyToken } from '@/lib/auth/session';
+import { handleRequestGuard } from '@/lib/auth/request-guard';
 
-const protectedRoutes = '/dashboard';
-const isSecureCookie = process.env.NODE_ENV === 'production';
-
+// Keep the legacy filename because this Next canary still requires it in dev mode.
+// The routing logic itself now lives in a shared module so migrating back to
+// `proxy.ts` later is just an entrypoint swap instead of another refactor.
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const sessionCookie = request.cookies.get('session');
-  const isProtectedRoute = pathname.startsWith(protectedRoutes);
-
-  if (isProtectedRoute && !sessionCookie) {
-    return NextResponse.redirect(new URL('/sign-in', request.url));
-  }
-
-  let res = NextResponse.next();
-
-  if (sessionCookie && request.method === 'GET') {
-    try {
-      const parsed = await verifyToken(sessionCookie.value);
-      const expiresInOneDay = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-      res.cookies.set({
-        name: 'session',
-        value: await signToken({
-          ...parsed,
-          expires: expiresInOneDay.toISOString()
-        }),
-        httpOnly: true,
-        secure: isSecureCookie,
-        sameSite: 'lax',
-        expires: expiresInOneDay
-      });
-    } catch (error) {
-      console.error('Error updating session:', error);
-      res.cookies.delete('session');
-      if (isProtectedRoute) {
-        return NextResponse.redirect(new URL('/sign-in', request.url));
-      }
-    }
-  }
-
-  return res;
+  return handleRequestGuard(request);
 }
 
 export const config = {

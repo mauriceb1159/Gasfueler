@@ -68,6 +68,14 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser to see the app in action.
 
+## Middleware Note
+
+This repo intentionally keeps [`middleware.ts`](./middleware.ts) for now even though newer Next.js guidance prefers `proxy.ts`.
+
+- On the current Next.js canary in this workspace, production accepted `proxy.ts` but local `next dev` failed with `Cannot find the middleware module`.
+- The request-guard logic itself lives in [`lib/auth/request-guard.ts`](./lib/auth/request-guard.ts), so switching entrypoints later should be a small cleanup instead of another refactor.
+- Once the local dev/runtime behavior is stable on a newer Next.js version, this can be revisited.
+
 You can listen for Stripe webhooks locally through their CLI to handle subscription change events:
 
 ```bash

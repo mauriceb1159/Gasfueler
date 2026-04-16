@@ -4,17 +4,24 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { LogOut, Settings, ShoppingCart, TicketPlus } from 'lucide-react';
+import { LogOut, Settings, ShoppingCart, TicketPlus, Users, MapPin, Truck, Navigation } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { signOut } from '@/app/(login)/actions';
 import { usePathname, useRouter } from 'next/navigation';
 import { User } from '@/lib/db/schema';
+import {
+  getDashboardUrlForRole,
+  ROLE_LABELS,
+  isAdmin,
+  type UserRole
+} from '@/lib/auth/roles';
 import useSWR, { mutate } from 'swr';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -55,32 +62,141 @@ function UserMenu() {
     );
   }
 
+  const userRole = user.role as UserRole;
+  const isUserAdmin = isAdmin(userRole);
+
   return (
     <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
       <DropdownMenuTrigger>
-        <Avatar className="cursor-pointer size-9">
-          <AvatarImage alt={user.name || ''} />
-          <AvatarFallback>
-            {user.email
-              .split(' ')
-              .map((n) => n[0])
-              .join('')}
-          </AvatarFallback>
-        </Avatar>
+        <div className="flex items-center gap-2">
+          <Avatar className="cursor-pointer size-9">
+            <AvatarImage alt={user.name || ''} />
+            <AvatarFallback>
+              {user.email
+                .split(' ')
+                .map((n) => n[0])
+                .join('')}
+            </AvatarFallback>
+          </Avatar>
+          <div className="hidden items-center gap-2 md:flex">
+            <div className="text-right">
+              <p className="text-xs font-medium text-gray-900">{user.name || user.email}</p>
+              <p className="text-xs text-gray-500">{ROLE_LABELS[userRole] || user.role}</p>
+            </div>
+          </div>
+        </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="flex flex-col gap-1">
-        <DropdownMenuItem className="cursor-pointer">
-          <Link href="/book" className="flex w-full items-center">
-            <TicketPlus className="mr-2 h-4 w-4" />
-            <span>Book</span>
-          </Link>
-        </DropdownMenuItem>
+        {/* Customer menu items */}
+        {user.role === 'end_user' && (
+          <>
+            <DropdownMenuItem className="cursor-pointer">
+              <Link href="/book" className="flex w-full items-center">
+                <TicketPlus className="mr-2 h-4 w-4" />
+                <span>Book Fuel</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+
+        {/* Driver menu items */}
+        {user.role === 'fuel_driver' && (
+          <>
+            <DropdownMenuItem className="cursor-pointer">
+              <Link href="/dashboard/driver" className="flex w-full items-center">
+                <Truck className="mr-2 h-4 w-4" />
+                <span>My Routes</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+
+        {/* Dispatcher menu items */}
+        {user.role === 'dispatcher' && (
+          <>
+            <DropdownMenuItem className="cursor-pointer">
+              <Link href="/dashboard/dispatcher" className="flex w-full items-center">
+                <Navigation className="mr-2 h-4 w-4" />
+                <span>Dispatch</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+
+        {/* Attendant menu items */}
+        {user.role === 'fuel_attendant' && (
+          <>
+            <DropdownMenuItem className="cursor-pointer">
+              <Link href="/dashboard/attendant" className="flex w-full items-center">
+                <MapPin className="mr-2 h-4 w-4" />
+                <span>Station</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+
+        {/* Store owner/admin menu items */}
+        {(user.role === 'store' || user.role === 'store_back_office') && (
+          <>
+            <DropdownMenuItem className="cursor-pointer">
+              <Link href="/dashboard/store" className="flex w-full items-center">
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                <span>Store Management</span>
+              </Link>
+            </DropdownMenuItem>
+            {user.role === 'store' && (
+              <DropdownMenuItem className="cursor-pointer">
+                <Link href="/dashboard/store-admin" className="flex w-full items-center">
+                  <Users className="mr-2 h-4 w-4" />
+                  <span>Team</span>
+                </Link>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+          </>
+        )}
+
+        {/* Market cart (shown for customers in market area) */}
+        {user.role === 'end_user' && (
+          <>
+            <DropdownMenuItem className="cursor-pointer">
+              <Link href="/market" className="flex w-full items-center">
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                <span>Market</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+
+        {/* Admin menu items */}
+        {isUserAdmin && (
+          <>
+            <DropdownMenuItem className="cursor-pointer">
+              <Link 
+                href={user.role === 'main_admin' ? '/dashboard/super-admin' : '/dashboard/admin'} 
+                className="flex w-full items-center"
+              >
+                <Users className="mr-2 h-4 w-4" />
+                <span>{user.role === 'main_admin' ? 'Super Admin' : 'Admin Panel'}</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+
+        {/* Account settings (for all users) */}
         <DropdownMenuItem className="cursor-pointer">
           <Link href="/dashboard" className="flex w-full items-center">
             <Settings className="mr-2 h-4 w-4" />
             <span>Account</span>
           </Link>
         </DropdownMenuItem>
+        
         <form action={handleSignOut} className="w-full">
           <button type="submit" className="flex w-full">
             <DropdownMenuItem className="w-full flex-1 cursor-pointer">
