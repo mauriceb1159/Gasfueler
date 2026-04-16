@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { comparePasswords, hashPassword } from '@/lib/auth/session';
+import { USER_ROLES } from '@/lib/auth/roles';
 import { db } from '@/lib/db/drizzle';
 import {
   activityLogs,
@@ -96,27 +97,12 @@ export async function registerUser(input: z.infer<typeof signUpInputSchema>) {
       };
     }
 
-    const passwordHash = await hashPassword(password);
-    const newUser: NewUser = {
-      email,
-      passwordHash,
-      role: 'owner'
-    };
-
-    const [createdUser] = await db.insert(users).values(newUser).returning();
-
-    if (!createdUser) {
-      return {
-        error: 'We could not create your account. Please try again.' as const
-      };
-    }
-
-    let teamId: number;
-    let userRole: string;
-    let createdTeam: typeof teams.$inferSelect | null = null;
+    let invitation:
+      | (typeof invitations.$inferSelect)
+      | undefined;
 
     if (inviteId) {
-      const [invitation] = await db
+      [invitation] = await db
         .select()
         .from(invitations)
         .where(
@@ -131,7 +117,28 @@ export async function registerUser(input: z.infer<typeof signUpInputSchema>) {
       if (!invitation) {
         return { error: 'This invitation is invalid or expired.' as const };
       }
+    }
 
+    const passwordHash = await hashPassword(password);
+    const newUser: NewUser = {
+      email,
+      passwordHash,
+      role: (invitation?.role as NewUser['role']) ?? USER_ROLES.END_USER
+    };
+
+    const [createdUser] = await db.insert(users).values(newUser).returning();
+
+    if (!createdUser) {
+      return {
+        error: 'We could not create your account. Please try again.' as const
+      };
+    }
+
+    let teamId: number;
+    let userRole: string;
+    let createdTeam: typeof teams.$inferSelect | null = null;
+
+    if (invitation) {
       teamId = invitation.teamId;
       userRole = invitation.role;
 
@@ -162,7 +169,7 @@ export async function registerUser(input: z.infer<typeof signUpInputSchema>) {
       }
 
       teamId = createdTeam.id;
-      userRole = 'owner';
+      userRole = USER_ROLES.END_USER;
 
       await logActivity(teamId, createdUser.id, ActivityType.CREATE_TEAM);
     }

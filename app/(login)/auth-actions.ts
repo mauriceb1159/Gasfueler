@@ -58,5 +58,9 @@ export const signUp = validatedAction(signUpInputSchema, async (data, formData) 
     redirect('/book');
   }
 
+  if (!data.inviteId) {
+    redirect('/book');
+  }
+
   redirect('/dashboard');
 });

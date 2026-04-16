@@ -25,7 +25,7 @@ export function ForgotPasswordForm() {
           Reset your password
         </h1>
         <p className="mt-3 text-center text-sm text-gray-600">
-          Enter your account email and we will generate a reset link for you.
+          Enter the email you use to book fuel and we will generate a reset link for you.
         </p>
 
         <form className="mt-8 space-y-6" action={formAction}>
@@ -77,7 +77,7 @@ export function ForgotPasswordForm() {
 
         <div className="mt-6 text-center">
           <Link href="/sign-in" className="text-sm font-medium text-gray-700 hover:text-gray-900">
-            Back to sign in
+            Back to booking sign in
           </Link>
         </div>
       </div>

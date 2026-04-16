@@ -7,12 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CircleIcon, Loader2 } from 'lucide-react';
-import {
-  USER_ROLES,
-  ROLE_LABELS,
-  ROLE_DESCRIPTIONS,
-  type UserRole
-} from '@/lib/auth/roles';
 
 export function Login({
   mode = 'signin',
@@ -30,8 +24,6 @@ export function Login({
   const [error, setError] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole>(USER_ROLES.END_USER);
-  const availableRoles = Object.values(USER_ROLES) as UserRole[];
 
   const authSwitchHref = buildAuthSwitchHref({
     mode,
@@ -56,7 +48,6 @@ export function Login({
           body: JSON.stringify({
             email,
             password,
-            ...(mode === 'signup' && { role }),
             inviteId: inviteId || undefined
           })
         }
@@ -84,6 +75,12 @@ export function Login({
         return;
       }
 
+      if (mode === 'signup' && !inviteId) {
+        router.push('/book');
+        router.refresh();
+        return;
+      }
+
       router.push('/dashboard');
       router.refresh();
     } catch {
@@ -101,9 +98,18 @@ export function Login({
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
           {mode === 'signin'
-            ? 'Sign in to your account'
-            : 'Create your account'}
+            ? 'Sign in to book and manage service'
+            : inviteId
+              ? 'Create your account'
+              : 'Create your customer account'}
         </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          {mode === 'signin'
+            ? 'Sign in to book fuel, manage orders, and track your service.'
+            : inviteId
+              ? 'Finish setting up your invited account.'
+              : 'Sign up to book fuel faster, manage requests, and track your service.'}
+        </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -170,32 +176,11 @@ export function Login({
             ) : null}
           </div>
 
-          {mode === 'signup' && (
-            <div>
-              <Label className="block text-sm font-medium text-gray-700">
-                Account Type
-              </Label>
-              <div className="mt-3 grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
-                {availableRoles.map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setRole(r)}
-                    className={`p-3 text-left rounded-lg border-2 transition ${
-                      role === r
-                        ? 'border-orange-500 bg-orange-50'
-                        : 'border-gray-300 bg-white hover:border-orange-300'
-                    }`}
-                  >
-                    <div className="font-medium text-sm">{ROLE_LABELS[r]}</div>
-                    <div className="text-xs text-gray-600 mt-1">
-                      {ROLE_DESCRIPTIONS[r]}
-                    </div>
-                  </button>
-                ))}
-              </div>
+          {mode === 'signup' && !inviteId ? (
+            <div className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-900">
+              New public sign-ups create a customer account for booking fuel and tracking service.
             </div>
-          )}
+          ) : null}
           {error && <div className="text-red-500 text-sm">{error}</div>}
 
           <div>
@@ -212,7 +197,7 @@ export function Login({
               ) : mode === 'signin' ? (
                 'Sign in'
               ) : (
-                'Sign up'
+                inviteId ? 'Create account' : 'Create customer account'
               )}
             </Button>
           </div>
@@ -226,8 +211,8 @@ export function Login({
             <div className="relative flex justify-center text-sm">
               <span className="px-2 bg-gray-50 text-gray-500">
                 {mode === 'signin'
-                  ? 'New to our platform?'
-                  : 'Already have an account?'}
+                  ? 'Ready to book fuel faster?'
+                  : 'Already booking with us?'}
               </span>
             </div>
           </div>
@@ -238,8 +223,8 @@ export function Login({
               className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-full shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             >
               {mode === 'signin'
-                ? 'Create an account'
-                : 'Sign in to existing account'}
+                ? 'Create customer account'
+                : 'Sign in to continue booking'}
             </Link>
           </div>
         </div>

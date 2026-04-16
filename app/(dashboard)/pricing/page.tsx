@@ -28,7 +28,7 @@ const consumerPlans = [
       'Fuel and store items charged separately at checkout'
     ],
     accent: 'bg-white',
-    ctaLabel: 'Create Consumer Account',
+    ctaLabel: 'Create customer account',
     ctaHref: '/sign-up',
     badge:
       'Built around the business plan target service fee of $4-$6 per visit.'
@@ -48,7 +48,7 @@ const consumerPlans = [
     ],
     accent:
       'bg-gradient-to-br from-orange-500 via-amber-400 to-yellow-300 text-slate-950',
-    ctaLabel: 'Join Membership Interest List',
+    ctaLabel: 'Join membership interest list',
     ctaHref: '/contact?type=consumer',
     badge:
       'The business plan highlights subscription + per-visit pricing as the core consumer model.'
@@ -214,7 +214,7 @@ export default function PricingPage() {
             </div>
             <Button asChild className="rounded-full bg-slate-950 text-white hover:bg-slate-800">
               <Link href="/contact?type=partner">
-                Contact Partner Team
+                Contact partner team
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>

@@ -62,12 +62,12 @@ export function ContactForm({
           </div>
 
           <div className="mt-8 rounded-[1.5rem] border border-white/10 bg-white/5 p-5 text-sm leading-6 text-slate-300">
-            Prefer self-serve account creation?
+            Want to jump straight into booking?
             <Link
               href="/sign-up"
               className="ml-2 inline-flex items-center font-semibold text-white underline decoration-orange-300 underline-offset-4"
             >
-              Go to sign up
+              Create customer account
               <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </div>

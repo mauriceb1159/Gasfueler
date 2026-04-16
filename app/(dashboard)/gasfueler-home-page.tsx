@@ -166,7 +166,7 @@ export function GasFuelerHomePage({
                   size="lg"
                   className="h-12 w-full rounded-full bg-slate-950 px-7 text-base text-white shadow-[0_18px_40px_-18px_rgba(15,23,42,0.9)] hover:bg-slate-800 sm:w-auto"
                 >
-                  Book a GasBite stop
+                  Book fuel now
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </a>
@@ -176,7 +176,7 @@ export function GasFuelerHomePage({
                   variant="outline"
                   className="h-12 w-full rounded-full border-white/80 bg-white/70 px-7 text-base text-slate-800 shadow-sm backdrop-blur hover:bg-white sm:w-auto"
                 >
-                  Explore pricing
+                  View customer pricing
                 </Button>
               </a>
             </div>

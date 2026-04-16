@@ -25,7 +25,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
           Choose a new password
         </h1>
         <p className="mt-3 text-center text-sm text-gray-600">
-          Pick a new password for your account.
+          Pick a new password so you can get back to booking and managing service.
         </p>
 
         <form className="mt-8 space-y-6" action={formAction}>
@@ -72,7 +72,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
             <div className="space-y-3 rounded-3xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">
               <p>{state.success}</p>
               <Link className="font-medium text-green-900 underline" href="/sign-in">
-                Continue to sign in
+                Continue to booking sign in
               </Link>
             </div>
           ) : null}
