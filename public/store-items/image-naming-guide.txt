@@ -1,0 +1,9 @@
+Bulk image matching guide
+
+1. Name each image file to match the product slug exactly.
+2. Examples:
+   smart-water.jpg -> matches slug smart-water
+   doritos-nacho-cheese.png -> matches slug doritos-nacho-cheese
+   twix-share-size.webp -> matches slug twix-share-size
+3. File extensions can be jpg, jpeg, png, webp, gif, or svg.
+4. If a filename does not match an existing product slug, it will show up as unmatched in preview.
