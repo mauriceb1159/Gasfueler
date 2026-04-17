@@ -1,0 +1,2 @@
+ALTER TABLE "contact_inquiries" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "password_reset_tokens" ENABLE ROW LEVEL SECURITY;
