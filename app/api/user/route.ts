@@ -1,4 +1,4 @@
-import { getUser } from '@/lib/db/queries';
+import { getUser, getVehiclesForUser } from '@/lib/db/queries';
 import {
   updateUserProfileForUser,
   updateUserProfileInputSchema
@@ -6,7 +6,27 @@ import {
 
 export async function GET() {
   const user = await getUser();
-  return Response.json(user);
+
+  if (!user) {
+    return Response.json(null);
+  }
+
+  const vehicles = user.role === 'end_user' ? await getVehiclesForUser(user.id) : [];
+  const primaryVehicle = vehicles[0] ?? null;
+
+  return Response.json({
+    ...user,
+    primaryVehicle: primaryVehicle
+      ? {
+          id: primaryVehicle.id,
+          nickname: primaryVehicle.nickname,
+          make: primaryVehicle.make,
+          model: primaryVehicle.model,
+          color: primaryVehicle.color,
+          licensePlate: primaryVehicle.licensePlate
+        }
+      : null
+  });
 }
 
 export async function PATCH(request: Request) {

@@ -26,6 +26,17 @@ import useSWR, { mutate } from 'swr';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
+type HeaderUser = User & {
+  primaryVehicle?: {
+    id: number;
+    nickname: string | null;
+    make: string | null;
+    model: string | null;
+    color: string | null;
+    licensePlate: string;
+  } | null;
+};
+
 type MarketCartSummary = {
   count: number;
   subtotal: number;
@@ -40,7 +51,7 @@ type MarketCartSummary = {
 
 function UserMenu() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { data: user } = useSWR<User>('/api/user', fetcher);
+  const { data: user } = useSWR<HeaderUser>('/api/user', fetcher);
   const router = useRouter();
 
   async function handleSignOut() {
@@ -64,6 +75,9 @@ function UserMenu() {
 
   const userRole = user.role as UserRole;
   const isUserAdmin = isAdmin(userRole);
+  const customerVehicleLabel =
+    userRole === 'end_user' ? formatPrimaryVehicleLabel(user.primaryVehicle) : null;
+  const identityLabel = customerVehicleLabel || user.name || user.email;
 
   return (
     <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
@@ -80,7 +94,7 @@ function UserMenu() {
           </Avatar>
           <div className="hidden items-center gap-2 md:flex">
             <div className="text-right">
-              <p className="text-xs font-medium text-gray-900">{user.name || user.email}</p>
+              <p className="text-xs font-medium text-gray-900">{identityLabel}</p>
               <p className="text-xs text-gray-500">{ROLE_LABELS[userRole] || user.role}</p>
             </div>
           </div>
@@ -371,4 +385,24 @@ function formatCurrency(cents: number) {
     style: 'currency',
     currency: 'USD',
   }).format(cents / 100);
+}
+
+function formatPrimaryVehicleLabel(
+  vehicle: HeaderUser['primaryVehicle']
+) {
+  if (!vehicle) {
+    return null;
+  }
+
+  if (vehicle.nickname?.trim()) {
+    return vehicle.nickname.trim();
+  }
+
+  const makeModel = [vehicle.make, vehicle.model].filter(Boolean).join(' ').trim();
+
+  if (makeModel) {
+    return makeModel;
+  }
+
+  return vehicle.licensePlate?.trim() || null;
 }
