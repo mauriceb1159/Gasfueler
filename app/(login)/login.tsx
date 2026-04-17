@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CircleIcon, Loader2 } from 'lucide-react';
+import { getDashboardUrlForRole, USER_ROLES, type UserRole } from '@/lib/auth/roles';
 
 export function Login({
   mode = 'signin',
@@ -77,6 +78,29 @@ export function Login({
 
       if (mode === 'signup' && !inviteId) {
         router.push('/book');
+        router.refresh();
+        return;
+      }
+
+      const userRole =
+        payload &&
+        typeof payload === 'object' &&
+        'user' in payload &&
+        payload.user &&
+        typeof payload.user === 'object' &&
+        'role' in payload.user &&
+        typeof payload.user.role === 'string'
+          ? (payload.user.role as UserRole)
+          : null;
+
+      if (userRole === USER_ROLES.END_USER) {
+        router.push('/book');
+        router.refresh();
+        return;
+      }
+
+      if (userRole) {
+        router.push(getDashboardUrlForRole(userRole));
         router.refresh();
         return;
       }
