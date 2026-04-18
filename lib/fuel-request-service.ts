@@ -22,6 +22,7 @@ import {
   VehicleClass,
   type NewVehicle
 } from '@/lib/db/schema';
+import { sendFuelOrderConfirmationEmail } from '@/lib/email/order-confirmation';
 import { getEffectiveFuelPriceForStationGrade } from '@/lib/fuel-pricing';
 
 const bookingSelectionSchema = z.object({
@@ -160,11 +161,23 @@ export async function createFuelRequestForUser(
   }
 
   let vehicleClass = input.vehicleClass || VehicleClass.SUV;
+  let vehicleDetails: {
+    nickname: string | null;
+    make: string | null;
+    model: string | null;
+    color: string | null;
+    licensePlate: string | null;
+  } | null = null;
 
   if (vehicleId) {
     const [vehicleRecord] = await db
       .select({
-        vehicleClass: vehicles.vehicleClass
+        vehicleClass: vehicles.vehicleClass,
+        nickname: vehicles.nickname,
+        make: vehicles.make,
+        model: vehicles.model,
+        color: vehicles.color,
+        licensePlate: vehicles.licensePlate
       })
       .from(vehicles)
       .where(eq(vehicles.id, vehicleId))
@@ -183,6 +196,15 @@ export async function createFuelRequestForUser(
     }
 
     vehicleClass = requestedVehicleClass;
+    vehicleDetails = vehicleRecord
+      ? {
+          nickname: vehicleRecord.nickname,
+          make: vehicleRecord.make,
+          model: vehicleRecord.model,
+          color: vehicleRecord.color,
+          licensePlate: vehicleRecord.licensePlate
+        }
+      : null;
   }
 
   const requestedGallons =
@@ -327,6 +349,49 @@ export async function createFuelRequestForUser(
     await db.insert(orderItems).values(newOrderItems);
   }
 
+  try {
+    await sendFuelOrderConfirmationEmail({
+      email: user.email,
+      customerName: user.name,
+      orderId: createdOrder.id,
+      requestId: createdRequest.id,
+      stationName: station.name,
+      stationAddress: [station.address, station.city, station.state, station.zip]
+        .filter(Boolean)
+        .join(', '),
+      slotStart: slot.startAt,
+      slotEnd: slot.endAt,
+      vehicleLabel: formatFuelVehicleLabel(
+        vehicleDetails ?? {
+          nickname: input.nickname?.trim() || null,
+          make: input.make?.trim() || null,
+          model: input.model?.trim() || null,
+          color: input.color?.trim() || null,
+          licensePlate: input.licensePlate?.trim() || null
+        }
+      ),
+      fuelGrade: input.fuelGrade,
+      requestTypeLabel: formatRequestTypeLabel(input.requestType),
+      requestedAmountLabel: formatRequestedAmountLabel(
+        input.requestType,
+        requestedGallons,
+        requestedDollarAmount
+      ),
+      specialInstructions: input.specialInstructions?.trim() || null,
+      fuelEstimate,
+      serviceFee,
+      addonTotal,
+      totalEstimate: (fuelEstimate ?? 0) + serviceFee + addonTotal,
+      storeItems: resolvedStoreItems.map((item) => ({
+        itemName: item.itemName,
+        quantity: item.quantity,
+        subtotalPrice: item.subtotalPrice
+      }))
+    });
+  } catch (error) {
+    console.error('Fuel booking confirmation email failed:', error);
+  }
+
   return {
     requestId: createdRequest.id,
     orderId: createdOrder.id,
@@ -335,6 +400,55 @@ export async function createFuelRequestForUser(
     addonTotal,
     serviceFee
   };
+}
+
+function formatFuelVehicleLabel(vehicle: {
+  nickname: string | null;
+  make: string | null;
+  model: string | null;
+  color: string | null;
+  licensePlate: string | null;
+}) {
+  const primaryLabel =
+    vehicle.nickname?.trim() ||
+    [vehicle.color, vehicle.make, vehicle.model].filter(Boolean).join(' ').trim() ||
+    vehicle.licensePlate?.trim() ||
+    'Saved vehicle';
+
+  if (vehicle.licensePlate?.trim() && primaryLabel !== vehicle.licensePlate.trim()) {
+    return `${primaryLabel} (${vehicle.licensePlate.trim()})`;
+  }
+
+  return primaryLabel;
+}
+
+function formatRequestTypeLabel(requestType: FuelRequestType) {
+  switch (requestType) {
+    case FuelRequestType.FILL_TANK:
+      return 'Fill tank';
+    case FuelRequestType.GALLONS:
+      return 'Specific gallons';
+    case FuelRequestType.DOLLAR_AMOUNT:
+      return 'Specific dollar amount';
+    default:
+      return requestType;
+  }
+}
+
+function formatRequestedAmountLabel(
+  requestType: FuelRequestType,
+  requestedGallons: number | null,
+  requestedDollarAmount: number | null
+) {
+  if (requestType === FuelRequestType.GALLONS && requestedGallons) {
+    return `${requestedGallons} gallon${requestedGallons === 1 ? '' : 's'}`;
+  }
+
+  if (requestType === FuelRequestType.DOLLAR_AMOUNT && requestedDollarAmount) {
+    return `$${requestedDollarAmount}`;
+  }
+
+  return null;
 }
 
 function getServiceFeeForVehicleClass(vehicleClass: VehicleClass) {

@@ -14,6 +14,7 @@ import {
   stations,
   type User
 } from '@/lib/db/schema';
+import { sendStoreOrderConfirmationEmail } from '@/lib/email/order-confirmation';
 
 const storeOrderSelectionSchema = z.object({
   stationStoreItemId: z.coerce.number().int().positive(),
@@ -196,11 +197,99 @@ export async function createStoreOrderForUser(
 
   await db.insert(orderItems).values(newOrderItems);
 
+  try {
+    await sendStoreOrderConfirmationEmail({
+      email: user.email,
+      customerName: user.name,
+      orderId: createdOrder.id,
+      stationName: station.name,
+      stationAddress: [station.address, station.city, station.state, station.zip]
+        .filter(Boolean)
+        .join(', '),
+      pickupModeLabel: formatPickupModeLabel(input.pickupMode),
+      pickupWindowLabel: formatPickupWindowLabel(
+        input.pickupMode,
+        pickupWindowStart,
+        pickupWindowEnd
+      ),
+      vehicleLabel: formatStoreVehicleLabel({
+        make: input.storeVehicleMake,
+        model: input.storeVehicleModel,
+        color: input.storeVehicleColor,
+        licensePlate: input.storeVehicleLicensePlate
+      }),
+      customerNotes: baseNotes || null,
+      totalAmount: storeSubtotal,
+      items: resolvedItems.map((item) => ({
+        itemName: item.itemName,
+        quantity: item.quantity,
+        subtotalPrice: item.subtotalPrice
+      }))
+    });
+  } catch (error) {
+    console.error('Store order confirmation email failed:', error);
+  }
+
   return {
     orderId: createdOrder.id,
     totalAmount: storeSubtotal,
     itemCount: resolvedItems.reduce((sum, item) => sum + item.quantity, 0)
   };
+}
+
+function formatStoreVehicleLabel(vehicle: {
+  make: string;
+  model: string;
+  color: string;
+  licensePlate: string;
+}) {
+  const baseLabel = [vehicle.color, vehicle.make, vehicle.model]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+
+  return vehicle.licensePlate?.trim()
+    ? `${baseLabel} (${vehicle.licensePlate.trim()})`
+    : baseLabel || 'Vehicle on arrival';
+}
+
+function formatPickupModeLabel(pickupMode: PickupMode) {
+  switch (pickupMode) {
+    case PickupMode.ASAP:
+      return 'ASAP';
+    case PickupMode.SCHEDULED:
+      return 'Scheduled';
+    case PickupMode.ON_ARRIVAL:
+      return 'On arrival';
+    default:
+      return pickupMode;
+  }
+}
+
+function formatPickupWindowLabel(
+  pickupMode: PickupMode,
+  pickupWindowStart: Date | null,
+  pickupWindowEnd: Date | null
+) {
+  if (pickupMode === PickupMode.SCHEDULED && pickupWindowStart && pickupWindowEnd) {
+    return `${formatStoreDateTime(pickupWindowStart)} - ${formatStoreDateTime(pickupWindowEnd)}`;
+  }
+
+  if (pickupMode === PickupMode.ON_ARRIVAL) {
+    return 'Ready when you arrive at the station';
+  }
+
+  return 'As soon as possible';
+}
+
+function formatStoreDateTime(value: Date) {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  }).format(value);
 }
 
 function parseSelectedStoreItems(
