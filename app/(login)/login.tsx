@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,8 +21,9 @@ export function Login({
   inviteId?: string | null;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(searchParams.get('error') || '');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -112,6 +113,27 @@ export function Login({
     } finally {
       setPending(false);
     }
+  }
+
+  function handleGoogleSignIn() {
+    const params = new URLSearchParams();
+
+    if (redirect) {
+      params.set('redirect', redirect);
+    }
+
+    if (priceId) {
+      params.set('priceId', priceId);
+    }
+
+    if (inviteId) {
+      params.set('inviteId', inviteId);
+    }
+
+    const query = params.toString();
+    window.location.href = query
+      ? `/api/auth/oauth/google?${query}`
+      : '/api/auth/oauth/google';
   }
 
   return (
@@ -226,6 +248,18 @@ export function Login({
             </Button>
           </div>
         </form>
+
+        <div className="mt-4">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full rounded-full border-gray-300 bg-white text-gray-800 hover:bg-gray-50"
+            onClick={handleGoogleSignIn}
+            disabled={pending}
+          >
+            Continue with Google
+          </Button>
+        </div>
 
         <div className="mt-6">
           <div className="relative">

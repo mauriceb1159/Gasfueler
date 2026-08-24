@@ -9,6 +9,7 @@ import {
   CalendarClock,
   ClipboardCheck,
   Menu,
+  Navigation,
   Package,
   PanelsTopLeft,
   Settings,
@@ -19,29 +20,45 @@ import useSWR from 'swr';
 import { User } from '@/lib/db/schema';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
-type DashboardRole = 'owner' | 'attendant' | 'store' | 'customer';
+type DashboardRole =
+  | 'owner'
+  | 'attendant'
+  | 'store'
+  | 'dispatcher'
+  | 'customer';
 
 function normalizeRole(role?: string | null): DashboardRole {
   const normalized = role?.toLowerCase().trim();
   if (!normalized || normalized === 'member' || normalized === 'customer') {
     return 'customer';
   }
-  if (normalized === 'owner' || normalized === 'admin') {
+  if (
+    normalized === 'owner' ||
+    normalized === 'admin' ||
+    normalized === 'main_admin'
+  ) {
     return 'owner';
   }
-  if (['attendant', 'attendants', 'fulfillment'].includes(normalized)) {
+  if (
+    ['fuel_attendant', 'attendant', 'attendants', 'fulfillment'].includes(
+      normalized
+    )
+  ) {
     return 'attendant';
   }
   if (
     [
       'store',
-      'backoffice',
       'store_back_office',
+      'backoffice',
       'store-back-office',
       'store back office'
     ].includes(normalized)
   ) {
     return 'store';
+  }
+  if (normalized === 'dispatcher') {
+    return 'dispatcher';
   }
   return 'customer';
 }
@@ -90,6 +107,12 @@ export default function DashboardLayout({
         roles: ['owner', 'attendant', 'store']
       },
       {
+        href: '/dashboard/dispatcher',
+        icon: Navigation,
+        label: 'Dispatch',
+        roles: ['owner', 'dispatcher']
+      },
+      {
         href: '/dashboard/activity',
         icon: Activity,
         label: 'Activity',
@@ -111,6 +134,7 @@ export default function DashboardLayout({
       owner: '/dashboard',
       attendant: '/dashboard/fulfillment',
       store: '/dashboard/store',
+      dispatcher: '/dashboard/dispatcher',
       customer: '/book'
     }),
     []

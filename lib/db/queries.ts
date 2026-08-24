@@ -17,6 +17,8 @@ import {
 import { cookies } from 'next/headers';
 import { headers } from 'next/headers';
 import { verifyToken } from '@/lib/auth/session';
+import { getOrCreateApplicationUserForSupabaseIdentity } from '@/lib/auth-service';
+import { createSupabaseAuthClient } from '@/lib/supabase/server';
 
 const MIN_OPEN_SERVICE_SLOTS = 6;
 const SLOT_DURATION_MINUTES = 45;
@@ -40,7 +42,11 @@ export async function getUser() {
   try {
     sessionData = await verifyToken(sessionToken);
   } catch {
-    return null;
+    if (!bearerToken) {
+      return null;
+    }
+
+    return getUserFromSupabaseAccessToken(bearerToken);
   }
 
   if (
@@ -66,6 +72,22 @@ export async function getUser() {
   }
 
   return user[0];
+}
+
+async function getUserFromSupabaseAccessToken(accessToken: string) {
+  const supabase = createSupabaseAuthClient();
+  const { data, error } = await supabase.auth.getUser(accessToken);
+
+  if (error || !data.user) {
+    return null;
+  }
+
+  try {
+    const result = await getOrCreateApplicationUserForSupabaseIdentity(data.user);
+    return result.user;
+  } catch {
+    return null;
+  }
 }
 
 export async function getTeamByStripeCustomerId(customerId: string) {

@@ -2,7 +2,9 @@ import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/lib/db/drizzle';
+import { createDispatchJobForOrder } from '@/lib/dispatch-service';
 import {
+  DispatchJobType,
   fuelRequests,
   FuelRequestItemType,
   FuelRequestStatus,
@@ -347,6 +349,21 @@ export async function createFuelRequestForUser(
     }));
 
     await db.insert(orderItems).values(newOrderItems);
+  }
+
+  try {
+    await createDispatchJobForOrder({
+      fuelRequestId: createdRequest.id,
+      orderId: createdOrder.id,
+      jobType: addonTotal > 0 ? DispatchJobType.COMBO : DispatchJobType.FUEL,
+      customerUserId: user.id,
+      stationId: station.id,
+      scheduledStartAt: slot.startAt,
+      scheduledEndAt: slot.endAt,
+      dispatcherNotes: 'Auto-created from fuel booking.',
+    });
+  } catch (error) {
+    console.error('Dispatch job auto-creation failed:', error);
   }
 
   try {

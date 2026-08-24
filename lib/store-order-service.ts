@@ -2,7 +2,9 @@ import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/lib/db/drizzle';
+import { createDispatchJobForOrder } from '@/lib/dispatch-service';
 import {
+  DispatchJobType,
   type NewOrder,
   type NewOrderItem,
   orderItems,
@@ -196,6 +198,20 @@ export async function createStoreOrderForUser(
   }));
 
   await db.insert(orderItems).values(newOrderItems);
+
+  try {
+    await createDispatchJobForOrder({
+      orderId: createdOrder.id,
+      jobType: DispatchJobType.STORE,
+      customerUserId: user.id,
+      stationId: station.id,
+      scheduledStartAt: pickupWindowStart,
+      scheduledEndAt: pickupWindowEnd,
+      dispatcherNotes: 'Auto-created from store order.',
+    });
+  } catch (error) {
+    console.error('Dispatch job auto-creation failed:', error);
+  }
 
   try {
     await sendStoreOrderConfirmationEmail({

@@ -1,21 +1,27 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, or } from 'drizzle-orm';
+import type { User as SupabaseAuthUser } from '@supabase/supabase-js';
 import { z } from 'zod';
 
-import { comparePasswords, hashPassword } from '@/lib/auth/session';
 import { USER_ROLES } from '@/lib/auth/roles';
+import { comparePasswords, hashPassword } from '@/lib/auth/session';
 import { db } from '@/lib/db/drizzle';
 import {
   activityLogs,
   ActivityType,
   invitations,
   type NewActivityLog,
-  type NewTeam,
-  type NewTeamMember,
   type NewUser,
+  type Team,
   teamMembers,
   teams,
   users
 } from '@/lib/db/schema';
+import {
+  createSupabaseAdminClient,
+  createSupabaseAuthClient
+} from '@/lib/supabase/server';
+
+const SUPABASE_AUTH_PASSWORD_SENTINEL = 'supabase-auth-managed-password';
 
 async function logActivity(
   teamId: number | null | undefined,
@@ -49,8 +55,108 @@ export const signUpInputSchema = z.object({
 });
 
 export async function authenticateUser(input: z.infer<typeof signInInputSchema>) {
-  const { email, password } = input;
+  const email = input.email.toLowerCase();
+  const { password } = input;
+  const supabase = createSupabaseAuthClient();
 
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (!error && data.user) {
+    const result = await getOrCreateApplicationUserForSupabaseIdentity(data.user);
+    await logActivity(result.team?.id, result.user.id, ActivityType.SIGN_IN);
+    return result;
+  }
+
+  return authenticateLegacyUserAndLinkToSupabase(email, password);
+}
+
+export async function registerUser(input: z.infer<typeof signUpInputSchema>) {
+  const email = input.email.toLowerCase();
+  const { password, inviteId } = input;
+
+  try {
+    const existingUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+
+    if (existingUser.length > 0) {
+      return {
+        error: 'An account with this email already exists. Try signing in instead.' as const
+      };
+    }
+
+    const supabaseUser = await createConfirmedSupabaseUser(email, password);
+
+    if ('error' in supabaseUser) {
+      return { error: supabaseUser.error };
+    }
+
+    return await createApplicationUserForSupabaseIdentity(supabaseUser.user, {
+      inviteId
+    });
+  } catch (error) {
+    console.error('Sign-up failed:', error);
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : 'We could not finish creating your account right now. Please try again.'
+    } as const;
+  }
+}
+
+export async function getOrCreateApplicationUserForSupabaseIdentity(
+  supabaseUser: SupabaseAuthUser,
+  input: { inviteId?: string; role?: string } = {}
+) {
+  const email = supabaseUser.email?.toLowerCase();
+
+  if (!email) {
+    throw new Error('Supabase Auth user does not have an email address.');
+  }
+
+  const userWithTeam = await db
+    .select({
+      user: users,
+      team: teams
+    })
+    .from(users)
+    .leftJoin(teamMembers, eq(users.id, teamMembers.userId))
+    .leftJoin(teams, eq(teamMembers.teamId, teams.id))
+    .where(
+      or(
+        eq(users.supabaseAuthUserId, supabaseUser.id),
+        eq(users.email, email)
+      )
+    )
+    .limit(1);
+
+  if (userWithTeam.length > 0) {
+    const { user, team } = userWithTeam[0];
+
+    if (!user.supabaseAuthUserId) {
+      user.supabaseAuthUserId = supabaseUser.id;
+      await db
+        .update(users)
+        .set({ supabaseAuthUserId: supabaseUser.id })
+        .where(eq(users.id, user.id));
+    }
+
+    return { user, team };
+  }
+
+  return createApplicationUserForSupabaseIdentity(supabaseUser, input);
+}
+
+async function authenticateLegacyUserAndLinkToSupabase(
+  email: string,
+  password: string
+) {
   const userWithTeam = await db
     .select({
       user: users,
@@ -73,6 +179,20 @@ export async function authenticateUser(input: z.infer<typeof signInInputSchema>)
     return { error: 'Invalid email or password. Please try again.' as const };
   }
 
+  if (!foundUser.supabaseAuthUserId) {
+    const supabaseUser = await createConfirmedSupabaseUser(email, password);
+
+    if ('error' in supabaseUser) {
+      return { error: supabaseUser.error };
+    }
+
+    foundUser.supabaseAuthUserId = supabaseUser.user.id;
+    await db
+      .update(users)
+      .set({ supabaseAuthUserId: supabaseUser.user.id })
+      .where(eq(users.id, foundUser.id));
+  }
+
   await logActivity(foundTeam?.id, foundUser.id, ActivityType.SIGN_IN);
 
   return {
@@ -81,118 +201,116 @@ export async function authenticateUser(input: z.infer<typeof signInInputSchema>)
   };
 }
 
-export async function registerUser(input: z.infer<typeof signUpInputSchema>) {
-  const { email, password, inviteId } = input;
+async function createConfirmedSupabaseUser(email: string, password: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true
+  });
 
-  try {
-    const existingUser = await db
+  if (error || !data.user) {
+    return {
+      error:
+        error?.message ||
+        'We could not create your authentication account right now.'
+    } as const;
+  }
+
+  return { user: data.user } as const;
+}
+
+async function createApplicationUserForSupabaseIdentity(
+  supabaseUser: SupabaseAuthUser,
+  input: { inviteId?: string; role?: string }
+) {
+  const email = supabaseUser.email?.toLowerCase();
+
+  if (!email) {
+    throw new Error('Supabase Auth user does not have an email address.');
+  }
+
+  let invitation: (typeof invitations.$inferSelect) | undefined;
+
+  if (input.inviteId) {
+    [invitation] = await db
       .select()
-      .from(users)
-      .where(eq(users.email, email))
+      .from(invitations)
+      .where(
+        and(
+          eq(invitations.id, parseInt(input.inviteId, 10)),
+          eq(invitations.email, email),
+          eq(invitations.status, 'pending')
+        )
+      )
       .limit(1);
 
-    if (existingUser.length > 0) {
-      return {
-        error: 'An account with this email already exists. Try signing in instead.' as const
-      };
+    if (!invitation) {
+      throw new Error('This invitation is invalid or expired.');
     }
+  }
 
-    let invitation:
-      | (typeof invitations.$inferSelect)
-      | undefined;
+  const userRole =
+    (invitation?.role as NewUser['role'] | undefined) ??
+    (input.role as NewUser['role'] | undefined) ??
+    USER_ROLES.END_USER;
 
-    if (inviteId) {
-      [invitation] = await db
-        .select()
-        .from(invitations)
-        .where(
-          and(
-            eq(invitations.id, parseInt(inviteId, 10)),
-            eq(invitations.email, email),
-            eq(invitations.status, 'pending')
-          )
-        )
-        .limit(1);
-
-      if (!invitation) {
-        return { error: 'This invitation is invalid or expired.' as const };
-      }
-    }
-
-    const passwordHash = await hashPassword(password);
-    const newUser: NewUser = {
+  const [createdUser] = await db
+    .insert(users)
+    .values({
       email,
-      passwordHash,
-      role: (invitation?.role as NewUser['role']) ?? USER_ROLES.END_USER
-    };
+      supabaseAuthUserId: supabaseUser.id,
+      passwordHash: await hashPassword(SUPABASE_AUTH_PASSWORD_SENTINEL),
+      role: userRole
+    })
+    .returning();
 
-    const [createdUser] = await db.insert(users).values(newUser).returning();
+  if (!createdUser) {
+    throw new Error('We could not create your account. Please try again.');
+  }
 
-    if (!createdUser) {
-      return {
-        error: 'We could not create your account. Please try again.' as const
-      };
+  let teamId: number;
+  let team: Team | null = null;
+
+  if (invitation) {
+    teamId = invitation.teamId;
+
+    await db
+      .update(invitations)
+      .set({ status: 'accepted' })
+      .where(eq(invitations.id, invitation.id));
+
+    [team] = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.id, teamId))
+      .limit(1);
+
+    await logActivity(teamId, createdUser.id, ActivityType.ACCEPT_INVITATION);
+  } else {
+    [team] = await db
+      .insert(teams)
+      .values({ name: `${email}'s Team` })
+      .returning();
+
+    if (!team) {
+      throw new Error(
+        'Your account was created, but we could not create your team. Please try again.'
+      );
     }
 
-    let teamId: number;
-    let userRole: string;
-    let createdTeam: typeof teams.$inferSelect | null = null;
+    teamId = team.id;
+    await logActivity(teamId, createdUser.id, ActivityType.CREATE_TEAM);
+  }
 
-    if (invitation) {
-      teamId = invitation.teamId;
-      userRole = invitation.role;
-
-      await db
-        .update(invitations)
-        .set({ status: 'accepted' })
-        .where(eq(invitations.id, invitation.id));
-
-      await logActivity(teamId, createdUser.id, ActivityType.ACCEPT_INVITATION);
-
-      [createdTeam] = await db
-        .select()
-        .from(teams)
-        .where(eq(teams.id, teamId))
-        .limit(1);
-    } else {
-      const newTeam: NewTeam = {
-        name: `${email}'s Team`
-      };
-
-      [createdTeam] = await db.insert(teams).values(newTeam).returning();
-
-      if (!createdTeam) {
-        return {
-          error:
-            'Your account was created, but we could not create your team. Please try again.' as const
-        };
-      }
-
-      teamId = createdTeam.id;
-      userRole = USER_ROLES.END_USER;
-
-      await logActivity(teamId, createdUser.id, ActivityType.CREATE_TEAM);
-    }
-
-    const newTeamMember: NewTeamMember = {
+  await Promise.all([
+    db.insert(teamMembers).values({
       userId: createdUser.id,
       teamId,
       role: userRole
-    };
+    }),
+    logActivity(teamId, createdUser.id, ActivityType.SIGN_UP)
+  ]);
 
-    await Promise.all([
-      db.insert(teamMembers).values(newTeamMember),
-      logActivity(teamId, createdUser.id, ActivityType.SIGN_UP)
-    ]);
-
-    return {
-      user: createdUser,
-      team: createdTeam
-    };
-  } catch (error) {
-    console.error('Sign-up failed:', error);
-    return {
-      error: 'We could not finish creating your account right now. Please try again.' as const
-    };
-  }
+  return { user: createdUser, team };
 }

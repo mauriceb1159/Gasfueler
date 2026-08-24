@@ -274,6 +274,56 @@ export async function createDispatchJob(
   return createdJob;
 }
 
+export async function createDispatchJobForOrder(input: {
+  fuelRequestId?: number | null;
+  orderId: number;
+  jobType: DispatchJobType;
+  customerUserId: number;
+  stationId: number;
+  scheduledStartAt?: Date | null;
+  scheduledEndAt?: Date | null;
+  dispatcherNotes?: string | null;
+}) {
+  const [existingJob] = await db
+    .select({ id: dispatchJobs.id })
+    .from(dispatchJobs)
+    .where(eq(dispatchJobs.orderId, input.orderId))
+    .limit(1);
+
+  if (existingJob) {
+    return existingJob;
+  }
+
+  const [createdJob] = await db
+    .insert(dispatchJobs)
+    .values({
+      fuelRequestId: input.fuelRequestId ?? null,
+      orderId: input.orderId,
+      jobType: input.jobType,
+      customerUserId: input.customerUserId,
+      stationId: input.stationId,
+      status: DispatchJobStatus.UNASSIGNED,
+      priority: 0,
+      scheduledStartAt: input.scheduledStartAt ?? null,
+      scheduledEndAt: input.scheduledEndAt ?? null,
+      dispatcherNotes: input.dispatcherNotes ?? null,
+    })
+    .returning({ id: dispatchJobs.id });
+
+  await db.insert(dispatchEvents).values({
+    dispatchJobId: createdJob.id,
+    actorUserId: input.customerUserId,
+    eventType: 'job_auto_created',
+    payload: {
+      orderId: input.orderId,
+      fuelRequestId: input.fuelRequestId ?? null,
+      jobType: input.jobType,
+    },
+  });
+
+  return createdJob;
+}
+
 export async function assignDispatchJob(
   jobId: number,
   input: z.infer<typeof assignDispatchJobInputSchema>,
