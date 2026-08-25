@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { canManageStationOperations } from '@/lib/auth/roles';
 import { Loader2 } from 'lucide-react';
 import { updateAccount } from '@/app/(login)/actions';
 import { StationFuelPriceMode, User } from '@/lib/db/schema';
@@ -106,7 +107,7 @@ function StationFuelPricing() {
     saveStationFuelPriceMode,
     {}
   );
-  const isOwner = user?.role === 'owner';
+  const canManageStations = canManageStationOperations(user?.role);
   const [selectedStationId, setSelectedStationId] = useState('');
   const defaultStationId = stations?.[0]?.id ? String(stations[0].id) : '';
 
@@ -177,7 +178,7 @@ function StationFuelPricing() {
             value={selectedStationId}
             onChange={(event) => setSelectedStationId(event.target.value)}
             className="flex h-12 w-full rounded-2xl border border-input bg-white px-4 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-            disabled={!isOwner || (!stations?.length && !defaultStationId)}
+            disabled={!canManageStations || (!stations?.length && !defaultStationId)}
           >
             {(stations ?? []).map((station) => (
               <option key={station.id} value={station.id}>
@@ -198,7 +199,7 @@ function StationFuelPricing() {
                 defaultValue={selectedStation?.fuelPriceMode ?? StationFuelPriceMode.MANUAL_FIRST}
                 key={`${selectedStationId}-${selectedStation?.fuelPriceMode ?? 'manual_first'}`}
                 className="flex h-12 min-w-[240px] rounded-2xl border border-input bg-white px-4 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                disabled={!isOwner || isModePending || !selectedStationId}
+                disabled={!canManageStations || isModePending || !selectedStationId}
               >
                 <option value={StationFuelPriceMode.MANUAL_FIRST}>Manual first</option>
                 <option value={StationFuelPriceMode.GOOGLE_FIRST}>Google first</option>
@@ -215,7 +216,7 @@ function StationFuelPricing() {
           <Button
             type="submit"
             className="bg-slate-900 text-white hover:bg-slate-800"
-            disabled={!isOwner || isModePending || !selectedStationId}
+            disabled={!canManageStations || isModePending || !selectedStationId}
           >
             {isModePending ? (
               <>
@@ -266,7 +267,7 @@ function StationFuelPricing() {
           <Button
             type="submit"
             className="bg-orange-500 hover:bg-orange-600 text-white"
-            disabled={isPricePending || !isOwner || !selectedStationId}
+            disabled={isPricePending || !canManageStations || !selectedStationId}
           >
             {isPricePending ? (
               <>
@@ -329,9 +330,9 @@ function StationFuelPricing() {
           )}
         </div>
 
-        {!isOwner && (
+        {!canManageStations && (
           <p className="text-sm text-muted-foreground">
-            You must be a team owner to update partner-station prices.
+            You must be a station attendant or admin to update partner-station prices.
           </p>
         )}
       </CardContent>

@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { canManageStationOperations } from '@/lib/auth/roles';
 import { ServiceSlotStatus, User } from '@/lib/db/schema';
 import {
   createServiceSlot,
@@ -66,7 +67,7 @@ export default function ServiceSlotsPage() {
     ActionState,
     FormData
   >(updateServiceSlotStatus, {});
-  const isOwner = user?.role === 'owner';
+  const canManageSlots = canManageStationOperations(user?.role);
   const [selectedStationId, setSelectedStationId] = useState('');
   const [slotDate, setSlotDate] = useState('');
   const [startTime, setStartTime] = useState('');
@@ -239,7 +240,7 @@ export default function ServiceSlotsPage() {
                     min={getTodayDateInputValue()}
                     value={slotDate}
                     onChange={(event) => setSlotDate(event.target.value)}
-                    disabled={!isOwner || !selectedStationId}
+                    disabled={!canManageSlots || !selectedStationId}
                   />
                 </div>
                 <div>
@@ -252,7 +253,7 @@ export default function ServiceSlotsPage() {
                     type="time"
                     value={startTime}
                     onChange={(event) => setStartTime(event.target.value)}
-                    disabled={!isOwner || !selectedStationId}
+                    disabled={!canManageSlots || !selectedStationId}
                   />
                 </div>
                 <div>
@@ -265,7 +266,7 @@ export default function ServiceSlotsPage() {
                     value={durationMinutes}
                     onChange={(event) => setDurationMinutes(event.target.value)}
                     className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm"
-                    disabled={!isOwner || !selectedStationId}
+                    disabled={!canManageSlots || !selectedStationId}
                   >
                     <option value="30">30 minutes</option>
                     <option value="45">45 minutes</option>
@@ -285,7 +286,7 @@ export default function ServiceSlotsPage() {
                     max="10"
                     value={capacity}
                     onChange={(event) => setCapacity(event.target.value)}
-                    disabled={!isOwner || !selectedStationId}
+                    disabled={!canManageSlots || !selectedStationId}
                   />
                 </div>
               </div>
@@ -306,7 +307,7 @@ export default function ServiceSlotsPage() {
               <Button
                 type="submit"
                 className="bg-slate-950 text-white hover:bg-slate-800"
-                disabled={!isOwner || isCreatePending || !selectedStationId}
+                disabled={!canManageSlots || isCreatePending || !selectedStationId}
               >
                 {isCreatePending ? (
                   <>
@@ -373,7 +374,7 @@ export default function ServiceSlotsPage() {
                             name="status"
                             defaultValue={slot.status}
                             className="flex h-10 rounded-xl border border-input bg-white px-3 text-sm"
-                            disabled={!isOwner || isStatusPending}
+                            disabled={!canManageSlots || isStatusPending}
                           >
                             <option value={ServiceSlotStatus.OPEN}>Open</option>
                             <option value={ServiceSlotStatus.FULL}>Full</option>
@@ -382,7 +383,7 @@ export default function ServiceSlotsPage() {
                           <Button
                             type="submit"
                             variant="outline"
-                            disabled={!isOwner || isStatusPending}
+                            disabled={!canManageSlots || isStatusPending}
                           >
                             {isStatusPending ? 'Saving...' : 'Update'}
                           </Button>
@@ -398,9 +399,9 @@ export default function ServiceSlotsPage() {
               </div>
             )}
 
-            {!isOwner ? (
+            {!canManageSlots ? (
               <p className="text-sm text-slate-500">
-                You must be a team owner to change slot availability.
+                You must be a station attendant or admin to change slot availability.
               </p>
             ) : null}
           </CardContent>

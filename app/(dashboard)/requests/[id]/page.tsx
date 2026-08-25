@@ -12,6 +12,7 @@ import { FulfillmentProofForm } from '@/app/(dashboard)/dashboard/fulfillment/fu
 import { cancelFuelRequest } from '@/app/(dashboard)/requests/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { canManageFulfillment } from '@/lib/auth/roles';
 import { getFuelRequestById, getUser } from '@/lib/db/queries';
 import { FuelRequestStatus } from '@/lib/db/schema';
 
@@ -39,11 +40,11 @@ export default async function RequestDetailsPage({
     notFound();
   }
 
-  const canManageFulfillment = user.role === 'owner';
+  const canManageRequestFulfillment = canManageFulfillment(user.role);
   const canCancelRequest =
     request.status !== FuelRequestStatus.COMPLETED &&
     request.status !== FuelRequestStatus.CANCELED &&
-    (user.role === 'owner' || request.userId === user.id);
+    (canManageRequestFulfillment || request.userId === user.id);
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#fff8f1_0%,#ffffff_60%)] px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
@@ -242,7 +243,7 @@ export default async function RequestDetailsPage({
                       this request.
                     </p>
                   </div>
-                ) : canManageFulfillment ? (
+                ) : canManageRequestFulfillment ? (
                   <div className="space-y-3">
                     <p className="text-sm leading-6 text-slate-600">
                       Complete the fueling stop here instead of navigating to a

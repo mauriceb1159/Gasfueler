@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { canManageStoreCatalog } from '@/lib/auth/roles';
 import { db } from '@/lib/db/drizzle';
 import { getUser } from '@/lib/db/queries';
 import { activityLogs, teamMembers } from '@/lib/db/schema';
@@ -137,7 +138,7 @@ export default async function StoreBackOfficePage({
     ])
   ) as Record<number, string[]>;
 
-  const isOwner = user.role === 'owner';
+  const canManageCatalog = canManageStoreCatalog(user.role);
 
   return (
     <section className="flex-1 p-4 lg:p-8">
@@ -181,10 +182,10 @@ export default async function StoreBackOfficePage({
         </Card>
       ) : null}
 
-      {!isOwner ? (
+      {!canManageCatalog ? (
         <Card className="mt-8 border-dashed">
           <CardContent className="p-6 text-sm text-muted-foreground">
-            You must be a team owner to manage the back-office store catalog.
+            You must be a store admin to manage the back-office store catalog.
           </CardContent>
         </Card>
       ) : (

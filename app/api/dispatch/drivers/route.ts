@@ -1,4 +1,5 @@
 import { getUser } from '@/lib/db/queries';
+import { canManageDispatch } from '@/lib/auth/roles';
 import {
   createDriverInputSchema,
   createDriverProfile,
@@ -12,8 +13,8 @@ export async function GET() {
     return Response.json({ error: 'User is not authenticated.' }, { status: 401 });
   }
 
-  if (user.role !== 'owner') {
-    return Response.json({ error: 'Only owners can manage dispatch drivers.' }, { status: 403 });
+  if (!canManageDispatch(user.role)) {
+    return Response.json({ error: 'Only dispatchers and admins can manage dispatch drivers.' }, { status: 403 });
   }
 
   const drivers = await listDrivers();
@@ -27,8 +28,8 @@ export async function POST(request: Request) {
     return Response.json({ error: 'User is not authenticated.' }, { status: 401 });
   }
 
-  if (user.role !== 'owner') {
-    return Response.json({ error: 'Only owners can manage dispatch drivers.' }, { status: 403 });
+  if (!canManageDispatch(user.role)) {
+    return Response.json({ error: 'Only dispatchers and admins can manage dispatch drivers.' }, { status: 403 });
   }
 
   let body: unknown;

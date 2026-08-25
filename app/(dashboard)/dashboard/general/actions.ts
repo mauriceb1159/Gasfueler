@@ -3,6 +3,7 @@
 import { z } from 'zod';
 
 import { validatedActionWithUser } from '@/lib/auth/middleware';
+import { canManageStationOperations } from '@/lib/auth/roles';
 import { db } from '@/lib/db/drizzle';
 import {
   serviceSlots,
@@ -347,8 +348,8 @@ async function ensureExtraMile97947Catalog(stationId: number) {
 export const saveStationFuelPrices = validatedActionWithUser(
   fuelPriceSchema,
   async (data, _, user) => {
-    if (user.role !== 'owner') {
-      return { error: 'Only owners can update partner fuel prices.' };
+    if (!canManageStationOperations(user.role)) {
+      return { error: 'Only station attendants and admins can update partner fuel prices.' };
     }
 
     const [station] = await db
@@ -392,8 +393,8 @@ export const saveStationFuelPrices = validatedActionWithUser(
 export const saveStationFuelPriceMode = validatedActionWithUser(
   fuelPriceModeSchema,
   async (data, _, user) => {
-    if (user.role !== 'owner') {
-      return { error: 'Only owners can update fuel price source settings.' };
+    if (!canManageStationOperations(user.role)) {
+      return { error: 'Only station attendants and admins can update fuel price source settings.' };
     }
 
     const [station] = await db
@@ -427,8 +428,8 @@ export const saveStationFuelPriceMode = validatedActionWithUser(
 export const createPartnerStation = validatedActionWithUser(
   createPartnerStationSchema,
   async (data, _, user) => {
-    if (user.role !== 'owner') {
-      return { error: 'Only owners can add partner stations.' };
+    if (!canManageStationOperations(user.role)) {
+      return { error: 'Only station attendants and admins can add partner stations.' };
     }
 
     const normalizedInput = {

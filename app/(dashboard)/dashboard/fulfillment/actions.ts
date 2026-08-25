@@ -3,6 +3,7 @@
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
+import { canManageFulfillment } from '@/lib/auth/roles';
 import { db } from '@/lib/db/drizzle';
 import {
   fuelRequests,
@@ -24,8 +25,8 @@ export async function completeFuelRequestWithProof(
     return { error: 'You must be signed in to complete a fuel request.' };
   }
 
-  if (user.role !== 'owner') {
-    return { error: 'Only owners can complete fulfillment proof right now.' };
+  if (!canManageFulfillment(user.role)) {
+    return { error: 'Only station attendants and admins can complete fulfillment proof.' };
   }
 
   const requestId = Number(formData.get('requestId'));

@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
 import { validatedActionWithUser } from '@/lib/auth/middleware';
+import { canManageStationOperations } from '@/lib/auth/roles';
 import { db } from '@/lib/db/drizzle';
 import {
   serviceSlots,
@@ -32,8 +33,8 @@ const updateSlotStatusSchema = z.object({
 export const createServiceSlot = validatedActionWithUser(
   createSlotSchema,
   async (data, _, user) => {
-    if (user.role !== 'owner') {
-      return { error: 'Only owners can create service slots.' };
+    if (!canManageStationOperations(user.role)) {
+      return { error: 'Only station attendants and admins can create service slots.' };
     }
 
     const [station] = await db
@@ -99,8 +100,8 @@ export const createServiceSlot = validatedActionWithUser(
 export const updateServiceSlotStatus = validatedActionWithUser(
   updateSlotStatusSchema,
   async (data, _, user) => {
-    if (user.role !== 'owner') {
-      return { error: 'Only owners can update service slots.' };
+    if (!canManageStationOperations(user.role)) {
+      return { error: 'Only station attendants and admins can update service slots.' };
     }
 
     const [slot] = await db

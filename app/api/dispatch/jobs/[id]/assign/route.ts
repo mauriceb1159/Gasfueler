@@ -1,5 +1,6 @@
 import { assignDispatchJob, assignDispatchJobInputSchema } from '@/lib/dispatch-service';
 import { getUser } from '@/lib/db/queries';
+import { canManageDispatch } from '@/lib/auth/roles';
 
 type RouteContext = {
   params: Promise<{
@@ -14,8 +15,8 @@ export async function POST(request: Request, context: RouteContext) {
     return Response.json({ error: 'User is not authenticated.' }, { status: 401 });
   }
 
-  if (user.role !== 'owner') {
-    return Response.json({ error: 'Only owners can assign dispatch jobs.' }, { status: 403 });
+  if (!canManageDispatch(user.role)) {
+    return Response.json({ error: 'Only dispatchers and admins can assign dispatch jobs.' }, { status: 403 });
   }
 
   const { id } = await context.params;

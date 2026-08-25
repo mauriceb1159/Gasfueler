@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
+import { canManageFulfillment } from '@/lib/auth/roles';
 import { getUser } from '@/lib/db/queries';
 import { db } from '@/lib/db/drizzle';
 import {
@@ -48,7 +49,7 @@ export async function cancelFuelRequest(formData: FormData) {
     redirect(`/requests/${requestId}`);
   }
 
-  if (user.role !== 'owner' && request.userId !== user.id) {
+  if (!canManageFulfillment(user.role) && request.userId !== user.id) {
     redirect(`/requests/${requestId}`);
   }
 

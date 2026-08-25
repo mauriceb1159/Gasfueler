@@ -77,3 +77,42 @@ export function isAdmin(userRole: UserRole): boolean {
 export function isMainAdmin(userRole: UserRole): boolean {
   return userRole === USER_ROLES.MAIN_ADMIN;
 }
+
+type RoleLike = UserRole | string | null | undefined;
+
+export function canManageTeam(role: RoleLike): boolean {
+  return role === USER_ROLES.ADMIN || role === USER_ROLES.MAIN_ADMIN;
+}
+
+export function canManageStoreCatalog(role: RoleLike): boolean {
+  return (
+    role === USER_ROLES.STORE ||
+    role === USER_ROLES.STORE_BACK_OFFICE ||
+    role === USER_ROLES.ADMIN ||
+    role === USER_ROLES.MAIN_ADMIN
+  );
+}
+
+export function canManageDispatch(role: RoleLike): boolean {
+  return (
+    role === USER_ROLES.DISPATCHER ||
+    role === USER_ROLES.ADMIN ||
+    role === USER_ROLES.MAIN_ADMIN
+  );
+}
+
+export function canManageFulfillment(role: RoleLike): boolean {
+  return (
+    role === USER_ROLES.FUEL_ATTENDANT ||
+    role === USER_ROLES.ADMIN ||
+    role === USER_ROLES.MAIN_ADMIN
+  );
+}
+
+export function canManageStationOperations(role: RoleLike): boolean {
+  return (
+    role === USER_ROLES.FUEL_ATTENDANT ||
+    role === USER_ROLES.ADMIN ||
+    role === USER_ROLES.MAIN_ADMIN
+  );
+}

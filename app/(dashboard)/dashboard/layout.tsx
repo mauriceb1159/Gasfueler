@@ -21,7 +21,7 @@ import { User } from '@/lib/db/schema';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 type DashboardRole =
-  | 'owner'
+  | 'admin'
   | 'attendant'
   | 'store'
   | 'dispatcher'
@@ -32,12 +32,8 @@ function normalizeRole(role?: string | null): DashboardRole {
   if (!normalized || normalized === 'member' || normalized === 'customer') {
     return 'customer';
   }
-  if (
-    normalized === 'owner' ||
-    normalized === 'admin' ||
-    normalized === 'main_admin'
-  ) {
-    return 'owner';
+  if (normalized === 'admin' || normalized === 'main_admin') {
+    return 'admin';
   }
   if (
     ['fuel_attendant', 'attendant', 'attendants', 'fulfillment'].includes(
@@ -75,54 +71,54 @@ export default function DashboardLayout({
 
   const navItems = useMemo(
     () => [
-      { href: '/dashboard', icon: Users, label: 'Team', roles: ['owner'] },
+      { href: '/dashboard', icon: Users, label: 'Team', roles: ['admin'] },
       {
         href: '/dashboard/general',
         icon: Settings,
         label: 'General',
-        roles: ['owner']
+        roles: ['admin', 'attendant']
       },
       {
         href: '/dashboard/store',
         icon: PanelsTopLeft,
         label: 'Store Back Office',
-        roles: ['owner', 'store']
+        roles: ['admin', 'store']
       },
       {
         href: '/dashboard/service-slots',
         icon: CalendarClock,
         label: 'Service Slots',
-        roles: ['owner']
+        roles: ['admin', 'attendant']
       },
       {
         href: '/dashboard/fulfillment',
         icon: ClipboardCheck,
         label: 'Fulfillment',
-        roles: ['owner', 'attendant']
+        roles: ['admin', 'attendant']
       },
       {
         href: '/dashboard/store-orders',
         icon: Package,
         label: 'Store Orders',
-        roles: ['owner', 'attendant', 'store']
+        roles: ['admin', 'attendant', 'store']
       },
       {
         href: '/dashboard/dispatcher',
         icon: Navigation,
         label: 'Dispatch',
-        roles: ['owner', 'dispatcher']
+        roles: ['admin', 'dispatcher']
       },
       {
         href: '/dashboard/activity',
         icon: Activity,
         label: 'Activity',
-        roles: ['owner', 'attendant', 'store']
+        roles: ['admin', 'attendant', 'store']
       },
       {
         href: '/dashboard/security',
         icon: Shield,
         label: 'Security',
-        roles: ['owner']
+        roles: ['admin']
       }
     ],
     []
@@ -131,7 +127,7 @@ export default function DashboardLayout({
   const role = normalizeRole(user?.role);
   const roleHome = useMemo<Record<DashboardRole, string>>(
     () => ({
-      owner: '/dashboard',
+      admin: '/dashboard',
       attendant: '/dashboard/fulfillment',
       store: '/dashboard/store',
       dispatcher: '/dashboard/dispatcher',
@@ -148,7 +144,7 @@ export default function DashboardLayout({
       return;
     }
 
-    if (role === 'owner') {
+    if (role === 'admin') {
       return;
     }
 

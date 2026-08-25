@@ -1,5 +1,6 @@
 import { asc, eq } from 'drizzle-orm';
 
+import { canManageStoreCatalog } from '@/lib/auth/roles';
 import { getUser } from '@/lib/db/queries';
 import { db } from '@/lib/db/drizzle';
 import { activityLogs, teamMembers } from '@/lib/db/schema';
@@ -40,8 +41,8 @@ export async function GET() {
     return Response.json({ error: 'User is not authenticated.' }, { status: 401 });
   }
 
-  if (user.role !== 'owner') {
-    return Response.json({ error: 'Only owners can export the store catalog.' }, { status: 403 });
+  if (!canManageStoreCatalog(user.role)) {
+    return Response.json({ error: 'Only store admins can export the store catalog.' }, { status: 403 });
   }
 
   const products = await db.query.storeItems.findMany({

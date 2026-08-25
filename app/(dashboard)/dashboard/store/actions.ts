@@ -4,6 +4,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
+import { canManageStoreCatalog } from '@/lib/auth/roles';
 import { getUser } from '@/lib/db/queries';
 import { db } from '@/lib/db/drizzle';
 import {
@@ -187,8 +188,8 @@ async function requireOwner() {
     redirect('/sign-in');
   }
 
-  if (user.role !== 'owner') {
-    redirect('/dashboard/store?error=Only owners can manage the store catalog.');
+  if (!canManageStoreCatalog(user.role)) {
+    redirect('/dashboard/store?error=Only store admins can manage the store catalog.');
   }
 
   return user;

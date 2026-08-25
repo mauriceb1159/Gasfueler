@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Loader2, PlusCircle } from 'lucide-react';
+import { canManageTeam, USER_ROLES } from '@/lib/auth/roles';
 
 type ActionState = {
   error?: string;
@@ -189,7 +190,7 @@ function InviteTeamMemberSkeleton() {
 
 function InviteTeamMember() {
   const { data: user } = useSWR<User>('/api/user', fetcher);
-  const isOwner = user?.role === 'owner';
+  const canInvite = canManageTeam(user?.role);
   const [inviteState, inviteAction, isInvitePending] = useActionState<
     ActionState,
     FormData
@@ -212,32 +213,48 @@ function InviteTeamMember() {
               type="email"
               placeholder="Enter email"
               required
-              disabled={!isOwner}
+              disabled={!canInvite}
             />
           </div>
           <div>
             <Label>Role</Label>
             <RadioGroup
-              defaultValue="member"
+              defaultValue={USER_ROLES.END_USER}
               name="role"
-              className="flex space-x-4"
-              disabled={!isOwner}
+              className="grid gap-3 sm:grid-cols-2"
+              disabled={!canInvite}
             >
               <div className="flex items-center space-x-2 mt-2">
-                <RadioGroupItem value="member" id="member" />
-                <Label htmlFor="member">Member</Label>
+                <RadioGroupItem value={USER_ROLES.END_USER} id="end_user" />
+                <Label htmlFor="end_user">Customer</Label>
               </div>
               <div className="flex items-center space-x-2 mt-2">
-                <RadioGroupItem value="attendant" id="attendant" />
-                <Label htmlFor="attendant">Attendant</Label>
+                <RadioGroupItem value={USER_ROLES.FUEL_DRIVER} id="fuel_driver" />
+                <Label htmlFor="fuel_driver">Fuel Driver</Label>
               </div>
               <div className="flex items-center space-x-2 mt-2">
-                <RadioGroupItem value="store_back_office" id="store_back_office" />
-                <Label htmlFor="store_back_office">Store Back Office</Label>
+                <RadioGroupItem value={USER_ROLES.FUEL_ATTENDANT} id="fuel_attendant" />
+                <Label htmlFor="fuel_attendant">Fuel Attendant</Label>
               </div>
               <div className="flex items-center space-x-2 mt-2">
-                <RadioGroupItem value="owner" id="owner" />
-                <Label htmlFor="owner">Owner</Label>
+                <RadioGroupItem value={USER_ROLES.STORE} id="store" />
+                <Label htmlFor="store">Store Owner</Label>
+              </div>
+              <div className="flex items-center space-x-2 mt-2">
+                <RadioGroupItem value={USER_ROLES.STORE_BACK_OFFICE} id="store_back_office" />
+                <Label htmlFor="store_back_office">Store Admin</Label>
+              </div>
+              <div className="flex items-center space-x-2 mt-2">
+                <RadioGroupItem value={USER_ROLES.DISPATCHER} id="dispatcher" />
+                <Label htmlFor="dispatcher">Dispatcher</Label>
+              </div>
+              <div className="flex items-center space-x-2 mt-2">
+                <RadioGroupItem value={USER_ROLES.ADMIN} id="admin" />
+                <Label htmlFor="admin">Administrator</Label>
+              </div>
+              <div className="flex items-center space-x-2 mt-2">
+                <RadioGroupItem value={USER_ROLES.MAIN_ADMIN} id="main_admin" />
+                <Label htmlFor="main_admin">Main Administrator</Label>
               </div>
             </RadioGroup>
           </div>
@@ -250,7 +267,7 @@ function InviteTeamMember() {
           <Button
             type="submit"
             className="bg-orange-500 hover:bg-orange-600 text-white"
-            disabled={isInvitePending || !isOwner}
+            disabled={isInvitePending || !canInvite}
           >
             {isInvitePending ? (
               <>
@@ -266,10 +283,10 @@ function InviteTeamMember() {
           </Button>
         </form>
       </CardContent>
-      {!isOwner && (
+      {!canInvite && (
         <CardFooter>
           <p className="text-sm text-muted-foreground">
-            You must be a team owner to invite new members.
+            You must be an admin to invite new members.
           </p>
         </CardFooter>
       )}

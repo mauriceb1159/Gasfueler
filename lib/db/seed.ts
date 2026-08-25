@@ -14,6 +14,7 @@ import {
   users
 } from './schema';
 import { hashPassword } from '@/lib/auth/session';
+import { USER_ROLES } from '@/lib/auth/roles';
 import { eq, and, gte } from 'drizzle-orm';
 
 async function createStripeProducts() {
@@ -574,7 +575,7 @@ async function seed() {
         {
           email: email,
           passwordHash: passwordHash,
-          role: 'owner',
+          role: USER_ROLES.MAIN_ADMIN,
         },
       ])
       .returning();

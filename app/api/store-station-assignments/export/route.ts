@@ -1,5 +1,6 @@
 import { asc, eq } from 'drizzle-orm';
 
+import { canManageStoreCatalog } from '@/lib/auth/roles';
 import { getUser } from '@/lib/db/queries';
 import { db } from '@/lib/db/drizzle';
 import { activityLogs, teamMembers } from '@/lib/db/schema';
@@ -40,9 +41,9 @@ export async function GET() {
     return Response.json({ error: 'User is not authenticated.' }, { status: 401 });
   }
 
-  if (user.role !== 'owner') {
+  if (!canManageStoreCatalog(user.role)) {
     return Response.json(
-      { error: 'Only owners can export station assignments.' },
+      { error: 'Only store admins can export station assignments.' },
       { status: 403 }
     );
   }

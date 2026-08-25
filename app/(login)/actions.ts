@@ -31,7 +31,12 @@ import {
   validatedAction,
   validatedActionWithUser
 } from '@/lib/auth/middleware';
-import { getDashboardUrlForRole, USER_ROLES, type UserRole } from '@/lib/auth/roles';
+import {
+  canManageTeam,
+  getDashboardUrlForRole,
+  USER_ROLES,
+  type UserRole
+} from '@/lib/auth/roles';
 
 async function logActivity(
   teamId: number | null | undefined,
@@ -322,6 +327,11 @@ export const removeTeamMember = validatedActionWithUser(
   removeTeamMemberSchema,
   async (data, _, user) => {
     const { memberId } = data;
+
+    if (!canManageTeam(user.role)) {
+      return { error: 'Only admins can remove team members.' };
+    }
+
     const userWithTeam = await getUserWithTeam(user.id);
 
     if (!userWithTeam?.teamId) {
@@ -349,13 +359,27 @@ export const removeTeamMember = validatedActionWithUser(
 
 const inviteTeamMemberSchema = z.object({
   email: z.string().email('Invalid email address'),
-  role: z.enum(['member', 'owner'])
+  role: z.enum([
+    USER_ROLES.END_USER,
+    USER_ROLES.FUEL_DRIVER,
+    USER_ROLES.FUEL_ATTENDANT,
+    USER_ROLES.STORE,
+    USER_ROLES.STORE_BACK_OFFICE,
+    USER_ROLES.DISPATCHER,
+    USER_ROLES.ADMIN,
+    USER_ROLES.MAIN_ADMIN
+  ])
 });
 
 export const inviteTeamMember = validatedActionWithUser(
   inviteTeamMemberSchema,
   async (data, _, user) => {
     const { email, role } = data;
+
+    if (!canManageTeam(user.role)) {
+      return { error: 'Only admins can invite team members.' };
+    }
+
     const userWithTeam = await getUserWithTeam(user.id);
 
     if (!userWithTeam?.teamId) {

@@ -8,16 +8,13 @@ import {
   listDispatchJobs,
   listDrivers,
 } from '@/lib/dispatch-service';
+import { canManageDispatch } from '@/lib/auth/roles';
 import { getUser } from '@/lib/db/queries';
 import { DispatchJobStatus } from '@/lib/db/schema';
 
 export const metadata = {
   title: 'Dispatch',
 };
-
-function canUseDispatcherBoard(role: string | null) {
-  return ['owner', 'admin', 'main_admin', 'dispatcher'].includes(role ?? '');
-}
 
 async function assignDriverAction(formData: FormData) {
   'use server';
@@ -28,7 +25,7 @@ async function assignDriverAction(formData: FormData) {
     redirect('/sign-in');
   }
 
-  if (!canUseDispatcherBoard(user.role)) {
+  if (!canManageDispatch(user.role)) {
     throw new Error('Only dispatchers and admins can assign dispatch jobs.');
   }
 
@@ -59,7 +56,7 @@ export default async function DispatcherDashboard() {
     redirect('/sign-in');
   }
 
-  if (!canUseDispatcherBoard(user.role)) {
+  if (!canManageDispatch(user.role)) {
     redirect('/dashboard');
   }
 
