@@ -75,8 +75,18 @@ export async function getUser() {
 }
 
 async function getUserFromSupabaseAccessToken(accessToken: string) {
-  const supabase = createSupabaseAuthClient();
-  const { data, error } = await supabase.auth.getUser(accessToken);
+  let data;
+  let error;
+
+  try {
+    const supabase = createSupabaseAuthClient();
+    const response = await supabase.auth.getUser(accessToken);
+    data = response.data;
+    error = response.error;
+  } catch (authError) {
+    console.error('Supabase access-token lookup failed:', authError);
+    return null;
+  }
 
   if (error || !data.user) {
     return null;

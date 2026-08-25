@@ -17,7 +17,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [user, team] = await Promise.all([getUser(), getTeamForUser()]);
+  const { user, team } = await getLayoutFallbacks();
 
   return (
     <html
@@ -37,5 +37,43 @@ export default async function RootLayout({
         </SWRConfig>
       </body>
     </html>
+  );
+}
+
+async function getLayoutFallbacks() {
+  try {
+    const user = await getUser();
+
+    if (!user) {
+      return { user: null, team: null };
+    }
+
+    try {
+      const team = await getTeamForUser();
+      return { user, team };
+    } catch (error) {
+      if (isDynamicServerUsageError(error)) {
+        throw error;
+      }
+
+      console.error('Failed to preload team for layout:', error);
+      return { user, team: null };
+    }
+  } catch (error) {
+    if (isDynamicServerUsageError(error)) {
+      throw error;
+    }
+
+    console.error('Failed to preload user for layout:', error);
+    return { user: null, team: null };
+  }
+}
+
+function isDynamicServerUsageError(error: unknown) {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'digest' in error &&
+    error.digest === 'DYNAMIC_SERVER_USAGE'
   );
 }
