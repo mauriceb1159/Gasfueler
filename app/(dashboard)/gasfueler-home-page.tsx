@@ -180,6 +180,15 @@ export function GasFuelerHomePage({
                 </Button>
               </a>
             </div>
+            <p className="mt-4 text-sm text-slate-600">
+              Already have an account?{' '}
+              <a
+                href="/sign-in?redirect=book"
+                className="font-semibold text-slate-950 underline underline-offset-4 transition hover:text-orange-700"
+              >
+                Sign in to continue booking.
+              </a>
+            </p>
 
             <HeroServiceCard className="mt-4 sm:hidden" />
 

@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { LogOut, Settings, ShoppingCart, TicketPlus, Users, MapPin, Truck, Navigation } from 'lucide-react';
+import { LogIn, LogOut, Settings, ShoppingCart, TicketPlus, Users, MapPin, Truck, Navigation } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,7 +51,7 @@ type MarketCartSummary = {
 
 function UserMenu() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { data: user } = useSWR<HeaderUser>('/api/user', fetcher);
+  const { data: user } = useSWR<HeaderUser | null>('/api/user', fetcher);
   const router = useRouter();
 
   async function handleSignOut() {
@@ -62,14 +62,24 @@ function UserMenu() {
 
   if (!user) {
     return (
-      <>
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        <Button
+          asChild
+          variant="outline"
+          className="h-9 rounded-full border-slate-200 bg-white/80 px-3 text-xs text-slate-800 shadow-sm sm:h-10 sm:px-4 sm:text-sm"
+        >
+          <Link href="/sign-in?redirect=book">
+            <LogIn className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            Sign in
+          </Link>
+        </Button>
         <Button
           asChild
           className="h-9 rounded-full px-3 text-xs sm:h-10 sm:px-4 sm:text-sm"
         >
           <Link href="/sign-up">Sign Up</Link>
         </Button>
-      </>
+      </div>
     );
   }
 

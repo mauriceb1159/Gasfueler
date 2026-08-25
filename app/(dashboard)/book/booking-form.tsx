@@ -6,6 +6,7 @@ import {
   type LucideIcon,
   MapPinned,
   Navigation,
+  RotateCcw,
   Search,
   ShoppingBag,
   ShoppingCart,
@@ -600,6 +601,33 @@ export function BookingForm({
     setCombinedFlowStep('store');
   }
 
+  function startNewBooking() {
+    setLocationStatus('idle');
+    setCoords(null);
+    setZipFilter('');
+    setSelectedStationId(stations[0]?.id ?? null);
+    setNearbyStations([]);
+    setSelectedNearbyStation(null);
+    setBookingMode('fuel_only');
+    setCombinedFlowStep('fuel');
+    setFuelGrade('regular');
+    setRequestType('fill_tank');
+    setRequestedGallons('');
+    setRequestedDollarAmount('');
+    setSelectedVehicleId('');
+    setSelectedSlotId('');
+    setIsStationPickerOpen(true);
+    setFuelStepError(null);
+    setVehicleClass('suv');
+    setPickupMode('asap');
+    setPickupWindowStart('');
+    setPickupWindowEnd('');
+    setCustomerNotes('');
+    setSelectedStoreItems({});
+    setIsStoreSummaryOpen(false);
+    setNearbyStatus('idle');
+  }
+
   const submitLabel =
     bookingMode === 'fuel_only'
       ? 'Save fuel stop'
@@ -871,6 +899,18 @@ export function BookingForm({
             {initialError}
           </div>
         ) : null}
+
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={startNewBooking}
+            className="gap-2 rounded-full border-slate-200 bg-white"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Start new booking
+          </Button>
+        </div>
 
         <section className="space-y-4">
           <SectionTitle icon={Store} title="Choose your stop" />
