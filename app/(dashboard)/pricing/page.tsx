@@ -17,8 +17,8 @@ const consumerPlans = [
   {
     name: 'Pay Per Visit',
     eyebrow: 'Best for occasional use',
-    price: '$4-$6',
-    cadence: 'service fee per fueling visit',
+    price: '$6.99-$10.99',
+    cadence: 'service fee by vehicle class',
     summary:
       'Schedule a stop, stay in your car, and pay only when you use GasBite.',
     features: [
@@ -31,7 +31,7 @@ const consumerPlans = [
     ctaLabel: 'Create customer account',
     ctaHref: '/sign-up',
     badge:
-      'Built around the business plan target service fee of $4-$6 per visit.'
+      'Current booking estimates use $6.99 for cars, $8.99 for SUVs, and $10.99 for trucks.'
   },
   {
     name: 'GasBite Membership',
