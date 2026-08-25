@@ -235,7 +235,7 @@ export function GasFuelerHomePage({
                     GasBite Experience
                   </p>
                   <p className="mt-3 text-2xl font-semibold leading-tight sm:text-[2rem]">
-                    Pull in, fuel up, collect your order, and roll out.
+                    Pull in, fuel up, collect your order, and be on your way in minutes.
                   </p>
                   <p className="mt-3 text-sm leading-6 text-slate-600">
                     Attendants handle the pump and deliver pre-ordered drinks
