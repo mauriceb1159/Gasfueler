@@ -22,6 +22,9 @@ export function Login({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const effectiveRedirect = redirect ?? searchParams.get('redirect');
+  const effectivePriceId = priceId ?? searchParams.get('priceId');
+  const effectiveInviteId = inviteId ?? searchParams.get('inviteId');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(searchParams.get('error') || '');
   const [email, setEmail] = useState('');
@@ -29,9 +32,9 @@ export function Login({
 
   const authSwitchHref = buildAuthSwitchHref({
     mode,
-    redirect,
-    priceId,
-    inviteId
+    redirect: effectiveRedirect,
+    priceId: effectivePriceId,
+    inviteId: effectiveInviteId
   });
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -50,7 +53,7 @@ export function Login({
           body: JSON.stringify({
             email,
             password,
-            inviteId: inviteId || undefined
+            inviteId: effectiveInviteId || undefined
           })
         }
       );
@@ -65,19 +68,19 @@ export function Login({
         return;
       }
 
-      if (redirect === 'book') {
+      if (effectiveRedirect === 'book') {
         router.push('/book');
         router.refresh();
         return;
       }
 
-      if (redirect) {
-        router.push(`/${redirect}`);
+      if (effectiveRedirect) {
+        router.push(`/${effectiveRedirect}`);
         router.refresh();
         return;
       }
 
-      if (mode === 'signup' && !inviteId) {
+      if (mode === 'signup' && !effectiveInviteId) {
         router.push('/book');
         router.refresh();
         return;
@@ -118,16 +121,16 @@ export function Login({
   function handleGoogleSignIn() {
     const params = new URLSearchParams();
 
-    if (redirect) {
-      params.set('redirect', redirect);
+    if (effectiveRedirect) {
+      params.set('redirect', effectiveRedirect);
     }
 
-    if (priceId) {
-      params.set('priceId', priceId);
+    if (effectivePriceId) {
+      params.set('priceId', effectivePriceId);
     }
 
-    if (inviteId) {
-      params.set('inviteId', inviteId);
+    if (effectiveInviteId) {
+      params.set('inviteId', effectiveInviteId);
     }
 
     const query = params.toString();
@@ -145,14 +148,14 @@ export function Login({
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
           {mode === 'signin'
             ? 'Sign in to book and manage service'
-            : inviteId
+            : effectiveInviteId
               ? 'Create your account'
               : 'Create your customer account'}
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           {mode === 'signin'
             ? 'Sign in to book fuel, manage orders, and track your service.'
-            : inviteId
+            : effectiveInviteId
               ? 'Finish setting up your invited account.'
               : 'Sign up to book fuel faster, manage requests, and track your service.'}
         </p>
@@ -160,9 +163,9 @@ export function Login({
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <form className="space-y-6" onSubmit={handleSubmit}>
-          <input type="hidden" name="redirect" value={redirect || ''} />
-          <input type="hidden" name="priceId" value={priceId || ''} />
-          <input type="hidden" name="inviteId" value={inviteId || ''} />
+          <input type="hidden" name="redirect" value={effectiveRedirect || ''} />
+          <input type="hidden" name="priceId" value={effectivePriceId || ''} />
+          <input type="hidden" name="inviteId" value={effectiveInviteId || ''} />
           <div>
             <Label
               htmlFor="email"
@@ -222,7 +225,7 @@ export function Login({
             ) : null}
           </div>
 
-          {mode === 'signup' && !inviteId ? (
+          {mode === 'signup' && !effectiveInviteId ? (
             <div className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-900">
               New public sign-ups create a customer account for booking fuel and tracking service.
             </div>
@@ -243,7 +246,7 @@ export function Login({
               ) : mode === 'signin' ? (
                 'Sign in'
               ) : (
-                inviteId ? 'Create account' : 'Create customer account'
+                effectiveInviteId ? 'Create account' : 'Create customer account'
               )}
             </Button>
           </div>

@@ -117,7 +117,7 @@ pnpm dev
 You should be able to sign in with:
 
 email: test@test.com
-password: admin123
+password: Fuelup2026!
 The only remaining non-blocking items are warnings about the deprecated middleware convention and outdated baseline-browser-mapping.
 
 

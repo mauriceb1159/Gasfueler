@@ -1,4 +1,4 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/lib/db/drizzle';
@@ -10,6 +10,7 @@ import {
   DispatchJobStatus,
   DispatchJobType,
   drivers,
+  driverLocations,
   DriverAvailabilityStatus,
   fuelRequests,
   orders,
@@ -61,6 +62,26 @@ export const createDispatchJobInputSchema = z
 
 export const assignDispatchJobInputSchema = z.object({
   driverId: z.coerce.number().int().positive(),
+});
+
+export const updateDriverJobStatusInputSchema = z.object({
+  status: z.enum([
+    DispatchJobStatus.ACCEPTED,
+    DispatchJobStatus.EN_ROUTE,
+    DispatchJobStatus.ARRIVED,
+    DispatchJobStatus.SERVICING,
+    DispatchJobStatus.COMPLETED,
+    DispatchJobStatus.CANCELED,
+  ]),
+});
+
+export const updateDriverLocationInputSchema = z.object({
+  driverId: z.coerce.number().int().positive().optional(),
+  latitude: z.coerce.number().min(-90).max(90),
+  longitude: z.coerce.number().min(-180).max(180),
+  heading: z.coerce.number().int().min(0).max(359).optional(),
+  speed: z.coerce.number().int().min(0).optional(),
+  capturedAt: z.string().datetime().optional(),
 });
 
 export async function listDrivers() {
@@ -191,6 +212,89 @@ export async function listDispatchJobs() {
       },
     },
     orderBy: (dispatchJobs, { desc }) => [desc(dispatchJobs.createdAt)],
+  });
+}
+
+export async function listAssignedDispatchJobsForDriver(actor: User) {
+  const driver = await getActiveDriverForUser(actor.id);
+
+  if (!driver) {
+    return { error: 'Active driver profile could not be found.' as const };
+  }
+
+  const assignedRows = await db
+    .select({ dispatchJobId: dispatchAssignments.dispatchJobId })
+    .from(dispatchAssignments)
+    .where(
+      and(
+        eq(dispatchAssignments.driverId, driver.id),
+        inArray(dispatchAssignments.assignmentStatus, [
+          DispatchAssignmentStatus.ASSIGNED,
+          DispatchAssignmentStatus.ACCEPTED,
+        ])
+      )
+    );
+
+  const jobIds = assignedRows.map((row) => row.dispatchJobId);
+
+  if (jobIds.length === 0) {
+    return [];
+  }
+
+  return db.query.dispatchJobs.findMany({
+    where: inArray(dispatchJobs.id, jobIds),
+    with: {
+      customerUser: {
+        columns: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      station: {
+        columns: {
+          id: true,
+          name: true,
+          city: true,
+          state: true,
+        },
+      },
+      fuelRequest: {
+        columns: {
+          id: true,
+          status: true,
+          fuelGrade: true,
+        },
+      },
+      order: {
+        columns: {
+          id: true,
+          orderType: true,
+          fulfillmentStatus: true,
+          totalAmount: true,
+        },
+      },
+      assignments: {
+        with: {
+          driver: {
+            columns: {
+              id: true,
+              availabilityStatus: true,
+            },
+            with: {
+              user: {
+                columns: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    orderBy: (dispatchJobs, { desc }) => [desc(dispatchJobs.updatedAt)],
   });
 }
 
@@ -393,4 +497,244 @@ export async function assignDispatchJob(
   });
 
   return assignment;
+}
+
+export async function acceptAssignedDispatchJob(jobId: number, actor: User) {
+  const driver = await getActiveDriverForUser(actor.id);
+
+  if (!driver) {
+    return { error: 'Active driver profile could not be found.' as const };
+  }
+
+  const assignment = await getActiveAssignmentForDriver(jobId, driver.id);
+
+  if (!assignment) {
+    return { error: 'Assigned dispatch job could not be found.' as const };
+  }
+
+  await db
+    .update(dispatchAssignments)
+    .set({
+      assignmentStatus: DispatchAssignmentStatus.ACCEPTED,
+      acceptedAt: new Date(),
+    })
+    .where(eq(dispatchAssignments.id, assignment.id));
+
+  await db
+    .update(dispatchJobs)
+    .set({
+      status: DispatchJobStatus.ACCEPTED,
+      updatedAt: new Date(),
+    })
+    .where(eq(dispatchJobs.id, jobId));
+
+  await db.insert(dispatchEvents).values({
+    dispatchJobId: jobId,
+    actorUserId: actor.id,
+    eventType: 'driver_accepted',
+    payload: {
+      driverId: driver.id,
+      assignmentId: assignment.id,
+    },
+  });
+
+  return getDispatchJobById(jobId);
+}
+
+export async function declineAssignedDispatchJob(jobId: number, actor: User) {
+  const driver = await getActiveDriverForUser(actor.id);
+
+  if (!driver) {
+    return { error: 'Active driver profile could not be found.' as const };
+  }
+
+  const assignment = await getActiveAssignmentForDriver(jobId, driver.id);
+
+  if (!assignment) {
+    return { error: 'Assigned dispatch job could not be found.' as const };
+  }
+
+  await db
+    .update(dispatchAssignments)
+    .set({
+      assignmentStatus: DispatchAssignmentStatus.DECLINED,
+      declinedAt: new Date(),
+    })
+    .where(eq(dispatchAssignments.id, assignment.id));
+
+  await db
+    .update(dispatchJobs)
+    .set({
+      status: DispatchJobStatus.UNASSIGNED,
+      updatedAt: new Date(),
+    })
+    .where(eq(dispatchJobs.id, jobId));
+
+  await db
+    .update(drivers)
+    .set({
+      availabilityStatus: DriverAvailabilityStatus.AVAILABLE,
+      updatedAt: new Date(),
+    })
+    .where(eq(drivers.id, driver.id));
+
+  await db.insert(dispatchEvents).values({
+    dispatchJobId: jobId,
+    actorUserId: actor.id,
+    eventType: 'driver_declined',
+    payload: {
+      driverId: driver.id,
+      assignmentId: assignment.id,
+    },
+  });
+
+  return getDispatchJobById(jobId);
+}
+
+export async function updateAssignedDispatchJobStatus(
+  jobId: number,
+  input: z.infer<typeof updateDriverJobStatusInputSchema>,
+  actor: User
+) {
+  const driver = await getActiveDriverForUser(actor.id);
+
+  if (!driver) {
+    return { error: 'Active driver profile could not be found.' as const };
+  }
+
+  const assignment = await getActiveAssignmentForDriver(jobId, driver.id);
+
+  if (!assignment) {
+    return { error: 'Assigned dispatch job could not be found.' as const };
+  }
+
+  await db
+    .update(dispatchJobs)
+    .set({
+      status: input.status,
+      updatedAt: new Date(),
+    })
+    .where(eq(dispatchJobs.id, jobId));
+
+  if (input.status === DispatchJobStatus.COMPLETED) {
+    await db
+      .update(drivers)
+      .set({
+        availabilityStatus: DriverAvailabilityStatus.AVAILABLE,
+        updatedAt: new Date(),
+      })
+      .where(eq(drivers.id, driver.id));
+  }
+
+  await db.insert(dispatchEvents).values({
+    dispatchJobId: jobId,
+    actorUserId: actor.id,
+    eventType: 'driver_status_updated',
+    payload: {
+      driverId: driver.id,
+      status: input.status,
+    },
+  });
+
+  return getDispatchJobById(jobId);
+}
+
+export async function updateDriverLocation(
+  input: z.infer<typeof updateDriverLocationInputSchema>,
+  actor: User
+) {
+  const driver = await getActiveDriverForUser(actor.id);
+
+  if (!driver) {
+    return { error: 'Active driver profile could not be found.' as const };
+  }
+
+  if (input.driverId && input.driverId !== driver.id) {
+    return { error: 'Driver location can only be updated by that driver.' as const };
+  }
+
+  const [location] = await db
+    .insert(driverLocations)
+    .values({
+      driverId: driver.id,
+      latitude: input.latitude.toFixed(6),
+      longitude: input.longitude.toFixed(6),
+      heading: input.heading ?? null,
+      speed: input.speed ?? null,
+      capturedAt: input.capturedAt ? new Date(input.capturedAt) : new Date(),
+    })
+    .returning();
+
+  return location;
+}
+
+async function getDispatchJobById(jobId: number) {
+  return db.query.dispatchJobs.findFirst({
+    where: eq(dispatchJobs.id, jobId),
+    with: {
+      customerUser: {
+        columns: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      station: {
+        columns: {
+          id: true,
+          name: true,
+          city: true,
+          state: true,
+        },
+      },
+      assignments: {
+        with: {
+          driver: {
+            columns: {
+              id: true,
+              availabilityStatus: true,
+            },
+            with: {
+              user: {
+                columns: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+async function getActiveDriverForUser(userId: number) {
+  const [driver] = await db
+    .select()
+    .from(drivers)
+    .where(and(eq(drivers.userId, userId), eq(drivers.active, true)))
+    .limit(1);
+
+  return driver ?? null;
+}
+
+async function getActiveAssignmentForDriver(jobId: number, driverId: number) {
+  const [assignment] = await db
+    .select()
+    .from(dispatchAssignments)
+    .where(
+      and(
+        eq(dispatchAssignments.dispatchJobId, jobId),
+        eq(dispatchAssignments.driverId, driverId),
+        inArray(dispatchAssignments.assignmentStatus, [
+          DispatchAssignmentStatus.ASSIGNED,
+          DispatchAssignmentStatus.ACCEPTED,
+        ])
+      )
+    )
+    .limit(1);
+
+  return assignment ?? null;
 }

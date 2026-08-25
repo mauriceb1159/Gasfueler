@@ -177,17 +177,40 @@ These should be called by:
 
 ## Realtime Strategy
 
-You do not need realtime on day one.
+The app should treat Postgres as the durable source of truth and realtime as a
+delivery layer. All writes still go through authenticated API routes so status
+rules, driver permissions, payments, fulfillment state, and audit events stay in
+one backend path.
 
-### Good V1
+### Mobile Boundary
 
-- polling every 10 to 20 seconds for dispatcher and driver apps
-- status updates written through normal API routes
+Flutter should depend on:
 
-### Good V2
+- `DispatchService` for durable reads and writes
+- `DispatchRealtimeService` for live updates
+- `DispatchPollingService` as the fallback when realtime is disabled or
+  temporarily disconnected
+- `PushNotificationService` for background/mobile notifications
 
-- add websockets, SSE, or a managed realtime service
-- stream driver location and job status changes
+This keeps Supabase, Firebase, or another realtime provider out of the UI layer.
+
+### Current Supabase Path
+
+- Use Supabase Realtime for filtered changes on:
+  - `dispatch_jobs`
+  - `dispatch_assignments`
+  - `driver_locations`
+- Keep channels scoped to the current board, driver, or job.
+- Do not broadcast every driver location to every connected user.
+- For larger production scale, prefer Supabase Broadcast/private channels fed by
+  database triggers or backend events over broad Postgres change subscriptions.
+
+### Push Notifications
+
+Firebase Cloud Messaging can be added later behind `PushNotificationService`. It
+should notify inactive/backgrounded devices about important events such as new
+assignments, cancellations, and schedule changes. It should not replace the
+dispatch source-of-truth tables.
 
 ## Recommended Build Order
 
@@ -196,7 +219,8 @@ You do not need realtime on day one.
 3. Build dispatcher admin APIs and a basic dispatch board.
 4. Build driver mobile APIs for assigned jobs and status updates.
 5. Add driver location updates.
-6. Add realtime only after the core workflow is stable.
+6. Add realtime subscriptions behind `DispatchRealtimeService`.
+7. Add Firebase Cloud Messaging for background notifications when needed.
 
 ## Safety Rules
 

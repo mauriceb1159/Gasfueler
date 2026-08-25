@@ -24,7 +24,7 @@ Request:
 ```json
 {
   "email": "test@test.com",
-  "password": "admin123"
+  "password": "Fuelup2026!"
 }
 ```
 
@@ -186,7 +186,7 @@ Request:
 
 ```json
 {
-  "currentPassword": "admin123",
+  "currentPassword": "Fuelup2026!",
   "newPassword": "new-password-123",
   "confirmPassword": "new-password-123"
 }
@@ -215,7 +215,7 @@ Request:
 
 ```json
 {
-  "password": "admin123"
+  "password": "Fuelup2026!"
 }
 ```
 
@@ -459,6 +459,105 @@ Common errors:
 - `400` slot unavailable
 - `401` not authenticated
 
+## Dispatch
+
+Dispatch writes go through the backend API. Supabase Realtime is used only as a
+live update delivery layer in the Flutter app.
+
+### `GET /api/dispatch/jobs`
+
+Dispatcher/owner endpoint for the dispatch board.
+
+Success response:
+
+```json
+[
+  {
+    "id": 1,
+    "jobType": "fuel",
+    "customerUserId": 2,
+    "stationId": 1,
+    "status": "unassigned",
+    "priority": 0,
+    "assignments": []
+  }
+]
+```
+
+### `POST /api/dispatch/jobs/:id/assign`
+
+Assign a driver to a dispatch job.
+
+Request:
+
+```json
+{
+  "driverId": 3
+}
+```
+
+### `GET /api/driver/jobs`
+
+Driver endpoint for currently assigned or accepted jobs.
+
+### `POST /api/driver/jobs/:id/accept`
+
+Mark an assigned job as accepted by the authenticated driver.
+
+### `POST /api/driver/jobs/:id/decline`
+
+Decline an assigned job and return it to the unassigned pool.
+
+### `POST /api/driver/jobs/:id/status`
+
+Update active job progress.
+
+Request:
+
+```json
+{
+  "status": "en_route"
+}
+```
+
+Allowed status values:
+
+- `accepted`
+- `en_route`
+- `arrived`
+- `servicing`
+- `completed`
+- `canceled`
+
+### `POST /api/driver/location`
+
+Record the authenticated driver's latest location.
+
+Request:
+
+```json
+{
+  "latitude": 34.052235,
+  "longitude": -118.243683,
+  "heading": 90,
+  "speed": 35,
+  "capturedAt": "2026-08-25T13:00:00.000Z"
+}
+```
+
+## Realtime
+
+Flutter exposes realtime through `DispatchRealtimeService`, with a disabled
+implementation for local development and a Supabase implementation when
+`AppConfig.supabaseUrl` and `AppConfig.supabasePublishableKey` are provided.
+
+Recommended subscriptions:
+
+- Dispatcher board: `dispatch_jobs`, `dispatch_assignments`, `driver_locations`
+- Driver app: `dispatch_assignments` filtered by `driver_id`
+- Job detail: `dispatch_jobs` filtered by `id`
+- Location view: `driver_locations` filtered by `driver_id`
+
 ## Current Mobile Build Order
 
 Recommended Flutter implementation order:
@@ -469,6 +568,8 @@ Recommended Flutter implementation order:
 4. Vehicles
 5. Book fuel request
 6. Store orders
+7. Dispatch service APIs
+8. Dispatch realtime subscriptions
 
 ## Suggested Flutter Notes
 
