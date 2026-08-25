@@ -57,20 +57,38 @@ export const signUpInputSchema = z.object({
 export async function authenticateUser(input: z.infer<typeof signInInputSchema>) {
   const email = input.email.toLowerCase();
   const { password } = input;
-  const supabase = createSupabaseAuthClient();
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
+  try {
+    const supabase = createSupabaseAuthClient();
 
-  if (!error && data.user) {
-    const result = await getOrCreateApplicationUserForSupabaseIdentity(data.user);
-    await logActivity(result.team?.id, result.user.id, ActivityType.SIGN_IN);
-    return result;
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (!error && data.user) {
+      const result = await getOrCreateApplicationUserForSupabaseIdentity(data.user);
+      await logActivity(result.team?.id, result.user.id, ActivityType.SIGN_IN);
+      return result;
+    }
+  } catch (error) {
+    if (!isMissingSupabaseAuthConfigError(error)) {
+      throw error;
+    }
+
+    console.warn(
+      'Supabase Auth password sign-in is not configured; falling back to legacy auth.'
+    );
   }
 
   return authenticateLegacyUserAndLinkToSupabase(email, password);
+}
+
+function isMissingSupabaseAuthConfigError(error: unknown) {
+  return (
+    error instanceof Error &&
+    error.message.includes('is required for Supabase Auth')
+  );
 }
 
 export async function registerUser(input: z.infer<typeof signUpInputSchema>) {
@@ -180,17 +198,28 @@ async function authenticateLegacyUserAndLinkToSupabase(
   }
 
   if (!foundUser.supabaseAuthUserId) {
-    const supabaseUser = await createConfirmedSupabaseUser(email, password);
+    let supabaseUser:
+      | Awaited<ReturnType<typeof createConfirmedSupabaseUser>>
+      | undefined;
 
-    if ('error' in supabaseUser) {
-      return { error: supabaseUser.error };
+    try {
+      supabaseUser = await createConfirmedSupabaseUser(email, password);
+    } catch (error) {
+      console.warn('Supabase Auth user linking failed during legacy sign-in:', error);
     }
 
-    foundUser.supabaseAuthUserId = supabaseUser.user.id;
-    await db
-      .update(users)
-      .set({ supabaseAuthUserId: supabaseUser.user.id })
-      .where(eq(users.id, foundUser.id));
+    if (supabaseUser && !('error' in supabaseUser)) {
+      foundUser.supabaseAuthUserId = supabaseUser.user.id;
+      await db
+        .update(users)
+        .set({ supabaseAuthUserId: supabaseUser.user.id })
+        .where(eq(users.id, foundUser.id));
+    } else if (supabaseUser && 'error' in supabaseUser) {
+      console.warn(
+        'Supabase Auth user linking skipped during legacy sign-in:',
+        supabaseUser.error
+      );
+    }
   }
 
   await logActivity(foundTeam?.id, foundUser.id, ActivityType.SIGN_IN);
