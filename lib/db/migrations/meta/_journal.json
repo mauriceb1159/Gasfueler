@@ -120,6 +120,13 @@
       "when": 1776461000000,
       "tag": "0016_default_user_role_end_user",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1776462000000,
+      "tag": "0017_dispatch_realtime_rls",
+      "breakpoints": true
     }
   ]
 }

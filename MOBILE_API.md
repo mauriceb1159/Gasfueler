@@ -551,6 +551,18 @@ Flutter exposes realtime through `DispatchRealtimeService`, with a disabled
 implementation for local development and a Supabase implementation when
 `AppConfig.supabaseUrl` and `AppConfig.supabasePublishableKey` are provided.
 
+Mobile builds should pass:
+
+```bash
+--dart-define=GASBITE_API_BASE_URL=https://your-api.example.com
+--dart-define=GASBITE_SUPABASE_URL=https://your-project-ref.supabase.co
+--dart-define=GASBITE_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+```
+
+The backend migration `0017_dispatch_realtime_rls.sql` enables realtime
+publication membership and read policies for the dispatch tables when running on
+Supabase.
+
 Recommended subscriptions:
 
 - Dispatcher board: `dispatch_jobs`, `dispatch_assignments`, `driver_locations`
