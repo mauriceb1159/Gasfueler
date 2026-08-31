@@ -19,6 +19,7 @@ import { User } from '@/lib/db/schema';
 import {
   getDashboardUrlForRole,
   ROLE_LABELS,
+  USER_ROLES,
   isAdmin,
   type UserRole
 } from '@/lib/auth/roles';
@@ -237,7 +238,9 @@ function UserMenu() {
 function Header() {
   const pathname = usePathname();
   const [marketCart, setMarketCart] = useState<MarketCartSummary | null>(null);
+  const { data: user } = useSWR<HeaderUser | null>('/api/user', fetcher);
   const showMarketCart = pathname.startsWith('/market');
+  const showBookLink = !user || user.role === USER_ROLES.END_USER;
 
   useEffect(() => {
     if (!showMarketCart) {
@@ -283,12 +286,14 @@ function Header() {
         </div>
         <div className="relative z-10 ml-2 flex shrink-0 items-center gap-1.5 sm:ml-6 sm:gap-4">
           {showMarketCart ? <MarketCartButton cart={marketCart} /> : null}
-          <Link
-            href="/book"
-            className="text-[13px] font-medium text-gray-700 transition-colors hover:text-gray-900 sm:text-sm"
-          >
-            Book
-          </Link>
+          {showBookLink ? (
+            <Link
+              href="/book"
+              className="text-[13px] font-medium text-gray-700 transition-colors hover:text-gray-900 sm:text-sm"
+            >
+              Book
+            </Link>
+          ) : null}
           <Suspense fallback={<div className="h-9 w-9" />}>
             <UserMenu />
           </Suspense>
