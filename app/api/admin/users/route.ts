@@ -1,5 +1,8 @@
 import { requireAdmin } from '@/lib/auth/role-middleware';
-import { getUser } from '@/lib/db/queries';
+import { asc, eq, isNull } from 'drizzle-orm';
+
+import { db } from '@/lib/db/drizzle';
+import { drivers, users } from '@/lib/db/schema';
 
 /**
  * GET /api/admin/users
@@ -7,16 +10,27 @@ import { getUser } from '@/lib/db/queries';
  */
 export async function GET() {
   try {
-    const user = await requireAdmin();
+    await requireAdmin();
 
-    // Placeholder: In a real app, you'd fetch from database
+    const userRows = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        role: users.role,
+        createdAt: users.createdAt,
+        driverId: drivers.id,
+        driverActive: drivers.active,
+        driverAvailabilityStatus: drivers.availabilityStatus,
+      })
+      .from(users)
+      .leftJoin(drivers, eq(drivers.userId, users.id))
+      .where(isNull(users.deletedAt))
+      .orderBy(asc(users.email));
+
     return Response.json({
       success: true,
-      message: 'Admin access granted',
-      currentUser: user,
-      data: {
-        users: []
-      }
+      data: { users: userRows }
     });
   } catch (error: any) {
     if (error.message.includes('Unauthorized')) {

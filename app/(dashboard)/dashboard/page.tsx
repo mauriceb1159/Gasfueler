@@ -10,7 +10,7 @@ import {
   CardFooter
 } from '@/components/ui/card';
 import { customerPortalAction } from '@/lib/payments/actions';
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { TeamDataWithMembers, User } from '@/lib/db/schema';
 import { removeTeamMember, inviteTeamMember } from '@/app/(login)/actions';
 import useSWR from 'swr';
@@ -18,8 +18,13 @@ import { Suspense } from 'react';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Loader2, PlusCircle } from 'lucide-react';
-import { canManageTeam, USER_ROLES } from '@/lib/auth/roles';
+import { Loader2, PlusCircle, Save } from 'lucide-react';
+import {
+  canManageTeam,
+  ROLE_LABELS,
+  USER_ROLES,
+  type UserRole,
+} from '@/lib/auth/roles';
 
 type ActionState = {
   error?: string;
@@ -27,6 +32,34 @@ type ActionState = {
 };
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+const ROLE_OPTIONS: UserRole[] = [
+  USER_ROLES.END_USER,
+  USER_ROLES.FUEL_DRIVER,
+  USER_ROLES.FUEL_ATTENDANT,
+  USER_ROLES.STORE,
+  USER_ROLES.STORE_BACK_OFFICE,
+  USER_ROLES.DISPATCHER,
+  USER_ROLES.ADMIN,
+  USER_ROLES.MAIN_ADMIN,
+];
+
+type AdminUserRow = {
+  id: number;
+  name: string | null;
+  email: string;
+  role: UserRole;
+  driverId: number | null;
+  driverActive: boolean | null;
+  driverAvailabilityStatus: string | null;
+};
+
+type AdminUsersResponse = {
+  success: boolean;
+  data: {
+    users: AdminUserRow[];
+  };
+};
 
 function SubscriptionSkeleton() {
   return (
@@ -294,6 +327,168 @@ function InviteTeamMember() {
   );
 }
 
+function RoleManagementSkeleton() {
+  return (
+    <Card className="mt-8 h-[220px]">
+      <CardHeader>
+        <CardTitle>Role Management</CardTitle>
+      </CardHeader>
+    </Card>
+  );
+}
+
+function RoleManagement() {
+  const { data: currentUser } = useSWR<User>('/api/user', fetcher);
+  const {
+    data: adminUsers,
+    mutate,
+    isLoading,
+  } = useSWR<AdminUsersResponse>(
+    canManageTeam(currentUser?.role) ? '/api/admin/users' : null,
+    fetcher
+  );
+  const [selectedRoles, setSelectedRoles] = useState<Record<number, UserRole>>({});
+  const [pendingUserId, setPendingUserId] = useState<number | null>(null);
+  const [message, setMessage] = useState<ActionState>({});
+
+  const users = adminUsers?.data.users ?? [];
+
+  async function updateRole(userId: number) {
+    const nextRole = selectedRoles[userId];
+
+    if (!nextRole) {
+      return;
+    }
+
+    setPendingUserId(userId);
+    setMessage({});
+
+    const response = await fetch(`/api/admin/users/${userId}/role`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ role: nextRole }),
+    });
+    const payload = await response.json();
+
+    if (!response.ok) {
+      setMessage({ error: payload.error ?? 'Role could not be updated.' });
+      setPendingUserId(null);
+      return;
+    }
+
+    setMessage({ success: 'Role updated.' });
+    setSelectedRoles((current) => {
+      const next = { ...current };
+      delete next[userId];
+      return next;
+    });
+    await mutate();
+    setPendingUserId(null);
+  }
+
+  if (!canManageTeam(currentUser?.role)) {
+    return (
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>Role Management</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            You must be an admin to manage user roles.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="mt-8">
+      <CardHeader>
+        <CardTitle>Role Management</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground">Loading users...</p>
+          ) : users.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No users found.</p>
+          ) : (
+            users.map((adminUser) => {
+              const selectedRole = selectedRoles[adminUser.id] ?? adminUser.role;
+              const isDirty = selectedRole !== adminUser.role;
+              const isPending = pendingUserId === adminUser.id;
+
+              return (
+                <div
+                  key={adminUser.id}
+                  className="flex flex-col gap-3 rounded-md border p-4 lg:flex-row lg:items-center lg:justify-between"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">
+                      {adminUser.name || adminUser.email}
+                    </p>
+                    <p className="truncate text-sm text-muted-foreground">
+                      {adminUser.email}
+                    </p>
+                    {adminUser.driverId ? (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Driver profile: {adminUser.driverActive ? 'active' : 'inactive'}
+                        {adminUser.driverAvailabilityStatus
+                          ? `, ${adminUser.driverAvailabilityStatus}`
+                          : ''}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <select
+                      value={selectedRole}
+                      onChange={(event) =>
+                        setSelectedRoles((current) => ({
+                          ...current,
+                          [adminUser.id]: event.target.value as UserRole,
+                        }))
+                      }
+                      className="h-10 rounded-md border bg-background px-3 text-sm"
+                      aria-label={`Role for ${adminUser.email}`}
+                    >
+                      {ROLE_OPTIONS.map((role) => (
+                        <option key={role} value={role}>
+                          {ROLE_LABELS[role]}
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => updateRole(adminUser.id)}
+                      disabled={!isDirty || isPending}
+                    >
+                      {isPending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Save className="mr-2 h-4 w-4" />
+                      )}
+                      Save
+                    </Button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+        {message?.error && (
+          <p className="mt-4 text-sm text-red-500">{message.error}</p>
+        )}
+        {message?.success && (
+          <p className="mt-4 text-sm text-green-600">{message.success}</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function SettingsPage() {
   return (
     <section className="flex-1 p-4 lg:p-8">
@@ -306,6 +501,9 @@ export default function SettingsPage() {
       </Suspense>
       <Suspense fallback={<InviteTeamMemberSkeleton />}>
         <InviteTeamMember />
+      </Suspense>
+      <Suspense fallback={<RoleManagementSkeleton />}>
+        <RoleManagement />
       </Suspense>
     </section>
   );
