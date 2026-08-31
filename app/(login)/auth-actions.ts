@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { validatedAction } from '@/lib/auth/middleware';
 import { setSession } from '@/lib/auth/session';
 import { authenticateUser, registerUser, signInInputSchema, signUpInputSchema } from '@/lib/auth-service';
+import { getPostAuthRedirectForRole, type UserRole } from '@/lib/auth/roles';
 import { createCheckoutSession } from '@/lib/payments/stripe';
 
 export const signIn = validatedAction(signInInputSchema, async (data, formData) => {
@@ -27,11 +28,7 @@ export const signIn = validatedAction(signInInputSchema, async (data, formData) 
     return createCheckoutSession({ team: result.team, priceId });
   }
 
-  if (redirectTo === 'book') {
-    redirect('/book');
-  }
-
-  redirect('/dashboard');
+  redirect(getPostAuthRedirectForRole(result.user.role as UserRole, redirectTo));
 });
 
 export const signUp = validatedAction(signUpInputSchema, async (data, formData) => {
@@ -54,13 +51,5 @@ export const signUp = validatedAction(signUpInputSchema, async (data, formData) 
     return createCheckoutSession({ team: result.team, priceId });
   }
 
-  if (redirectTo === 'book') {
-    redirect('/book');
-  }
-
-  if (!data.inviteId) {
-    redirect('/book');
-  }
-
-  redirect('/dashboard');
+  redirect(getPostAuthRedirectForRole(result.user.role as UserRole, redirectTo));
 });

@@ -33,7 +33,7 @@ import {
 } from '@/lib/auth/middleware';
 import {
   canManageTeam,
-  getDashboardUrlForRole,
+  getPostAuthRedirectForRole,
   USER_ROLES,
   type UserRole
 } from '@/lib/auth/roles';
@@ -80,13 +80,7 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
     return createCheckoutSession({ team: result.team, priceId });
   }
 
-  if (redirectTo === 'book') {
-    redirect('/book');
-  }
-
-  // Redirect to role-specific dashboard
-  const roleDashboard = getDashboardUrlForRole(result.user.role as UserRole);
-  redirect(roleDashboard);
+  redirect(getPostAuthRedirectForRole(result.user.role as UserRole, redirectTo));
 });
 
 const signUpSchema = z.object({
@@ -126,13 +120,7 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
       return createCheckoutSession({ team: result.team, priceId });
     }
 
-    if (redirectTo === 'book') {
-      redirect('/book');
-    }
-
-    // Redirect to role-specific dashboard
-    const roleDashboard = getDashboardUrlForRole(result.user.role as UserRole);
-    redirect(roleDashboard);
+    redirect(getPostAuthRedirectForRole(result.user.role as UserRole, redirectTo));
   } catch (error) {
     console.error('Sign-up failed:', error);
     return {

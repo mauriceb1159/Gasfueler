@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CircleIcon, Loader2 } from 'lucide-react';
-import { getDashboardUrlForRole, USER_ROLES, type UserRole } from '@/lib/auth/roles';
+import { getPostAuthRedirectForRole, type UserRole } from '@/lib/auth/roles';
 
 export function Login({
   mode = 'signin',
@@ -68,24 +68,6 @@ export function Login({
         return;
       }
 
-      if (effectiveRedirect === 'book') {
-        router.push('/book');
-        router.refresh();
-        return;
-      }
-
-      if (effectiveRedirect) {
-        router.push(`/${effectiveRedirect}`);
-        router.refresh();
-        return;
-      }
-
-      if (mode === 'signup' && !effectiveInviteId) {
-        router.push('/book');
-        router.refresh();
-        return;
-      }
-
       const userRole =
         payload &&
         typeof payload === 'object' &&
@@ -97,14 +79,8 @@ export function Login({
           ? (payload.user.role as UserRole)
           : null;
 
-      if (userRole === USER_ROLES.END_USER) {
-        router.push('/book');
-        router.refresh();
-        return;
-      }
-
       if (userRole) {
-        router.push(getDashboardUrlForRole(userRole));
+        router.push(getPostAuthRedirectForRole(userRole, effectiveRedirect));
         router.refresh();
         return;
       }

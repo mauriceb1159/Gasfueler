@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { getDashboardUrlForRole, USER_ROLES, type UserRole } from '@/lib/auth/roles';
+import { getPostAuthRedirectForRole, type UserRole } from '@/lib/auth/roles';
 import { setSession } from '@/lib/auth/session';
 import { getOrCreateApplicationUserForSupabaseIdentity } from '@/lib/auth-service';
 import { createSupabaseAuthClient } from '@/lib/supabase/server';
@@ -35,19 +35,10 @@ export async function GET(request: Request) {
 
   const redirectTo = requestUrl.searchParams.get('redirect');
 
-  if (redirectTo === 'book') {
-    return NextResponse.redirect(new URL('/book', requestUrl.origin));
-  }
-
-  if (redirectTo) {
-    return NextResponse.redirect(new URL(`/${redirectTo}`, requestUrl.origin));
-  }
-
-  if (user.role === USER_ROLES.END_USER) {
-    return NextResponse.redirect(new URL('/book', requestUrl.origin));
-  }
-
   return NextResponse.redirect(
-    new URL(getDashboardUrlForRole(user.role as UserRole), requestUrl.origin)
+    new URL(
+      getPostAuthRedirectForRole(user.role as UserRole, redirectTo),
+      requestUrl.origin
+    )
   );
 }

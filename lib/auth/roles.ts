@@ -56,6 +56,35 @@ export function getDashboardUrlForRole(role: UserRole): string {
   return dashboardMap[role] || '/dashboard';
 }
 
+export function getPostAuthRedirectForRole(
+  role: UserRole,
+  requestedRedirect?: string | null
+): string {
+  if (requestedRedirect === 'book') {
+    return role === USER_ROLES.END_USER ? '/book' : getDashboardUrlForRole(role);
+  }
+
+  if (requestedRedirect) {
+    return normalizeInternalRedirect(requestedRedirect) || getDashboardUrlForRole(role);
+  }
+
+  if (role === USER_ROLES.END_USER) {
+    return '/book';
+  }
+
+  return getDashboardUrlForRole(role);
+}
+
+function normalizeInternalRedirect(path: string): string | null {
+  const trimmedPath = path.trim();
+
+  if (!trimmedPath || trimmedPath.startsWith('http://') || trimmedPath.startsWith('https://')) {
+    return null;
+  }
+
+  return trimmedPath.startsWith('/') ? trimmedPath : `/${trimmedPath}`;
+}
+
 /**
  * Check if user has required role(s)
  */
