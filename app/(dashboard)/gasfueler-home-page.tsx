@@ -5,13 +5,39 @@ import {
   CarFront,
   Clock3,
   Coffee,
+  CreditCard,
   Fuel,
   MapPinned,
+  ShieldCheck,
   ShoppingBag,
   Sparkles,
   Store,
+  SunSnow,
   WalletCards,
 } from 'lucide-react';
+
+const heroBenefits = [
+  {
+    icon: Fuel,
+    title: 'Touchless fuel-ups',
+    copy: 'Skip touching the pump while an attendant handles the stop.',
+  },
+  {
+    icon: CreditCard,
+    title: 'Secure prepaid payments',
+    copy: 'Pay through GasBite without tapping, swiping, or inserting a card.',
+  },
+  {
+    icon: SunSnow,
+    title: 'Stay comfortable',
+    copy: 'Stay dry in winter, cool in summer, and settled in your car.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Safer late-night stops',
+    copy: 'Remain inside your vehicle at night or in less familiar areas.',
+  },
+];
 
 const workflow = [
   {
@@ -159,6 +185,29 @@ export function GasFuelerHomePage({
               in-app snack ordering, and a polished drive-through experience
               that keeps customers in motion.
             </p>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              {heroBenefits.map((item) => (
+                <div
+                  key={item.title}
+                  className="rounded-[1.2rem] border border-white/70 bg-white/75 p-4 shadow-[0_16px_42px_-32px_rgba(15,23,42,0.8)] backdrop-blur-xl"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-950 text-white">
+                      <item.icon className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-950">
+                        {item.title}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-slate-600">
+                        {item.copy}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
 
             <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:gap-4">
               <a href="/sign-up?redirect=book" className="w-full sm:w-auto">
@@ -468,6 +517,14 @@ export function GasFuelerHomePage({
               <p className="mt-2 text-base leading-7 text-slate-700">
                 Monetize through listing fees, station partnerships, and higher
                 average ticket value from forecourt-to-store conversion.
+              </p>
+            </div>
+            <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5">
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-700">
+                Fleet Control
+              </p>
+              <p className="mt-2 text-base leading-7 text-slate-700">
+                Prepay and track company driver fuel stops from one dashboard.
               </p>
             </div>
             <a href="/pricing">
