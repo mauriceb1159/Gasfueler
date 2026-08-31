@@ -3,6 +3,7 @@ import { Fuel } from 'lucide-react';
 
 import { BookingForm, EmptyBookingState } from './booking-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getDashboardUrlForRole, USER_ROLES, type UserRole } from '@/lib/auth/roles';
 import { getBookableStations, getUser, getVehiclesForUser } from '@/lib/db/queries';
 
 export default async function BookPage({
@@ -14,6 +15,10 @@ export default async function BookPage({
 
   if (!user) {
     redirect('/sign-in?redirect=book');
+  }
+
+  if (user.role !== USER_ROLES.END_USER) {
+    redirect(getDashboardUrlForRole(user.role as UserRole));
   }
 
   const params = searchParams ? await searchParams : undefined;
