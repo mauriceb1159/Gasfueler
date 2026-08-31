@@ -115,7 +115,8 @@ export async function registerUser(input: z.infer<typeof signUpInputSchema>) {
     }
 
     return await createApplicationUserForSupabaseIdentity(supabaseUser.user, {
-      inviteId
+      inviteId,
+      password
     });
   } catch (error) {
     console.error('Sign-up failed:', error);
@@ -251,7 +252,7 @@ async function createConfirmedSupabaseUser(email: string, password: string) {
 
 async function createApplicationUserForSupabaseIdentity(
   supabaseUser: SupabaseAuthUser,
-  input: { inviteId?: string; role?: string }
+  input: { inviteId?: string; password?: string; role?: string }
 ) {
   const email = supabaseUser.email?.toLowerCase();
 
@@ -289,7 +290,9 @@ async function createApplicationUserForSupabaseIdentity(
     .values({
       email,
       supabaseAuthUserId: supabaseUser.id,
-      passwordHash: await hashPassword(SUPABASE_AUTH_PASSWORD_SENTINEL),
+      passwordHash: await hashPassword(
+        input.password ?? SUPABASE_AUTH_PASSWORD_SENTINEL
+      ),
       role: userRole
     })
     .returning();
