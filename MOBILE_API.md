@@ -38,7 +38,7 @@ Success response:
     "id": 1,
     "email": "test@test.com",
     "name": null,
-    "role": "owner"
+    "role": "main_admin"
   }
 }
 ```
@@ -77,7 +77,7 @@ Success response:
     "id": 2,
     "email": "newuser@example.com",
     "name": null,
-    "role": "owner"
+    "role": "main_admin"
   }
 }
 ```
@@ -106,7 +106,7 @@ Success response:
     "id": 1,
     "email": "test@test.com",
     "name": null,
-    "role": "owner"
+    "role": "main_admin"
   }
 }
 ```
@@ -140,7 +140,7 @@ Success response:
   "id": 1,
   "email": "test@test.com",
   "name": "Maurice",
-  "role": "owner"
+  "role": "main_admin"
 }
 ```
 
@@ -168,7 +168,7 @@ Success response:
   "id": 1,
   "email": "maurice@example.com",
   "name": "Maurice",
-  "role": "owner"
+  "role": "main_admin"
 }
 ```
 
@@ -466,7 +466,7 @@ live update delivery layer in the Flutter app.
 
 ### `GET /api/dispatch/jobs`
 
-Dispatcher/owner endpoint for the dispatch board.
+Dispatcher/admin endpoint for the dispatch board.
 
 Success response:
 

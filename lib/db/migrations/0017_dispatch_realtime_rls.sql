@@ -41,13 +41,13 @@ BEGIN
     EXECUTE 'CREATE POLICY "drivers_dispatch_read" ON "drivers" FOR SELECT TO authenticated USING (
       EXISTS (
         SELECT 1 FROM "users" current_user_record
-        WHERE current_user_record."supabase_auth_user_id" = auth.uid()::text
+        WHERE current_user_record."supabase_auth_user_id"::text = auth.uid()::text
           AND current_user_record."role" IN (''dispatcher'', ''admin'', ''main_admin'')
       )
       OR EXISTS (
         SELECT 1 FROM "users" driver_user
         WHERE driver_user."id" = "drivers"."user_id"
-          AND driver_user."supabase_auth_user_id" = auth.uid()::text
+          AND driver_user."supabase_auth_user_id"::text = auth.uid()::text
       )
     )';
 
@@ -55,13 +55,13 @@ BEGIN
     EXECUTE 'CREATE POLICY "dispatch_jobs_dispatch_read" ON "dispatch_jobs" FOR SELECT TO authenticated USING (
       EXISTS (
         SELECT 1 FROM "users" current_user_record
-        WHERE current_user_record."supabase_auth_user_id" = auth.uid()::text
+        WHERE current_user_record."supabase_auth_user_id"::text = auth.uid()::text
           AND current_user_record."role" IN (''dispatcher'', ''admin'', ''main_admin'')
       )
       OR EXISTS (
         SELECT 1 FROM "users" customer_user
         WHERE customer_user."id" = "dispatch_jobs"."customer_user_id"
-          AND customer_user."supabase_auth_user_id" = auth.uid()::text
+          AND customer_user."supabase_auth_user_id"::text = auth.uid()::text
       )
       OR EXISTS (
         SELECT 1
@@ -70,7 +70,7 @@ BEGIN
         JOIN "users" driver_user ON driver_user."id" = d."user_id"
         WHERE da."dispatch_job_id" = "dispatch_jobs"."id"
           AND da."assignment_status" IN (''assigned'', ''accepted'')
-          AND driver_user."supabase_auth_user_id" = auth.uid()::text
+          AND driver_user."supabase_auth_user_id"::text = auth.uid()::text
       )
     )';
 
@@ -78,7 +78,7 @@ BEGIN
     EXECUTE 'CREATE POLICY "dispatch_assignments_dispatch_read" ON "dispatch_assignments" FOR SELECT TO authenticated USING (
       EXISTS (
         SELECT 1 FROM "users" current_user_record
-        WHERE current_user_record."supabase_auth_user_id" = auth.uid()::text
+        WHERE current_user_record."supabase_auth_user_id"::text = auth.uid()::text
           AND current_user_record."role" IN (''dispatcher'', ''admin'', ''main_admin'')
       )
       OR EXISTS (
@@ -86,14 +86,14 @@ BEGIN
         FROM "drivers" d
         JOIN "users" driver_user ON driver_user."id" = d."user_id"
         WHERE d."id" = "dispatch_assignments"."driver_id"
-          AND driver_user."supabase_auth_user_id" = auth.uid()::text
+          AND driver_user."supabase_auth_user_id"::text = auth.uid()::text
       )
       OR EXISTS (
         SELECT 1
         FROM "dispatch_jobs" dj
         JOIN "users" customer_user ON customer_user."id" = dj."customer_user_id"
         WHERE dj."id" = "dispatch_assignments"."dispatch_job_id"
-          AND customer_user."supabase_auth_user_id" = auth.uid()::text
+          AND customer_user."supabase_auth_user_id"::text = auth.uid()::text
       )
     )';
 
@@ -101,7 +101,7 @@ BEGIN
     EXECUTE 'CREATE POLICY "driver_locations_dispatch_read" ON "driver_locations" FOR SELECT TO authenticated USING (
       EXISTS (
         SELECT 1 FROM "users" current_user_record
-        WHERE current_user_record."supabase_auth_user_id" = auth.uid()::text
+        WHERE current_user_record."supabase_auth_user_id"::text = auth.uid()::text
           AND current_user_record."role" IN (''dispatcher'', ''admin'', ''main_admin'')
       )
       OR EXISTS (
@@ -109,7 +109,7 @@ BEGIN
         FROM "drivers" d
         JOIN "users" driver_user ON driver_user."id" = d."user_id"
         WHERE d."id" = "driver_locations"."driver_id"
-          AND driver_user."supabase_auth_user_id" = auth.uid()::text
+          AND driver_user."supabase_auth_user_id"::text = auth.uid()::text
       )
       OR EXISTS (
         SELECT 1
@@ -119,7 +119,7 @@ BEGIN
         WHERE da."driver_id" = "driver_locations"."driver_id"
           AND da."assignment_status" IN (''assigned'', ''accepted'')
           AND dj."status" NOT IN (''completed'', ''canceled'')
-          AND customer_user."supabase_auth_user_id" = auth.uid()::text
+          AND customer_user."supabase_auth_user_id"::text = auth.uid()::text
       )
     )';
 
@@ -130,7 +130,7 @@ BEGIN
         FROM "drivers" d
         JOIN "users" driver_user ON driver_user."id" = d."user_id"
         WHERE d."id" = "driver_locations"."driver_id"
-          AND driver_user."supabase_auth_user_id" = auth.uid()::text
+          AND driver_user."supabase_auth_user_id"::text = auth.uid()::text
       )
     )';
 
@@ -138,7 +138,7 @@ BEGIN
     EXECUTE 'CREATE POLICY "dispatch_events_dispatch_read" ON "dispatch_events" FOR SELECT TO authenticated USING (
       EXISTS (
         SELECT 1 FROM "users" current_user_record
-        WHERE current_user_record."supabase_auth_user_id" = auth.uid()::text
+        WHERE current_user_record."supabase_auth_user_id"::text = auth.uid()::text
           AND current_user_record."role" IN (''dispatcher'', ''admin'', ''main_admin'')
       )
       OR EXISTS (
@@ -146,7 +146,7 @@ BEGIN
         FROM "dispatch_jobs" dj
         JOIN "users" customer_user ON customer_user."id" = dj."customer_user_id"
         WHERE dj."id" = "dispatch_events"."dispatch_job_id"
-          AND customer_user."supabase_auth_user_id" = auth.uid()::text
+          AND customer_user."supabase_auth_user_id"::text = auth.uid()::text
       )
       OR EXISTS (
         SELECT 1
@@ -156,7 +156,7 @@ BEGIN
         JOIN "users" driver_user ON driver_user."id" = d."user_id"
         WHERE dj."id" = "dispatch_events"."dispatch_job_id"
           AND da."assignment_status" IN (''assigned'', ''accepted'')
-          AND driver_user."supabase_auth_user_id" = auth.uid()::text
+          AND driver_user."supabase_auth_user_id"::text = auth.uid()::text
       )
     )';
   END IF;
