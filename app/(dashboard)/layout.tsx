@@ -241,6 +241,7 @@ function Header() {
   const { data: user } = useSWR<HeaderUser | null>('/api/user', fetcher);
   const showMarketCart = pathname.startsWith('/market');
   const showBookLink = !user || user.role === USER_ROLES.END_USER;
+  const showDriverRoutesLink = user?.role === USER_ROLES.FUEL_DRIVER;
 
   useEffect(() => {
     if (!showMarketCart) {
@@ -292,6 +293,14 @@ function Header() {
               className="text-[13px] font-medium text-gray-700 transition-colors hover:text-gray-900 sm:text-sm"
             >
               Book
+            </Link>
+          ) : null}
+          {showDriverRoutesLink ? (
+            <Link
+              href="/dashboard/driver"
+              className="text-[13px] font-medium text-gray-700 transition-colors hover:text-gray-900 sm:text-sm"
+            >
+              My Routes
             </Link>
           ) : null}
           <Suspense fallback={<div className="h-9 w-9" />}>
