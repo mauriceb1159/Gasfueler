@@ -70,10 +70,6 @@ export default async function DriverDashboard() {
         ) : (
           <div className="space-y-4">
             {activeJobs.map((job) => {
-              const assignment = job.assignments.find((item) =>
-                ['assigned', 'accepted'].includes(item.assignmentStatus)
-              );
-
               return (
                 <div
                   key={job.id}
@@ -88,11 +84,6 @@ export default async function DriverDashboard() {
                         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
                           {job.status.replaceAll('_', ' ')}
                         </span>
-                        {assignment ? (
-                          <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
-                            {assignment.assignmentStatus}
-                          </span>
-                        ) : null}
                       </div>
                       <h3 className="mt-3 text-lg font-semibold text-slate-950">
                         Job #{job.id} at {job.station?.name ?? 'Station'}
