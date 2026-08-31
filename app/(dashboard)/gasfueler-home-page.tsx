@@ -148,7 +148,7 @@ export function GasFuelerHomePage({
             </div>
 
             <h1 className="mt-6 text-4xl font-semibold tracking-[-0.05em] text-slate-950 sm:mt-8 sm:text-5xl lg:text-7xl">
-              Full-service fueling,
+              Full-service touchless fueling,
               <span className="block bg-gradient-to-r from-orange-500 via-amber-500 to-cyan-500 bg-clip-text text-transparent">
                 rebuilt for modern drivers.
               </span>
