@@ -25,6 +25,7 @@ type DashboardRole =
   | 'attendant'
   | 'store'
   | 'dispatcher'
+  | 'driver'
   | 'customer';
 
 function normalizeRole(role?: string | null): DashboardRole {
@@ -55,6 +56,9 @@ function normalizeRole(role?: string | null): DashboardRole {
   }
   if (normalized === 'dispatcher') {
     return 'dispatcher';
+  }
+  if (normalized === 'fuel_driver' || normalized === 'driver') {
+    return 'driver';
   }
   return 'customer';
 }
@@ -109,6 +113,12 @@ export default function DashboardLayout({
         roles: ['admin', 'dispatcher']
       },
       {
+        href: '/dashboard/driver',
+        icon: Navigation,
+        label: 'Driver',
+        roles: ['driver']
+      },
+      {
         href: '/dashboard/activity',
         icon: Activity,
         label: 'Activity',
@@ -131,6 +141,7 @@ export default function DashboardLayout({
       attendant: '/dashboard/fulfillment',
       store: '/dashboard/store',
       dispatcher: '/dashboard/dispatcher',
+      driver: '/dashboard/driver',
       customer: '/book'
     }),
     []
