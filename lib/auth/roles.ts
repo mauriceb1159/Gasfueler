@@ -69,6 +69,10 @@ export function getPostAuthRedirectForRole(
   }
 
   if (requestedRedirect === 'book') {
+    if (isAdmin(role)) {
+      return getDashboardUrlForRole(role);
+    }
+
     return canBook(role) ? '/book' : getDashboardUrlForRole(role);
   }
 
