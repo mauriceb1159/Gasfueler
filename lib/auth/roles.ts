@@ -64,6 +64,10 @@ export function getPostAuthRedirectForRole(
     return getDashboardUrlForRole(role);
   }
 
+  if (isDashboardAccountRedirect(requestedRedirect) && isAdmin(role)) {
+    return getDashboardUrlForRole(role);
+  }
+
   if (requestedRedirect === 'book') {
     return canBook(role) ? '/book' : getDashboardUrlForRole(role);
   }
@@ -87,6 +91,16 @@ function isDashboardIndexRedirect(path?: string | null): boolean {
   const normalizedPath = path.trim().replace(/^\/+/, '').replace(/\/+$/, '');
 
   return normalizedPath === 'dashboard';
+}
+
+function isDashboardAccountRedirect(path?: string | null): boolean {
+  if (!path) {
+    return false;
+  }
+
+  const normalizedPath = path.trim().replace(/^\/+/, '').replace(/\/+$/, '');
+
+  return normalizedPath === 'dashboard/account';
 }
 
 function normalizeInternalRedirect(path: string): string | null {

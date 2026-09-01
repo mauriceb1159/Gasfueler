@@ -243,6 +243,7 @@ function Header() {
   const showMarketCart = pathname.startsWith('/market');
   const showBookLink = !user || canBook(user.role);
   const showDriverRoutesLink = user?.role === USER_ROLES.FUEL_DRIVER;
+  const showAdminDashboardLink = user ? isAdmin(user.role as UserRole) : false;
 
   useEffect(() => {
     if (!showMarketCart) {
@@ -294,6 +295,14 @@ function Header() {
               className="text-[13px] font-medium text-gray-700 transition-colors hover:text-gray-900 sm:text-sm"
             >
               Book
+            </Link>
+          ) : null}
+          {showAdminDashboardLink ? (
+            <Link
+              href={getDashboardUrlForRole(user!.role as UserRole)}
+              className="text-[13px] font-medium text-gray-700 transition-colors hover:text-gray-900 sm:text-sm"
+            >
+              {user?.role === USER_ROLES.MAIN_ADMIN ? 'Super Admin' : 'Admin'}
             </Link>
           ) : null}
           {showDriverRoutesLink ? (
