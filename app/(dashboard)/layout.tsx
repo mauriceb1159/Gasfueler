@@ -217,7 +217,7 @@ function UserMenu() {
 
         {/* Account settings (for all users) */}
         <DropdownMenuItem className="cursor-pointer">
-          <Link href="/dashboard" className="flex w-full items-center">
+          <Link href="/dashboard/account" className="flex w-full items-center">
             <Settings className="mr-2 h-4 w-4" />
             <span>Account</span>
           </Link>

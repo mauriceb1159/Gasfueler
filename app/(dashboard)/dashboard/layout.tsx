@@ -75,7 +75,12 @@ export default function DashboardLayout({
 
   const navItems = useMemo(
     () => [
-      { href: '/dashboard', icon: Users, label: 'Team', roles: ['admin'] },
+      {
+        href: '/dashboard/account',
+        icon: Users,
+        label: 'Team',
+        roles: ['admin']
+      },
       {
         href: '/dashboard/general',
         icon: Settings,
@@ -137,7 +142,7 @@ export default function DashboardLayout({
   const role = normalizeRole(user?.role);
   const roleHome = useMemo<Record<DashboardRole, string>>(
     () => ({
-      admin: '/dashboard',
+      admin: '/dashboard/super-admin',
       attendant: '/dashboard/fulfillment',
       store: '/dashboard/store',
       dispatcher: '/dashboard/dispatcher',

@@ -60,6 +60,10 @@ export function getPostAuthRedirectForRole(
   role: UserRole,
   requestedRedirect?: string | null
 ): string {
+  if (isDashboardIndexRedirect(requestedRedirect)) {
+    return getDashboardUrlForRole(role);
+  }
+
   if (requestedRedirect === 'book') {
     return canBook(role) ? '/book' : getDashboardUrlForRole(role);
   }
@@ -73,6 +77,16 @@ export function getPostAuthRedirectForRole(
   }
 
   return getDashboardUrlForRole(role);
+}
+
+function isDashboardIndexRedirect(path?: string | null): boolean {
+  if (!path) {
+    return false;
+  }
+
+  const normalizedPath = path.trim().replace(/^\/+/, '').replace(/\/+$/, '');
+
+  return normalizedPath === 'dashboard';
 }
 
 function normalizeInternalRedirect(path: string): string | null {
