@@ -49,6 +49,16 @@ const optionalPositiveIntSchema = z.preprocess((value) => {
   return value;
 }, z.number().int().positive().optional());
 
+const optionalTrimmedString = (max: number) =>
+  z
+    .string()
+    .max(max)
+    .optional()
+    .transform((value) => {
+      const trimmed = value?.trim();
+      return trimmed ? trimmed : undefined;
+    });
+
 export const fuelRequestInputSchema = z
   .object({
     stationId: z.coerce.number().int().positive('Choose a partner station.'),
@@ -62,17 +72,17 @@ export const fuelRequestInputSchema = z
     requestedGallons: optionalPositiveIntSchema,
     requestedDollarAmount: optionalPositiveIntSchema,
     vehicleId: optionalPositiveIntSchema,
-    nickname: z.string().max(100).optional(),
+    nickname: optionalTrimmedString(100),
     vehicleClass: z
       .enum([VehicleClass.CAR, VehicleClass.SUV, VehicleClass.TRUCK])
       .optional(),
-    make: z.string().max(100).optional(),
-    model: z.string().max(100).optional(),
-    color: z.string().max(50).optional(),
-    licensePlate: z.string().max(30).optional(),
-    fuelType: z.string().max(30).optional(),
-    vehicleNotes: z.string().max(500).optional(),
-    specialInstructions: z.string().max(1000).optional(),
+    make: optionalTrimmedString(100),
+    model: optionalTrimmedString(100),
+    color: optionalTrimmedString(50),
+    licensePlate: optionalTrimmedString(30),
+    fuelType: optionalTrimmedString(30),
+    vehicleNotes: optionalTrimmedString(500),
+    specialInstructions: optionalTrimmedString(1000),
     selectedStoreItems: bookingSelectedItemsFieldSchema
   })
   .superRefine((data, ctx) => {
@@ -144,14 +154,14 @@ export async function createFuelRequestForUser(
   if (!vehicleId) {
     const newVehicle: NewVehicle = {
       userId: user.id,
-      nickname: input.nickname?.trim() || null,
+      nickname: input.nickname || null,
       vehicleClass: input.vehicleClass || VehicleClass.SUV,
-      make: input.make?.trim() || null,
-      model: input.model?.trim() || null,
-      color: input.color?.trim() || null,
-      licensePlate: input.licensePlate!.trim(),
-      fuelType: input.fuelType?.trim() || null,
-      notes: input.vehicleNotes?.trim() || null
+      make: input.make || null,
+      model: input.model || null,
+      color: input.color || null,
+      licensePlate: input.licensePlate!,
+      fuelType: input.fuelType || null,
+      notes: input.vehicleNotes || null
     };
 
     const [createdVehicle] = await db
@@ -179,32 +189,45 @@ export async function createFuelRequestForUser(
         make: vehicles.make,
         model: vehicles.model,
         color: vehicles.color,
-        licensePlate: vehicles.licensePlate
+        licensePlate: vehicles.licensePlate,
+        fuelType: vehicles.fuelType,
+        notes: vehicles.notes
       })
       .from(vehicles)
       .where(eq(vehicles.id, vehicleId))
       .limit(1);
 
-    const requestedVehicleClass = input.vehicleClass || VehicleClass.SUV;
+    const requestedVehicleClass =
+      input.vehicleClass ||
+      parseVehicleClass(vehicleRecord?.vehicleClass) ||
+      VehicleClass.SUV;
+    const vehicleUpdates = {
+      nickname: input.nickname ?? vehicleRecord?.nickname ?? null,
+      vehicleClass: requestedVehicleClass,
+      make: input.make ?? vehicleRecord?.make ?? null,
+      model: input.model ?? vehicleRecord?.model ?? null,
+      color: input.color ?? vehicleRecord?.color ?? null,
+      licensePlate: input.licensePlate ?? vehicleRecord?.licensePlate ?? null,
+      fuelType: input.fuelType ?? vehicleRecord?.fuelType ?? null,
+      notes: input.vehicleNotes ?? vehicleRecord?.notes ?? null,
+      updatedAt: new Date()
+    };
 
-    if (vehicleRecord?.vehicleClass !== requestedVehicleClass) {
+    if (vehicleRecord) {
       await db
         .update(vehicles)
-        .set({
-          vehicleClass: requestedVehicleClass,
-          updatedAt: new Date()
-        })
+        .set(vehicleUpdates)
         .where(eq(vehicles.id, vehicleId));
     }
 
     vehicleClass = requestedVehicleClass;
     vehicleDetails = vehicleRecord
       ? {
-          nickname: vehicleRecord.nickname,
-          make: vehicleRecord.make,
-          model: vehicleRecord.model,
-          color: vehicleRecord.color,
-          licensePlate: vehicleRecord.licensePlate
+          nickname: vehicleUpdates.nickname,
+          make: vehicleUpdates.make,
+          model: vehicleUpdates.model,
+          color: vehicleUpdates.color,
+          licensePlate: vehicleUpdates.licensePlate
         }
       : null;
   }
@@ -380,11 +403,11 @@ export async function createFuelRequestForUser(
       slotEnd: slot.endAt,
       vehicleLabel: formatFuelVehicleLabel(
         vehicleDetails ?? {
-          nickname: input.nickname?.trim() || null,
-          make: input.make?.trim() || null,
-          model: input.model?.trim() || null,
-          color: input.color?.trim() || null,
-          licensePlate: input.licensePlate?.trim() || null
+          nickname: input.nickname || null,
+          make: input.make || null,
+          model: input.model || null,
+          color: input.color || null,
+          licensePlate: input.licensePlate || null
         }
       ),
       fuelGrade: input.fuelGrade,
@@ -478,6 +501,18 @@ function getServiceFeeForVehicleClass(vehicleClass: VehicleClass) {
     default:
       return 899;
   }
+}
+
+function parseVehicleClass(value: string | null | undefined) {
+  if (
+    value === VehicleClass.CAR ||
+    value === VehicleClass.SUV ||
+    value === VehicleClass.TRUCK
+  ) {
+    return value;
+  }
+
+  return null;
 }
 
 function parseSelectedStoreItems(
