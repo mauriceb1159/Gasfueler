@@ -172,8 +172,11 @@ export async function listDispatchJobs() {
         columns: {
           id: true,
           name: true,
+          address: true,
           city: true,
           state: true,
+          latitude: true,
+          longitude: true,
         },
       },
       fuelRequest: {
@@ -255,8 +258,11 @@ export async function listAssignedDispatchJobsForDriver(actor: User) {
         columns: {
           id: true,
           name: true,
+          address: true,
           city: true,
           state: true,
+          latitude: true,
+          longitude: true,
         },
       },
       fuelRequest: {
@@ -683,8 +689,11 @@ async function getDispatchJobById(jobId: number) {
         columns: {
           id: true,
           name: true,
+          address: true,
           city: true,
           state: true,
+          latitude: true,
+          longitude: true,
         },
       },
       assignments: {
