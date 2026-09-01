@@ -12,12 +12,19 @@ import {
   drivers,
   driverLocations,
   DriverAvailabilityStatus,
+  FuelRequestStatus,
   fuelRequests,
   orders,
   stations,
   type User,
   users,
 } from '@/lib/db/schema';
+import {
+  notifyBookingCreated,
+  notifyCustomerArrived,
+  notifyDriverAssigned,
+  notifyDriverStatusUpdated,
+} from '@/lib/notifications/dispatch-notifications';
 
 export const createDriverInputSchema = z.object({
   userId: z.coerce.number().int().positive(),
@@ -381,6 +388,8 @@ export async function createDispatchJob(
     },
   });
 
+  await notifyBookingCreated(createdJob.id);
+
   return createdJob;
 }
 
@@ -430,6 +439,8 @@ export async function createDispatchJobForOrder(input: {
       jobType: input.jobType,
     },
   });
+
+  await notifyBookingCreated(createdJob.id);
 
   return createdJob;
 }
@@ -502,6 +513,8 @@ export async function assignDispatchJob(
     },
   });
 
+  await notifyDriverAssigned(jobId);
+
   return assignment;
 }
 
@@ -545,6 +558,91 @@ export async function acceptAssignedDispatchJob(jobId: number, actor: User) {
   });
 
   return getDispatchJobById(jobId);
+}
+
+export async function markCustomerArrivedForFuelRequest(
+  fuelRequestId: number,
+  actor: User
+) {
+  const [request] = await db
+    .select({
+      id: fuelRequests.id,
+      orderId: fuelRequests.orderId,
+      status: fuelRequests.status,
+      userId: fuelRequests.userId,
+    })
+    .from(fuelRequests)
+    .where(eq(fuelRequests.id, fuelRequestId))
+    .limit(1);
+
+  if (!request) {
+    return { error: 'Fuel request could not be found.' as const };
+  }
+
+  if (request.userId !== actor.id) {
+    return { error: 'Only the customer can mark this request as arrived.' as const };
+  }
+
+  if (
+    request.status === FuelRequestStatus.COMPLETED ||
+    request.status === FuelRequestStatus.CANCELED ||
+    request.status === FuelRequestStatus.NO_SHOW
+  ) {
+    return { error: 'This fuel request can no longer be marked arrived.' as const };
+  }
+
+  const [job] = await db
+    .select({ id: dispatchJobs.id })
+    .from(dispatchJobs)
+    .where(eq(dispatchJobs.fuelRequestId, fuelRequestId))
+    .limit(1);
+
+  await db
+    .update(fuelRequests)
+    .set({
+      status: FuelRequestStatus.ARRIVED,
+      updatedAt: new Date(),
+    })
+    .where(eq(fuelRequests.id, fuelRequestId));
+
+  if (request.orderId) {
+    await db
+      .update(orders)
+      .set({
+        status: FuelRequestStatus.ARRIVED,
+        updatedAt: new Date(),
+      })
+      .where(eq(orders.id, request.orderId));
+  }
+
+  if (job) {
+    await db
+      .update(dispatchJobs)
+      .set({
+        updatedAt: new Date(),
+      })
+      .where(eq(dispatchJobs.id, job.id));
+
+    await db.insert(dispatchEvents).values({
+      dispatchJobId: job.id,
+      actorUserId: actor.id,
+      eventType: 'customer_arrived',
+      payload: {
+        fuelRequestId,
+        orderId: request.orderId,
+        customerUserId: actor.id,
+      },
+    });
+
+    await notifyCustomerArrived(job.id);
+  }
+
+  return {
+    requestId: fuelRequestId,
+    orderId: request.orderId,
+    dispatchJobId: job?.id ?? null,
+    status: FuelRequestStatus.ARRIVED,
+  };
 }
 
 export async function declineAssignedDispatchJob(jobId: number, actor: User) {
@@ -641,6 +739,8 @@ export async function updateAssignedDispatchJobStatus(
       status: input.status,
     },
   });
+
+  await notifyDriverStatusUpdated(jobId, input.status);
 
   return getDispatchJobById(jobId);
 }
