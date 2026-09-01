@@ -131,6 +131,7 @@ async function notifyDispatchEvent({
   console.info(`[dispatch-alert:${kind}] ${subject(context)}\n${text}`);
 
   if (recipientEmails.length === 0) {
+    console.warn(`[dispatch-alert:${kind}] No email recipients resolved.`);
     return;
   }
 
@@ -152,6 +153,13 @@ async function notifyDispatchEvent({
       console.error(
         `[dispatch-alert:${kind}] Failed to alert ${recipientEmails[index]}.`,
         result.reason
+      );
+      return;
+    }
+
+    if (!result.value.sent) {
+      console.warn(
+        `[dispatch-alert:${kind}] Email to ${recipientEmails[index]} skipped: ${result.value.reason}.`
       );
     }
   });
