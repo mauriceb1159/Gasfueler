@@ -8,6 +8,7 @@ import { db } from '@/lib/db/drizzle';
 import {
   activityLogs,
   ActivityType,
+  drivers,
   invitations,
   type NewActivityLog,
   type NewUser,
@@ -53,6 +54,16 @@ export const signUpInputSchema = z.object({
   password: z.string().min(8),
   inviteId: z.string().optional()
 });
+
+export async function getDriverProfileIdForUser(userId: number) {
+  const [driver] = await db
+    .select({ id: drivers.id })
+    .from(drivers)
+    .where(and(eq(drivers.userId, userId), eq(drivers.active, true)))
+    .limit(1);
+
+  return driver?.id ?? null;
+}
 
 export async function authenticateUser(input: z.infer<typeof signInInputSchema>) {
   const email = input.email.toLowerCase();

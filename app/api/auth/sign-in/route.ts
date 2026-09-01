@@ -1,5 +1,9 @@
 import { createSessionToken, setSession } from '@/lib/auth/session';
-import { authenticateUser, signInInputSchema } from '@/lib/auth-service';
+import {
+  authenticateUser,
+  getDriverProfileIdForUser,
+  signInInputSchema
+} from '@/lib/auth-service';
 
 export async function POST(request: Request) {
   try {
@@ -22,6 +26,7 @@ export async function POST(request: Request) {
 
     await setSession(result.user);
     const { token, expiresAt } = await createSessionToken(result.user);
+    const driverProfileId = await getDriverProfileIdForUser(result.user.id);
 
     return Response.json({
       token,
@@ -30,7 +35,8 @@ export async function POST(request: Request) {
         id: result.user.id,
         email: result.user.email,
         name: result.user.name,
-        role: result.user.role
+        role: result.user.role,
+        driverProfileId
       }
     });
   } catch (error) {

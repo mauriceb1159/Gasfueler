@@ -1,4 +1,5 @@
 import { getUser } from '@/lib/db/queries';
+import { getDriverProfileIdForUser } from '@/lib/auth-service';
 
 export async function GET() {
   const user = await getUser();
@@ -7,12 +8,15 @@ export async function GET() {
     return Response.json({ error: 'User is not authenticated.' }, { status: 401 });
   }
 
+  const driverProfileId = await getDriverProfileIdForUser(user.id);
+
   return Response.json({
     user: {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: user.role
+      role: user.role,
+      driverProfileId
     }
   });
 }
