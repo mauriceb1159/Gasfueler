@@ -61,7 +61,7 @@ export function getPostAuthRedirectForRole(
   requestedRedirect?: string | null
 ): string {
   if (requestedRedirect === 'book') {
-    return role === USER_ROLES.END_USER ? '/book' : getDashboardUrlForRole(role);
+    return canBook(role) ? '/book' : getDashboardUrlForRole(role);
   }
 
   if (requestedRedirect) {
@@ -108,6 +108,10 @@ export function isMainAdmin(userRole: UserRole): boolean {
 }
 
 type RoleLike = UserRole | string | null | undefined;
+
+export function canBook(role: RoleLike): boolean {
+  return role === USER_ROLES.END_USER || role === USER_ROLES.MAIN_ADMIN;
+}
 
 export function canManageTeam(role: RoleLike): boolean {
   return role === USER_ROLES.ADMIN || role === USER_ROLES.MAIN_ADMIN;

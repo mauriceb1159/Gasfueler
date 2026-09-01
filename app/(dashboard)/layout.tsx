@@ -17,6 +17,7 @@ import { signOut } from '@/app/(login)/actions';
 import { usePathname, useRouter } from 'next/navigation';
 import { User } from '@/lib/db/schema';
 import {
+  canBook,
   getDashboardUrlForRole,
   ROLE_LABELS,
   USER_ROLES,
@@ -240,7 +241,7 @@ function Header() {
   const [marketCart, setMarketCart] = useState<MarketCartSummary | null>(null);
   const { data: user } = useSWR<HeaderUser | null>('/api/user', fetcher);
   const showMarketCart = pathname.startsWith('/market');
-  const showBookLink = !user || user.role === USER_ROLES.END_USER;
+  const showBookLink = !user || canBook(user.role);
   const showDriverRoutesLink = user?.role === USER_ROLES.FUEL_DRIVER;
 
   useEffect(() => {
