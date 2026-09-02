@@ -69,7 +69,7 @@ function UserMenu() {
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
-              className="h-9 w-9 rounded-full border-slate-200 bg-white/80 p-0 text-slate-800 shadow-sm sm:hidden"
+              className="h-9 w-9 rounded-full border-neutral-200 bg-white p-0 text-black shadow-sm sm:hidden"
               aria-label="Open account menu"
             >
               <Menu className="h-4 w-4" />
@@ -94,7 +94,7 @@ function UserMenu() {
         <Button
           asChild
           variant="outline"
-          className="h-9 rounded-full border-slate-200 bg-white/80 px-3 text-xs text-slate-800 shadow-sm sm:h-10 sm:px-4 sm:text-sm"
+          className="h-9 rounded-full border-neutral-200 bg-white px-3 text-xs text-black shadow-sm sm:h-10 sm:px-4 sm:text-sm"
         >
           <Link href="/sign-in?redirect=book">
             <LogIn className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -294,8 +294,8 @@ function Header() {
   }, [showMarketCart]);
 
   return (
-    <header className="sticky top-0 z-40 px-3 pt-4 sm:px-4 lg:px-6">
-      <div className="mx-auto flex h-[62px] max-w-7xl items-center justify-between rounded-full border border-white/60 bg-white/75 px-3 shadow-[0_18px_60px_-28px_rgba(15,23,42,0.55)] backdrop-blur-xl sm:h-[74px] sm:px-5 lg:h-[80px] lg:px-6">
+    <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white px-3 py-3 sm:px-4 lg:px-6">
+      <div className="mx-auto flex h-[62px] max-w-7xl items-center justify-between bg-white sm:h-[74px]">
         <div className="min-w-0 flex-1">
           <Link href="/" className="flex w-fit shrink-0 items-center">
             <div className="relative h-[52px] w-[220px] max-w-[52vw] shrink-0 overflow-hidden sm:h-[70px] sm:w-[420px] sm:max-w-none lg:h-[76px] lg:w-[590px]">
@@ -319,7 +319,7 @@ function Header() {
           {showBookLink ? (
             <Link
               href="/book"
-              className="hidden text-[13px] font-medium text-gray-700 transition-colors hover:text-gray-900 sm:inline-flex sm:text-sm"
+              className="hidden text-[13px] font-semibold text-black transition-colors hover:text-orange-600 sm:inline-flex sm:text-sm"
             >
               Book Fuel
             </Link>
@@ -327,7 +327,7 @@ function Header() {
           {showAdminDashboardLink ? (
             <Link
               href={getDashboardUrlForRole(user!.role as UserRole)}
-              className="hidden text-[13px] font-medium text-gray-700 transition-colors hover:text-gray-900 sm:inline-flex sm:text-sm"
+              className="hidden text-[13px] font-semibold text-black transition-colors hover:text-orange-600 sm:inline-flex sm:text-sm"
             >
               {user?.role === USER_ROLES.MAIN_ADMIN ? 'Super Admin' : 'Admin'}
             </Link>
@@ -335,7 +335,7 @@ function Header() {
           {showDriverRoutesLink ? (
             <Link
               href="/dashboard/driver"
-              className="hidden text-[13px] font-medium text-gray-700 transition-colors hover:text-gray-900 sm:inline-flex sm:text-sm"
+              className="hidden text-[13px] font-semibold text-black transition-colors hover:text-orange-600 sm:inline-flex sm:text-sm"
             >
               My Routes
             </Link>

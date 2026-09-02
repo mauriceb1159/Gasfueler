@@ -50,24 +50,24 @@
   }
 
   :root {
-    --background: 30 33% 98%;
-    --foreground: 224 43% 11%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 5%;
     --card: 0 0% 100%;
     --card-foreground: 224 43% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 43% 11%;
     --primary: 23 95% 56%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 27 100% 96%;
-    --secondary-foreground: 224 43% 11%;
-    --muted: 30 33% 96%;
-    --muted-foreground: 221 16% 40%;
-    --accent: 188 78% 93%;
-    --accent-foreground: 210 78% 16%;
+    --secondary: 24 100% 96%;
+    --secondary-foreground: 0 0% 5%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 34%;
+    --accent: 211 77% 94%;
+    --accent-foreground: 211 73% 28%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 24 33% 88%;
-    --input: 24 33% 88%;
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
     --ring: 23 95% 56%;
     --chart-1: 23 95% 56%;
     --chart-2: 193 82% 39%;
@@ -76,12 +76,12 @@
     --chart-5: 345 82% 55%;
     --radius: 0.9rem;
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 224 43% 11%;
+    --sidebar-foreground: 0 0% 5%;
     --sidebar-primary: 23 95% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 30 33% 96%;
-    --sidebar-accent-foreground: 224 43% 11%;
-    --sidebar-border: 24 33% 88%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 5%;
+    --sidebar-border: 0 0% 88%;
     --sidebar-ring: 23 95% 56%;
   }
 
@@ -131,10 +131,8 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: "Manrope", Arial, Helvetica, sans-serif;
-    background-image:
-      radial-gradient(circle at top left, rgba(251, 146, 60, 0.18), transparent 28%),
-      radial-gradient(circle at 85% 10%, rgba(34, 211, 238, 0.14), transparent 24%),
-      linear-gradient(180deg, rgba(255, 247, 237, 0.95) 0%, rgba(255, 255, 255, 1) 32%, rgba(241, 245, 249, 0.9) 100%);
+    background-color: hsl(var(--background));
+    background-image: linear-gradient(180deg, #ffffff 0%, #ffffff 62%, #fff7ed 100%);
     min-height: 100vh;
   }
 

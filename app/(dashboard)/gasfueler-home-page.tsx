@@ -161,26 +161,24 @@ export function GasFuelerHomePage({
   compareLabel,
 }: HomePageProps = {}) {
   return (
-    <main className="overflow-hidden">
+    <main className="overflow-hidden bg-white">
       <section className="relative isolate px-4 pb-16 pt-8 sm:px-6 sm:pt-10 lg:px-8">
-        <div className="absolute left-[-12rem] top-16 -z-10 h-72 w-72 rounded-full bg-orange-400/20 blur-3xl" />
-        <div className="absolute right-[-8rem] top-28 -z-10 h-80 w-80 rounded-full bg-cyan-300/20 blur-3xl" />
 
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-12">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/80 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-600 shadow-sm backdrop-blur sm:px-4 sm:text-xs sm:tracking-[0.24em]">
+            <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-600 shadow-sm sm:px-4 sm:text-xs sm:tracking-[0.24em]">
               <Sparkles className="h-4 w-4" />
               GasBite
             </div>
 
-            <h1 className="mt-6 text-4xl font-semibold tracking-[-0.05em] text-slate-950 sm:mt-8 sm:text-5xl lg:text-7xl">
+            <h1 className="mt-6 text-4xl font-semibold tracking-tight text-black sm:mt-8 sm:text-5xl lg:text-7xl">
               Full-service touchless fueling,
-              <span className="block bg-gradient-to-r from-orange-500 via-amber-500 to-cyan-500 bg-clip-text text-transparent">
+              <span className="block text-orange-600">
                 rebuilt for modern drivers.
               </span>
             </h1>
 
-            <p className="mt-5 max-w-xl text-base leading-7 text-slate-600 sm:mt-6 sm:text-xl sm:leading-8">
+            <p className="mt-5 max-w-xl text-base leading-7 text-neutral-600 sm:mt-6 sm:text-xl sm:leading-8">
               GasBite brings back the ease of full-service gas with booking,
               in-app snack ordering, and a polished drive-through experience
               that keeps customers in motion.
@@ -190,17 +188,17 @@ export function GasFuelerHomePage({
               {heroBenefits.map((item) => (
                 <div
                   key={item.title}
-                  className="rounded-[1.2rem] border border-white/70 bg-white/75 p-4 shadow-[0_16px_42px_-32px_rgba(15,23,42,0.8)] backdrop-blur-xl"
+                  className="rounded-[1.2rem] border border-neutral-200 bg-white p-4 shadow-[0_16px_42px_-34px_rgba(0,0,0,0.55)]"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-950 text-white">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-black text-white">
                       <item.icon className="h-4 w-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-slate-950">
+                      <p className="text-sm font-semibold text-black">
                         {item.title}
                       </p>
-                      <p className="mt-1 text-xs leading-5 text-slate-600">
+                      <p className="mt-1 text-xs leading-5 text-neutral-600">
                         {item.copy}
                       </p>
                     </div>
@@ -213,7 +211,7 @@ export function GasFuelerHomePage({
               <a href="/sign-up?redirect=book" className="w-full sm:w-auto">
                 <Button
                   size="lg"
-                  className="h-12 w-full rounded-full bg-slate-950 px-7 text-base text-white shadow-[0_18px_40px_-18px_rgba(15,23,42,0.9)] hover:bg-slate-800 sm:w-auto"
+                  className="h-12 w-full rounded-full bg-orange-600 px-7 text-base text-white shadow-[0_18px_40px_-18px_rgba(234,88,12,0.8)] hover:bg-orange-700 sm:w-auto"
                 >
                   Book fuel now
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -223,17 +221,17 @@ export function GasFuelerHomePage({
                 <Button
                   size="lg"
                   variant="outline"
-                  className="h-12 w-full rounded-full border-white/80 bg-white/70 px-7 text-base text-slate-800 shadow-sm backdrop-blur hover:bg-white sm:w-auto"
+                  className="h-12 w-full rounded-full border-neutral-300 bg-white px-7 text-base text-black shadow-sm hover:bg-neutral-50 sm:w-auto"
                 >
                   View customer pricing
                 </Button>
               </a>
             </div>
-            <p className="mt-4 text-sm text-slate-600">
+            <p className="mt-4 text-sm text-neutral-600">
               Already have an account?{' '}
               <a
                 href="/sign-in?redirect=book"
-                className="font-semibold text-slate-950 underline underline-offset-4 transition hover:text-orange-700"
+                className="font-semibold text-black underline underline-offset-4 transition hover:text-orange-700"
               >
                 Sign in to continue booking.
               </a>
@@ -242,19 +240,19 @@ export function GasFuelerHomePage({
             <HeroServiceCard className="mt-4 sm:hidden" />
 
             <div className="mt-6 hidden gap-4 sm:grid lg:grid-cols-2">
-              <div className="rounded-[1.35rem] border border-white/70 bg-white/80 p-4 shadow-[0_18px_45px_-30px_rgba(15,23,42,0.55)] backdrop-blur-xl">
+              <div className="rounded-[1.35rem] border border-neutral-200 bg-white p-4 shadow-[0_18px_45px_-34px_rgba(0,0,0,0.45)]">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-orange-600">
                   Concierge Stop
                 </p>
-                <p className="mt-2 text-lg font-semibold text-slate-950">
+                <p className="mt-2 text-lg font-semibold text-black">
                   Attendants handle the pump while the driver stays put.
                 </p>
               </div>
-              <div className="rounded-[1.35rem] border border-white/70 bg-white/72 p-4 shadow-[0_18px_45px_-30px_rgba(15,23,42,0.5)] backdrop-blur-xl">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-700">
+              <div className="rounded-[1.35rem] border border-neutral-200 bg-white p-4 shadow-[0_18px_45px_-34px_rgba(0,0,0,0.45)]">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-blue-700">
                   Add-On Basket
                 </p>
-                <p className="mt-2 text-lg font-semibold text-slate-950">
+                <p className="mt-2 text-lg font-semibold text-black">
                   Drinks and snacks reach the window in the same stop.
                 </p>
               </div>
@@ -262,8 +260,7 @@ export function GasFuelerHomePage({
           </div>
 
           <div className="relative">
-            <div className="absolute -inset-2 rounded-[2rem] bg-gradient-to-br from-orange-400/25 via-transparent to-cyan-400/20 blur-2xl sm:-inset-4" />
-            <div className="relative rounded-[1.75rem] border border-white/60 bg-white/82 p-3 shadow-[0_28px_80px_-28px_rgba(15,23,42,0.85)] backdrop-blur-xl sm:rounded-[2rem] sm:p-4">
+            <div className="relative rounded-[1.75rem] border border-neutral-200 bg-white p-3 shadow-[0_28px_80px_-34px_rgba(0,0,0,0.55)] sm:rounded-[2rem] sm:p-4">
               <div className="grid gap-4">
                 <div className="relative hidden overflow-hidden rounded-[1.6rem] bg-slate-950 sm:block">
                   <img
@@ -288,22 +285,22 @@ export function GasFuelerHomePage({
 
             <div className={compactHeroCards ? '-mt-3' : 'mt-4'}>
               <div className="grid gap-4 lg:grid-cols-[1.12fr_0.88fr]">
-                <div className="rounded-[1.5rem] border border-white/70 bg-white/85 p-5 text-slate-950 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.7)] backdrop-blur-xl">
+                <div className="rounded-[1.5rem] border border-neutral-200 bg-white p-5 text-black shadow-[0_18px_50px_-34px_rgba(0,0,0,0.45)]">
                   <p className="text-xs font-semibold uppercase tracking-[0.26em] text-orange-600">
                     GasBite Experience
                   </p>
                   <p className="mt-3 text-2xl font-semibold leading-tight sm:text-[2rem]">
                     Pull in, fuel up, collect your order, and be on your way in minutes.
                   </p>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">
+                  <p className="mt-3 text-sm leading-6 text-neutral-600">
                     Attendants handle the pump and deliver pre-ordered drinks
                     and snacks straight to the window.
                   </p>
                 </div>
 
-                <div className="rounded-[1.5rem] border border-slate-200 bg-slate-950 p-5 text-white shadow-[0_18px_50px_-30px_rgba(15,23,42,0.8)]">
+                <div className="rounded-[1.5rem] border border-neutral-200 bg-black p-5 text-white shadow-[0_18px_50px_-30px_rgba(0,0,0,0.75)]">
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-xs uppercase tracking-[0.24em] text-cyan-200">
+                    <p className="text-xs uppercase tracking-[0.24em] text-blue-200">
                       Service Snapshot
                     </p>
                   </div>
