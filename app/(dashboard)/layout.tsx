@@ -298,13 +298,13 @@ function Header() {
       <div className="mx-auto flex h-[62px] max-w-7xl items-center justify-between bg-white sm:h-[74px]">
         <div className="min-w-0 flex-1">
           <Link href="/" className="flex w-fit shrink-0 items-center">
-            <div className="relative h-[52px] w-[270px] max-w-[64vw] shrink-0 overflow-hidden sm:h-[70px] sm:w-[420px] sm:max-w-none lg:h-[76px] lg:w-[590px]">
+            <div className="relative h-[56px] w-[320px] max-w-[74vw] shrink-0 overflow-hidden sm:h-[70px] sm:w-[420px] sm:max-w-none lg:h-[76px] lg:w-[590px]">
               <Image
                 src="/logos/gasbite-logo-shared.jpg"
                 alt="GasBite logo"
                 fill
                 priority
-                className="object-contain object-left mix-blend-multiply scale-[2.22] sm:scale-[2.08] lg:scale-[2.1]"
+                className="object-contain object-left mix-blend-multiply scale-[2.45] sm:scale-[2.08] lg:scale-[2.1]"
                 sizes="(max-width: 640px) 300px, (max-width: 1024px) 420px, 590px"
                 style={{
                   objectPosition: 'left center',
