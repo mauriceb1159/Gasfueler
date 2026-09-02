@@ -161,7 +161,7 @@ export function GasFuelerHomePage({
 }: HomePageProps = {}) {
   return (
     <main className="overflow-hidden bg-white">
-      <section className="relative isolate px-4 pb-16 pt-8 sm:px-6 sm:pt-10 lg:px-8">
+      <section className="relative isolate px-4 pb-16 pt-8 sm:px-6 sm:pt-10 lg:px-8 lg:pt-2 xl:pt-0">
 
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-12">
           <div className="max-w-2xl">
