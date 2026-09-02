@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { LogIn, LogOut, Settings, ShoppingCart, TicketPlus, Users, MapPin, Truck, Navigation } from 'lucide-react';
+import { LogIn, LogOut, Menu, Settings, ShoppingCart, TicketPlus, Users, MapPin, Truck, Navigation } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,7 +64,33 @@ function UserMenu() {
 
   if (!user) {
     return (
-      <div className="flex items-center gap-1.5 sm:gap-2">
+      <>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="h-9 w-9 rounded-full border-slate-200 bg-white/80 p-0 text-slate-800 shadow-sm sm:hidden"
+              aria-label="Open account menu"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem className="cursor-pointer">
+              <Link href="/sign-in?redirect=book" className="flex w-full items-center">
+                <LogIn className="mr-2 h-4 w-4" />
+                <span>Sign in</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
+              <Link href="/sign-up" className="flex w-full items-center">
+                <Users className="mr-2 h-4 w-4" />
+                <span>Create account</span>
+              </Link>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <div className="hidden items-center gap-2 sm:flex">
         <Button
           asChild
           variant="outline"
@@ -81,7 +107,8 @@ function UserMenu() {
         >
           <Link href="/sign-up">Sign Up</Link>
         </Button>
-      </div>
+        </div>
+      </>
     );
   }
 
@@ -271,7 +298,7 @@ function Header() {
       <div className="mx-auto flex h-[62px] max-w-7xl items-center justify-between rounded-full border border-white/60 bg-white/75 px-3 shadow-[0_18px_60px_-28px_rgba(15,23,42,0.55)] backdrop-blur-xl sm:h-[74px] sm:px-5 lg:h-[80px] lg:px-6">
         <div className="min-w-0 flex-1">
           <Link href="/" className="flex w-fit shrink-0 items-center">
-            <div className="relative h-[52px] w-[300px] max-w-[72vw] shrink-0 overflow-hidden sm:h-[70px] sm:w-[420px] sm:max-w-none lg:h-[76px] lg:w-[590px]">
+            <div className="relative h-[52px] w-[220px] max-w-[52vw] shrink-0 overflow-hidden sm:h-[70px] sm:w-[420px] sm:max-w-none lg:h-[76px] lg:w-[590px]">
               <Image
                 src="/logos/gasbite-logo-shared.jpg"
                 alt="GasBite logo"
@@ -292,7 +319,7 @@ function Header() {
           {showBookLink ? (
             <Link
               href="/book"
-              className="text-[13px] font-medium text-gray-700 transition-colors hover:text-gray-900 sm:text-sm"
+              className="hidden text-[13px] font-medium text-gray-700 transition-colors hover:text-gray-900 sm:inline-flex sm:text-sm"
             >
               Book Fuel
             </Link>
@@ -300,7 +327,7 @@ function Header() {
           {showAdminDashboardLink ? (
             <Link
               href={getDashboardUrlForRole(user!.role as UserRole)}
-              className="text-[13px] font-medium text-gray-700 transition-colors hover:text-gray-900 sm:text-sm"
+              className="hidden text-[13px] font-medium text-gray-700 transition-colors hover:text-gray-900 sm:inline-flex sm:text-sm"
             >
               {user?.role === USER_ROLES.MAIN_ADMIN ? 'Super Admin' : 'Admin'}
             </Link>
@@ -308,7 +335,7 @@ function Header() {
           {showDriverRoutesLink ? (
             <Link
               href="/dashboard/driver"
-              className="text-[13px] font-medium text-gray-700 transition-colors hover:text-gray-900 sm:text-sm"
+              className="hidden text-[13px] font-medium text-gray-700 transition-colors hover:text-gray-900 sm:inline-flex sm:text-sm"
             >
               My Routes
             </Link>
