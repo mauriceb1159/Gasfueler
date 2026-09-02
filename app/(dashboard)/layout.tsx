@@ -294,7 +294,7 @@ function Header() {
               href="/book"
               className="text-[13px] font-medium text-gray-700 transition-colors hover:text-gray-900 sm:text-sm"
             >
-              Book
+              Book Fuel
             </Link>
           ) : null}
           {showAdminDashboardLink ? (
