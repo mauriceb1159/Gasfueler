@@ -85,7 +85,7 @@ function UserMenu() {
             <DropdownMenuItem className="cursor-pointer">
               <Link href="/sign-up" className="flex w-full items-center">
                 <Users className="mr-2 h-4 w-4" />
-                <span>Create account</span>
+                <span>Get Started</span>
               </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -105,7 +105,7 @@ function UserMenu() {
           asChild
           className="h-9 rounded-full px-3 text-xs sm:h-10 sm:px-4 sm:text-sm"
         >
-          <Link href="/sign-up">Sign Up</Link>
+          <Link href="/sign-up">Get Started</Link>
         </Button>
         </div>
       </>
