@@ -319,7 +319,7 @@ function Header() {
           {showBookLink ? (
             <Link
               href="/book"
-              className="hidden text-[13px] font-semibold text-black transition-colors hover:text-orange-600 sm:inline-flex sm:text-sm"
+              className="hidden text-[13px] font-semibold text-black transition-colors hover:text-[#f68b1f] sm:inline-flex sm:text-sm"
             >
               Book Fuel
             </Link>
@@ -327,7 +327,7 @@ function Header() {
           {showAdminDashboardLink ? (
             <Link
               href={getDashboardUrlForRole(user!.role as UserRole)}
-              className="hidden text-[13px] font-semibold text-black transition-colors hover:text-orange-600 sm:inline-flex sm:text-sm"
+              className="hidden text-[13px] font-semibold text-black transition-colors hover:text-[#f68b1f] sm:inline-flex sm:text-sm"
             >
               {user?.role === USER_ROLES.MAIN_ADMIN ? 'Super Admin' : 'Admin'}
             </Link>
@@ -335,7 +335,7 @@ function Header() {
           {showDriverRoutesLink ? (
             <Link
               href="/dashboard/driver"
-              className="hidden text-[13px] font-semibold text-black transition-colors hover:text-orange-600 sm:inline-flex sm:text-sm"
+              className="hidden text-[13px] font-semibold text-black transition-colors hover:text-[#f68b1f] sm:inline-flex sm:text-sm"
             >
               My Routes
             </Link>
@@ -368,7 +368,7 @@ function MarketCartButton({ cart }: { cart: MarketCartSummary | null }) {
           type="button"
           className="hidden items-center gap-3 rounded-full border border-slate-200 bg-white/90 px-3 py-2 text-left shadow-sm transition hover:border-orange-200 hover:bg-white lg:flex"
         >
-          <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-orange-100 text-orange-700">
+          <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[#fff0df] text-[#f68b1f]">
             <ShoppingCart className="h-4 w-4" />
             {itemCount > 0 ? (
               <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-slate-950 px-1 text-[10px] font-semibold text-white">
@@ -400,7 +400,7 @@ function MarketCartButton({ cart }: { cart: MarketCartSummary | null }) {
                 {itemCount} item{itemCount === 1 ? '' : 's'}
               </p>
             </div>
-            <span className="rounded-full bg-orange-50 px-3 py-1 text-sm font-semibold text-orange-700">
+            <span className="rounded-full bg-[#fff0df] px-3 py-1 text-sm font-semibold text-[#d96f12]">
               {formatCurrency(cart?.subtotal ?? 0)}
             </span>
           </div>

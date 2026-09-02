@@ -167,7 +167,7 @@ export function GasFuelerHomePage({
           <div className="max-w-2xl">
             <h1 className="text-4xl font-semibold tracking-tight text-black sm:text-5xl lg:text-7xl">
               Full-service touchless fueling,
-              <span className="block text-orange-600">
+              <span className="block text-[#f68b1f]">
                 rebuilt for modern drivers.
               </span>
             </h1>
@@ -205,7 +205,7 @@ export function GasFuelerHomePage({
               <a href="/sign-up?redirect=book" className="w-full sm:w-auto">
                 <Button
                   size="lg"
-                  className="h-12 w-full rounded-full bg-orange-600 px-7 text-base text-white shadow-[0_18px_40px_-18px_rgba(234,88,12,0.8)] hover:bg-orange-700 sm:w-auto"
+                  className="h-12 w-full rounded-full bg-[#f68b1f] px-7 text-base text-white shadow-[0_18px_40px_-18px_rgba(246,139,31,0.8)] hover:bg-[#e77712] sm:w-auto"
                 >
                   Book fuel now
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -225,7 +225,7 @@ export function GasFuelerHomePage({
               Already have an account?{' '}
               <a
                 href="/sign-in?redirect=book"
-                className="font-semibold text-black underline underline-offset-4 transition hover:text-orange-700"
+                className="font-semibold text-black underline underline-offset-4 transition hover:text-[#d96f12]"
               >
                 Sign in to continue booking.
               </a>
@@ -235,7 +235,7 @@ export function GasFuelerHomePage({
 
             <div className="mt-6 hidden gap-4 sm:grid lg:grid-cols-2">
               <div className="rounded-[1.35rem] border border-neutral-200 bg-white p-4 shadow-[0_18px_45px_-34px_rgba(0,0,0,0.45)]">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-orange-600">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#f68b1f]">
                   Concierge Stop
                 </p>
                 <p className="mt-2 text-lg font-semibold text-black">
@@ -280,7 +280,7 @@ export function GasFuelerHomePage({
             <div className={compactHeroCards ? '-mt-3' : 'mt-4'}>
               <div className="grid gap-4 lg:grid-cols-[1.12fr_0.88fr]">
                 <div className="rounded-[1.5rem] border border-neutral-200 bg-white p-5 text-black shadow-[0_18px_50px_-34px_rgba(0,0,0,0.45)]">
-                  <p className="text-xs font-semibold uppercase tracking-[0.26em] text-orange-600">
+                  <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[#f68b1f]">
                     GasBite Experience
                   </p>
                   <p className="mt-3 text-2xl font-semibold leading-tight sm:text-[2rem]">
@@ -322,7 +322,7 @@ export function GasFuelerHomePage({
       {compareLabel ? (
         <section className="px-4 pb-2 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">
-            <div className="inline-flex rounded-full border border-orange-200 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-orange-600 shadow-sm backdrop-blur">
+            <div className="inline-flex rounded-full border border-orange-200 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#f68b1f] shadow-sm backdrop-blur">
               {compareLabel}
             </div>
           </div>
@@ -355,7 +355,7 @@ export function GasFuelerHomePage({
               key={item.title}
               className="rounded-[1.75rem] border border-white/65 bg-white/75 p-7 shadow-[0_20px_70px_-38px_rgba(15,23,42,0.55)] backdrop-blur-xl"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-amber-400 text-white shadow-lg shadow-orange-500/25">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#f68b1f] to-amber-400 text-white shadow-lg shadow-orange-500/25">
                 <item.icon className="h-6 w-6" />
               </div>
               <h2 className="mt-6 text-2xl font-semibold tracking-tight text-slate-950">
@@ -412,7 +412,7 @@ export function GasFuelerHomePage({
       <section className="px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-2">
           <div className="rounded-[2rem] border border-white/65 bg-white/75 p-8 shadow-[0_24px_80px_-42px_rgba(15,23,42,0.58)] backdrop-blur-xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-orange-600">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#f68b1f]">
               Driver App Features
             </p>
             <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
@@ -443,7 +443,7 @@ export function GasFuelerHomePage({
           </div>
 
           <div className="rounded-[2rem] border border-slate-900/10 bg-gradient-to-br from-orange-50 via-white to-cyan-50 p-8 shadow-[0_24px_80px_-42px_rgba(15,23,42,0.58)]">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-orange-600">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#f68b1f]">
               Station Partner Value
             </p>
             <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
@@ -456,7 +456,7 @@ export function GasFuelerHomePage({
                   className="rounded-[1.5rem] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur"
                 >
                   <div className="flex items-start gap-4">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-cyan-500 text-white">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#f68b1f] to-blue-500 text-white">
                       <item.icon className="h-5 w-5" />
                     </div>
                     <div>
@@ -478,7 +478,7 @@ export function GasFuelerHomePage({
       <section className="px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-8 rounded-[2rem] border border-white/70 bg-white/75 px-8 py-10 shadow-[0_24px_80px_-42px_rgba(15,23,42,0.58)] backdrop-blur-xl lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.26em] text-orange-600">
+            <p className="text-sm font-semibold uppercase tracking-[0.26em] text-[#f68b1f]">
               The Business Model
             </p>
             <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
@@ -493,7 +493,7 @@ export function GasFuelerHomePage({
 
           <div className="grid gap-4">
             <div className="rounded-[1.5rem] border border-orange-100 bg-orange-50 p-5">
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-orange-600">
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#f68b1f]">
                 Consumer Plans
               </p>
               <p className="mt-2 text-base leading-7 text-slate-700">
