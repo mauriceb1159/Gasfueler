@@ -10,7 +10,6 @@ import {
   MapPinned,
   ShieldCheck,
   ShoppingBag,
-  Sparkles,
   Store,
   SunSnow,
   WalletCards,
@@ -166,12 +165,7 @@ export function GasFuelerHomePage({
 
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-12">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-600 shadow-sm sm:px-4 sm:text-xs sm:tracking-[0.24em]">
-              <Sparkles className="h-4 w-4" />
-              GasBite
-            </div>
-
-            <h1 className="mt-6 text-4xl font-semibold tracking-tight text-black sm:mt-8 sm:text-5xl lg:text-7xl">
+            <h1 className="text-4xl font-semibold tracking-tight text-black sm:text-5xl lg:text-7xl">
               Full-service touchless fueling,
               <span className="block text-orange-600">
                 rebuilt for modern drivers.
