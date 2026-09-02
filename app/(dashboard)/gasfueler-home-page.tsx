@@ -172,6 +172,27 @@ export function GasFuelerHomePage({
               </span>
             </h1>
 
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4">
+              <a href="/sign-up?redirect=book" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  className="h-12 w-full rounded-lg bg-[#f68b1f] px-7 text-base text-white shadow-[0_18px_40px_-18px_rgba(246,139,31,0.8)] hover:bg-[#e77712] sm:w-auto"
+                >
+                  Book Fuel
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </a>
+              <a href="/pricing" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="h-12 w-full rounded-lg border-[#f68b1f] bg-white px-7 text-base text-[#d96f12] shadow-sm hover:bg-[#fff6ec] sm:w-auto"
+                >
+                  View Pricing
+                </Button>
+              </a>
+            </div>
+
             <p className="mt-5 max-w-xl text-base leading-7 text-neutral-600 sm:mt-6 sm:text-xl sm:leading-8">
               GasBite brings back the ease of full-service gas with booking,
               in-app snack ordering, and a polished drive-through experience
@@ -201,26 +222,6 @@ export function GasFuelerHomePage({
               ))}
             </div>
 
-            <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:gap-4">
-              <a href="/sign-up?redirect=book" className="w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  className="h-12 w-full rounded-full bg-[#f68b1f] px-7 text-base text-white shadow-[0_18px_40px_-18px_rgba(246,139,31,0.8)] hover:bg-[#e77712] sm:w-auto"
-                >
-                  Book fuel now
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </a>
-              <a href="/pricing" className="w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="h-12 w-full rounded-full border-neutral-300 bg-white px-7 text-base text-black shadow-sm hover:bg-neutral-50 sm:w-auto"
-                >
-                  View customer pricing
-                </Button>
-              </a>
-            </div>
             <p className="mt-4 text-sm text-neutral-600">
               Already have an account?{' '}
               <a

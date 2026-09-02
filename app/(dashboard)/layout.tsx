@@ -90,23 +90,19 @@ function UserMenu() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <div className="hidden items-center gap-2 sm:flex">
-        <Button
-          asChild
-          variant="outline"
-          className="h-9 rounded-full border-neutral-200 bg-white px-3 text-xs text-black shadow-sm sm:h-10 sm:px-4 sm:text-sm"
-        >
-          <Link href="/sign-in?redirect=book">
-            <LogIn className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+        <div className="hidden items-center gap-5 sm:flex">
+          <Link
+            href="/sign-in?redirect=book"
+            className="text-base font-medium text-neutral-600 transition-colors hover:text-black"
+          >
             Sign in
           </Link>
-        </Button>
-        <Button
-          asChild
-          className="h-9 rounded-full px-3 text-xs sm:h-10 sm:px-4 sm:text-sm"
-        >
-          <Link href="/sign-up">Get Started</Link>
-        </Button>
+          <Button
+            asChild
+            className="h-10 rounded-lg bg-[#f68b1f] px-5 text-base text-white shadow-sm hover:bg-[#e77712]"
+          >
+            <Link href="/sign-up">Get Started</Link>
+          </Button>
         </div>
       </>
     );
@@ -298,13 +294,13 @@ function Header() {
       <div className="mx-auto flex h-[62px] max-w-7xl items-center justify-between bg-white sm:h-[74px]">
         <div className="min-w-0 flex-1">
           <Link href="/" className="flex w-fit shrink-0 items-center">
-            <div className="relative h-[56px] w-[320px] max-w-[74vw] shrink-0 overflow-hidden sm:h-[70px] sm:w-[420px] sm:max-w-none lg:h-[76px] lg:w-[590px]">
+            <div className="relative h-[58px] w-[360px] max-w-[80vw] shrink-0 overflow-hidden sm:h-[70px] sm:w-[420px] sm:max-w-none lg:h-[76px] lg:w-[590px]">
               <Image
                 src="/logos/gasbite-logo-shared.jpg"
                 alt="GasBite logo"
                 fill
                 priority
-                className="object-contain object-left mix-blend-multiply scale-[2.45] sm:scale-[2.08] lg:scale-[2.1]"
+                className="object-contain object-left mix-blend-multiply scale-[2.7] sm:scale-[2.08] lg:scale-[2.1]"
                 sizes="(max-width: 640px) 300px, (max-width: 1024px) 420px, 590px"
                 style={{
                   objectPosition: 'left center',
