@@ -278,41 +278,42 @@ export function GasFuelerHomePage({
               </div>
             </div>
 
-            <div className={compactHeroCards ? '-mt-3' : 'mt-4'}>
-              <div className="grid gap-4 lg:grid-cols-[1.12fr_0.88fr]">
-                <div className="rounded-[1.5rem] border border-neutral-200 bg-white p-5 text-black shadow-[0_18px_50px_-34px_rgba(0,0,0,0.45)]">
-                  <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[#f68b1f]">
-                    GasBite Experience
-                  </p>
-                  <p className="mt-3 text-2xl font-semibold leading-tight sm:text-[2rem]">
-                    Pull in, fuel up, collect your order, and be on your way in minutes.
-                  </p>
-                  <p className="mt-3 text-sm leading-6 text-neutral-600">
-                    Attendants handle the pump and deliver pre-ordered drinks
-                    and snacks straight to the window.
-                  </p>
-                </div>
+          </div>
+        </div>
 
-                <div className="rounded-[1.5rem] border border-neutral-200 bg-black p-5 text-white shadow-[0_18px_50px_-30px_rgba(0,0,0,0.75)]">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-xs uppercase tracking-[0.24em] text-blue-200">
-                      Service Snapshot
-                    </p>
-                  </div>
-                  <div className="mt-4 space-y-3">
-                    <div className="rounded-2xl bg-white/10 px-4 py-3">
-                      <p className="text-sm text-white/65">People-first service</p>
-                      <p className="text-base font-semibold">A polished attendant-led stop</p>
-                    </div>
-                    <div className="rounded-2xl bg-white/10 px-4 py-3">
-                      <p className="text-sm text-white/65">Faster convenience</p>
-                      <p className="text-base font-semibold">Fuel and snacks in one stop</p>
-                    </div>
-                    <div className="rounded-2xl bg-white/10 px-4 py-3">
-                      <p className="text-sm text-white/65">Brand feel</p>
-                      <p className="text-base font-semibold">Modern, premium, and effortless</p>
-                    </div>
-                  </div>
+        <div className={compactHeroCards ? 'mx-auto mt-6 max-w-7xl' : 'mx-auto mt-8 max-w-7xl'}>
+          <div className="grid gap-4 lg:grid-cols-[1.12fr_0.88fr]">
+            <div className="rounded-[1.5rem] border border-neutral-200 bg-white p-5 text-black shadow-[0_18px_50px_-34px_rgba(0,0,0,0.45)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[#f68b1f]">
+                GasBite Experience
+              </p>
+              <p className="mt-3 text-2xl font-semibold leading-tight sm:text-[2rem]">
+                Pull in, fuel up, collect your order, and be on your way in minutes.
+              </p>
+              <p className="mt-3 text-sm leading-6 text-neutral-600">
+                Attendants handle the pump and deliver pre-ordered drinks and
+                snacks straight to the window.
+              </p>
+            </div>
+
+            <div className="rounded-[1.5rem] border border-neutral-200 bg-black p-5 text-white shadow-[0_18px_50px_-30px_rgba(0,0,0,0.75)]">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs uppercase tracking-[0.24em] text-blue-200">
+                  Service Snapshot
+                </p>
+              </div>
+              <div className="mt-4 space-y-3">
+                <div className="rounded-2xl bg-white/10 px-4 py-3">
+                  <p className="text-sm text-white/65">People-first service</p>
+                  <p className="text-base font-semibold">A polished attendant-led stop</p>
+                </div>
+                <div className="rounded-2xl bg-white/10 px-4 py-3">
+                  <p className="text-sm text-white/65">Faster convenience</p>
+                  <p className="text-base font-semibold">Fuel and snacks in one stop</p>
+                </div>
+                <div className="rounded-2xl bg-white/10 px-4 py-3">
+                  <p className="text-sm text-white/65">Brand feel</p>
+                  <p className="text-base font-semibold">Modern, premium, and effortless</p>
                 </div>
               </div>
             </div>
