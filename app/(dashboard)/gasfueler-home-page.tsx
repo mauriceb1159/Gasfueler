@@ -294,6 +294,11 @@ export function GasFuelerHomePage({
                 Attendants handle the pump and deliver pre-ordered drinks and
                 snacks straight to the window.
               </p>
+              <p className="mt-4 max-w-3xl text-sm leading-6 text-neutral-600">
+                Perfect for pregnant women, older drivers, parents keeping an
+                eye on kids or pets in the car, or anyone who needs to stay on
+                an important meeting or call. GasBite has you covered.
+              </p>
             </div>
 
             <div className="rounded-[1.5rem] border border-neutral-200 bg-black p-5 text-white shadow-[0_18px_50px_-30px_rgba(0,0,0,0.75)]">
