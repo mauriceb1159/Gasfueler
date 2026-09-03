@@ -321,6 +321,7 @@ export function BookingForm({
   const selectedVehicleRecord =
     vehicles.find((vehicle) => String(vehicle.id) === selectedVehicleId) ?? null;
   const effectiveVehicleClass = vehicleClass || 'suv';
+  const isCommercialVehicle = effectiveVehicleClass === 'commercial';
   const isCombinedFlow = bookingMode === 'fuel_and_store';
   const isCombinedFuelStep = isCombinedFlow && combinedFlowStep === 'fuel';
   const isCombinedStoreStep = isCombinedFlow && combinedFlowStep === 'store';
@@ -342,6 +343,8 @@ export function BookingForm({
         Number.isFinite(requestedDollarAmountNumber) &&
         requestedDollarAmountNumber > 0
       ? Math.round(requestedDollarAmountNumber * 100)
+      : requestType === 'fill_tank' && !isCommercialVehicle
+      ? getFillUpPreAuthCents(effectiveVehicleClass, fuelGrade)
       : null;
   const estimatedTotal =
     estimatedFuelCost !== null ? estimatedFuelCost + serviceFee + addonSubtotal : null;
@@ -395,7 +398,7 @@ export function BookingForm({
     : 'Pick a live service slot';
   const fuelPlanSummary =
     requestType === 'fill_tank'
-      ? `${formatFuelGrade(fuelGrade)} - Fill tank`
+      ? `${formatFuelGrade(fuelGrade)} - Fill tank pre-auth up to ${formatEstimate(estimatedFuelCost)}`
       : requestType === 'gallons' && requestedGallons
       ? `${formatFuelGrade(fuelGrade)} - ${requestedGallons} gallons`
       : requestType === 'dollar_amount' && requestedDollarAmount
@@ -447,6 +450,12 @@ export function BookingForm({
       setCombinedFlowStep('fuel');
     }
   }, [bookingMode]);
+
+  useEffect(() => {
+    if (effectiveVehicleClass === 'commercial' && requestType === 'fill_tank') {
+      setRequestType('gallons');
+    }
+  }, [effectiveVehicleClass, requestType]);
 
   useEffect(() => {
     function closeOnVisibilityChange() {
@@ -542,7 +551,7 @@ export function BookingForm({
   const hasValidCombinedStation = Boolean(selectedStation) && !selectedNearbyStation;
   const hasValidCombinedSlot = Boolean(selectedSlotId);
   const hasValidCombinedFuelAmount =
-    requestType === 'fill_tank'
+    requestType === 'fill_tank' && !isCommercialVehicle
       ? true
       : requestType === 'gallons'
       ? Number.isFinite(requestedGallonsNumber) && requestedGallonsNumber > 0
@@ -562,6 +571,9 @@ export function BookingForm({
       : null,
     requestType === 'dollar_amount' && !hasValidCombinedFuelAmount
       ? 'Enter the fuel dollar amount.'
+      : null,
+    requestType === 'fill_tank' && isCommercialVehicle
+      ? 'Choose exact gallons or a dollar amount for commercial vehicles.'
       : null
   ].filter((item): item is string => item !== null);
 
@@ -1511,12 +1523,27 @@ export function BookingForm({
               onChange={(event) => setRequestType(event.target.value)}
               className="flex h-12 w-full rounded-full border border-input bg-white px-4 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
             >
-              <option value="fill_tank">Fill tank</option>
+              {!isCommercialVehicle ? (
+                <option value="fill_tank">Fill tank</option>
+              ) : null}
               <option value="gallons">Exact gallons</option>
               <option value="dollar_amount">Dollar amount</option>
             </select>
           </Field>
         </div>
+        {requestType === 'fill_tank' && estimatedFuelCost !== null ? (
+          <div className="rounded-[1.25rem] border border-orange-200 bg-orange-50 p-4 text-sm leading-6 text-orange-900">
+            Fill-up pre-auth is capped at {formatCurrency(estimatedFuelCost)} for
+            this vehicle type and fuel grade. You will only be charged for the
+            final pump total plus fees and add-ons.
+          </div>
+        ) : isCommercialVehicle ? (
+          <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+            Fill-up is unavailable for commercial and oversized vehicles. Choose
+            exact gallons or a dollar amount so the authorization matches the
+            stop.
+          </div>
+        ) : null}
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Requested gallons" htmlFor="requestedGallons">
             <Input
@@ -1596,7 +1623,9 @@ export function BookingForm({
             >
               <option value="car">Car</option>
               <option value="suv">SUV</option>
-              <option value="truck">Truck</option>
+              <option value="light_truck">Light truck (F-150 / 1500)</option>
+              <option value="heavy_duty_truck">Heavy-duty truck (F-250 / F-350)</option>
+              <option value="commercial">Commercial / oversized</option>
             </select>
           </Field>
         </div>
@@ -2275,9 +2304,27 @@ function formatFuelGrade(fuelGrade: string) {
 }
 
 function formatVehicleClass(vehicleClass: string) {
-  return vehicleClass.toUpperCase() === 'SUV'
-    ? 'SUV'
-    : vehicleClass.charAt(0).toUpperCase() + vehicleClass.slice(1);
+  if (vehicleClass.toUpperCase() === 'SUV') {
+    return 'SUV';
+  }
+
+  if (vehicleClass === 'light_truck') {
+    return 'Light truck';
+  }
+
+  if (vehicleClass === 'truck') {
+    return 'Light truck';
+  }
+
+  if (vehicleClass === 'heavy_duty_truck') {
+    return 'Heavy-duty truck';
+  }
+
+  if (vehicleClass === 'commercial') {
+    return 'Commercial / oversized';
+  }
+
+  return vehicleClass.charAt(0).toUpperCase() + vehicleClass.slice(1);
 }
 
 function formatCurrency(cents: number) {
@@ -2355,12 +2402,37 @@ function getServiceFeeForVehicleClass(vehicleClass: string) {
   switch (vehicleClass) {
     case 'car':
       return 699;
+    case 'light_truck':
+    case 'heavy_duty_truck':
+    case 'commercial':
     case 'truck':
       return 1099;
     case 'suv':
     default:
       return 899;
   }
+}
+
+function getFillUpPreAuthCents(vehicleClass: string, fuelGrade: string) {
+  const fuelFamily = fuelGrade.toLowerCase().includes('diesel') ? 'diesel' : 'gas';
+
+  if (vehicleClass === 'car') {
+    return fuelFamily === 'diesel' ? 20000 : 15000;
+  }
+
+  if (vehicleClass === 'suv') {
+    return fuelFamily === 'diesel' ? 27500 : 22500;
+  }
+
+  if (vehicleClass === 'light_truck' || vehicleClass === 'truck') {
+    return fuelFamily === 'diesel' ? 30000 : 25000;
+  }
+
+  if (vehicleClass === 'heavy_duty_truck') {
+    return fuelFamily === 'diesel' ? 40000 : 30000;
+  }
+
+  return 0;
 }
 
 function formatTaxLabel(estimatedFuelCost: number | null) {

@@ -27,6 +27,24 @@ import {
 import { sendFuelOrderConfirmationEmail } from '@/lib/email/order-confirmation';
 import { getEffectiveFuelPriceForStationGrade } from '@/lib/fuel-pricing';
 
+const vehicleClassSchema = z.enum([
+  VehicleClass.CAR,
+  VehicleClass.SUV,
+  VehicleClass.TRUCK,
+  VehicleClass.LIGHT_TRUCK,
+  VehicleClass.HEAVY_DUTY_TRUCK,
+  VehicleClass.COMMERCIAL
+]);
+
+const fillUpPreAuthCaps: Record<VehicleClass, { gas: number; diesel: number }> = {
+  [VehicleClass.CAR]: { gas: 15000, diesel: 20000 },
+  [VehicleClass.SUV]: { gas: 22500, diesel: 27500 },
+  [VehicleClass.TRUCK]: { gas: 25000, diesel: 30000 },
+  [VehicleClass.LIGHT_TRUCK]: { gas: 25000, diesel: 30000 },
+  [VehicleClass.HEAVY_DUTY_TRUCK]: { gas: 30000, diesel: 40000 },
+  [VehicleClass.COMMERCIAL]: { gas: 0, diesel: 0 }
+};
+
 const bookingSelectionSchema = z.object({
   stationStoreItemId: z.coerce.number().int().positive(),
   quantity: z.coerce.number().int().positive()
@@ -73,9 +91,7 @@ export const fuelRequestInputSchema = z
     requestedDollarAmount: optionalPositiveIntSchema,
     vehicleId: optionalPositiveIntSchema,
     nickname: optionalTrimmedString(100),
-    vehicleClass: z
-      .enum([VehicleClass.CAR, VehicleClass.SUV, VehicleClass.TRUCK])
-      .optional(),
+    vehicleClass: vehicleClassSchema.optional(),
     make: optionalTrimmedString(100),
     model: optionalTrimmedString(100),
     color: optionalTrimmedString(50),
@@ -240,6 +256,17 @@ export async function createFuelRequestForUser(
       : null;
 
   const serviceFee = getServiceFeeForVehicleClass(vehicleClass);
+
+  if (
+    vehicleClass === VehicleClass.COMMERCIAL &&
+    input.requestType === FuelRequestType.FILL_TANK
+  ) {
+    return {
+      error:
+        'Fill-up is unavailable for commercial and oversized vehicles. Choose exact gallons or a dollar amount.' as const
+    };
+  }
+
   const selectedStoreItems = parseSelectedStoreItems(input.selectedStoreItems);
   let latestPrice: { priceCents: number } | null = null;
 
@@ -315,6 +342,8 @@ export async function createFuelRequestForUser(
           requestedGallons &&
           latestPrice?.priceCents
         ? requestedGallons * latestPrice.priceCents
+        : input.requestType === FuelRequestType.FILL_TANK
+        ? getFillUpPreAuthCents(vehicleClass, input.fuelGrade)
         : null;
 
   const newRequest: NewFuelRequest = {
@@ -495,7 +524,11 @@ function getServiceFeeForVehicleClass(vehicleClass: VehicleClass) {
   switch (vehicleClass) {
     case VehicleClass.CAR:
       return 699;
+    case VehicleClass.LIGHT_TRUCK:
+      return 1099;
     case VehicleClass.TRUCK:
+    case VehicleClass.HEAVY_DUTY_TRUCK:
+    case VehicleClass.COMMERCIAL:
       return 1099;
     case VehicleClass.SUV:
     default:
@@ -507,12 +540,21 @@ function parseVehicleClass(value: string | null | undefined) {
   if (
     value === VehicleClass.CAR ||
     value === VehicleClass.SUV ||
-    value === VehicleClass.TRUCK
+    value === VehicleClass.TRUCK ||
+    value === VehicleClass.LIGHT_TRUCK ||
+    value === VehicleClass.HEAVY_DUTY_TRUCK ||
+    value === VehicleClass.COMMERCIAL
   ) {
     return value;
   }
 
   return null;
+}
+
+function getFillUpPreAuthCents(vehicleClass: VehicleClass, fuelGrade: string) {
+  const fuelFamily = fuelGrade.toLowerCase().includes('diesel') ? 'diesel' : 'gas';
+
+  return fillUpPreAuthCaps[vehicleClass][fuelFamily];
 }
 
 function parseSelectedStoreItems(

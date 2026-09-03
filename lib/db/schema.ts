@@ -772,6 +772,9 @@ export enum VehicleClass {
   CAR = 'car',
   SUV = 'suv',
   TRUCK = 'truck',
+  LIGHT_TRUCK = 'light_truck',
+  HEAVY_DUTY_TRUCK = 'heavy_duty_truck',
+  COMMERCIAL = 'commercial',
 }
 
 export enum FuelRequestItemType {

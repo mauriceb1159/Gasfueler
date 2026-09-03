@@ -9,6 +9,15 @@ import {
   VehicleClass
 } from '@/lib/db/schema';
 
+const vehicleClassSchema = z.enum([
+  VehicleClass.CAR,
+  VehicleClass.SUV,
+  VehicleClass.TRUCK,
+  VehicleClass.LIGHT_TRUCK,
+  VehicleClass.HEAVY_DUTY_TRUCK,
+  VehicleClass.COMMERCIAL
+]);
+
 const optionalTrimmedString = (max: number) =>
   z
     .string()
@@ -21,7 +30,7 @@ const optionalTrimmedString = (max: number) =>
 
 export const createVehicleInputSchema = z.object({
   nickname: optionalTrimmedString(100),
-  vehicleClass: z.enum([VehicleClass.CAR, VehicleClass.SUV, VehicleClass.TRUCK]),
+  vehicleClass: vehicleClassSchema,
   make: optionalTrimmedString(100),
   model: optionalTrimmedString(100),
   color: optionalTrimmedString(50),
@@ -33,9 +42,7 @@ export const createVehicleInputSchema = z.object({
 export const updateVehicleInputSchema = z
   .object({
     nickname: optionalTrimmedString(100),
-    vehicleClass: z
-      .enum([VehicleClass.CAR, VehicleClass.SUV, VehicleClass.TRUCK])
-      .optional(),
+    vehicleClass: vehicleClassSchema.optional(),
     make: optionalTrimmedString(100),
     model: optionalTrimmedString(100),
     color: optionalTrimmedString(50),
