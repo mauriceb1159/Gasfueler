@@ -161,11 +161,11 @@ export function GasFuelerHomePage({
 }: HomePageProps = {}) {
   return (
     <main className="overflow-hidden bg-white">
-      <section className="relative isolate px-4 pb-16 pt-8 sm:px-6 sm:pt-10 lg:px-8 lg:pt-2 xl:pt-0">
+      <section className="relative isolate px-4 pb-16 pt-8 sm:px-6 sm:pt-10 lg:px-8 lg:pt-8 xl:pt-10">
 
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:items-start lg:gap-12">
-          <div className="max-w-2xl">
-            <h1 className="text-3xl font-medium leading-[1.12] tracking-normal text-black sm:text-4xl lg:text-[2.75rem] xl:text-[3.15rem]">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.18fr_0.82fr] lg:items-start lg:gap-12">
+          <div className="max-w-2xl lg:max-w-3xl">
+            <h1 className="text-3xl font-medium leading-[1.12] tracking-normal text-black sm:text-4xl lg:text-[2.45rem] xl:text-[2.85rem]">
               Full-service gas station fueling,
               <span className="block text-[#f68b1f]">
                 rebuilt for modern drivers
