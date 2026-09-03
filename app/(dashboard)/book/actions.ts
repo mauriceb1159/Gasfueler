@@ -28,7 +28,7 @@ export const createFuelRequest = validatedActionWithUser(
       return result;
     }
 
-    redirect(`/requests/${result.requestId}`);
+    redirect(`/requests/${result.requestId}/demo-payment`);
   }
 );
 

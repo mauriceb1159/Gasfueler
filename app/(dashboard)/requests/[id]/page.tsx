@@ -1,5 +1,7 @@
+import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import {
+  ArrowRight,
   CalendarClock,
   Camera,
   CheckCircle2,
@@ -17,9 +19,11 @@ import { getFuelRequestById, getUser } from '@/lib/db/queries';
 import { FuelRequestStatus } from '@/lib/db/schema';
 
 export default async function RequestDetailsPage({
-  params
+  params,
+  searchParams
 }: {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ payment?: string }>;
 }) {
   const user = await getUser();
 
@@ -40,11 +44,14 @@ export default async function RequestDetailsPage({
     notFound();
   }
 
+  const resolvedSearchParams = searchParams ? await searchParams : {};
   const canManageRequestFulfillment = canManageFulfillment(user.role);
+  const isRequestOwner = request.userId === user.id;
+  const needsPayment = request.status === FuelRequestStatus.PENDING_PAYMENT;
   const canCancelRequest =
     request.status !== FuelRequestStatus.COMPLETED &&
     request.status !== FuelRequestStatus.CANCELED &&
-    (canManageRequestFulfillment || request.userId === user.id);
+    (canManageRequestFulfillment || isRequestOwner);
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#fff8f1_0%,#ffffff_60%)] px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
@@ -62,6 +69,15 @@ export default async function RequestDetailsPage({
             proof from one place.
           </p>
         </div>
+
+        {resolvedSearchParams.payment === 'demo-paid' ? (
+          <div className="mt-8 rounded-[1.25rem] border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-800 shadow-sm">
+            <p className="font-semibold">Demo payment authorized</p>
+            <p className="mt-1">
+              This request is scheduled and ready for the fulfillment workflow.
+            </p>
+          </div>
+        ) : null}
 
         <div className="mt-10 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="space-y-6">
@@ -162,6 +178,32 @@ export default async function RequestDetailsPage({
           </div>
 
           <div className="space-y-6">
+            {needsPayment && isRequestOwner ? (
+              <Card className="rounded-[1.5rem] border-orange-200 bg-white shadow-[0_25px_70px_-40px_rgba(15,23,42,0.32)] sm:rounded-[2rem]">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl text-slate-950 sm:text-2xl">
+                    <CreditCard className="h-5 w-5 text-orange-600" />
+                    Payment Required
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm leading-6 text-slate-600">
+                    Complete the demo checkout to move this booking into the
+                    scheduled workflow. No real card is charged.
+                  </p>
+                  <Button
+                    asChild
+                    className="h-11 w-full rounded-full bg-orange-600 text-white shadow-lg shadow-orange-200 hover:bg-orange-700"
+                  >
+                    <Link href={`/requests/${request.id}/demo-payment`}>
+                      Continue to demo payment
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : null}
+
             <Card className="rounded-[1.5rem] border-orange-200 bg-orange-50 shadow-[0_25px_70px_-40px_rgba(15,23,42,0.32)] sm:rounded-[2rem]">
               <CardHeader>
                 <CardTitle className="text-xl text-slate-950 sm:text-2xl">
@@ -253,8 +295,9 @@ export default async function RequestDetailsPage({
                   </div>
                 ) : (
                   <p className="text-sm leading-6 text-slate-600">
-                    Your request is scheduled. An attendant will complete fueling
-                    and upload proof once service is done.
+                    {needsPayment
+                      ? 'Complete payment to schedule this request for fueling.'
+                      : 'Your request is scheduled. An attendant will complete fueling and upload proof once service is done.'}
                   </p>
                 )}
               </CardContent>
