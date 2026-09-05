@@ -54,6 +54,16 @@ const bookingSelectedItemsFieldSchema = z
   .union([z.string(), z.array(bookingSelectionSchema)])
   .optional();
 
+const serviceAddOns = {
+  window_squeegee: {
+    id: 'window_squeegee',
+    itemName: 'Window squeegee service',
+    unitPrice: 399
+  }
+} as const;
+
+type ServiceAddOnId = keyof typeof serviceAddOns;
+
 const optionalPositiveIntSchema = z.preprocess((value) => {
   if (typeof value === 'string') {
     const trimmedValue = value.trim();
@@ -99,7 +109,8 @@ export const fuelRequestInputSchema = z
     fuelType: optionalTrimmedString(30),
     vehicleNotes: optionalTrimmedString(500),
     specialInstructions: optionalTrimmedString(1000),
-    selectedStoreItems: bookingSelectedItemsFieldSchema
+    selectedStoreItems: bookingSelectedItemsFieldSchema,
+    selectedServiceAddOns: z.string().optional()
   })
   .superRefine((data, ctx) => {
     if (
@@ -268,6 +279,9 @@ export async function createFuelRequestForUser(
   }
 
   const selectedStoreItems = parseSelectedStoreItems(input.selectedStoreItems);
+  const selectedServiceAddOns = parseSelectedServiceAddOns(
+    input.selectedServiceAddOns
+  );
   let latestPrice: { priceCents: number } | null = null;
 
   try {
@@ -331,7 +345,7 @@ export async function createFuelRequestForUser(
   const addonTotal = resolvedStoreItems.reduce(
     (sum, item) => sum + item.subtotalPrice,
     0
-  );
+  ) + selectedServiceAddOns.reduce((sum, item) => sum + item.subtotalPrice, 0);
 
   const fuelEstimate =
     input.requestType === FuelRequestType.DOLLAR_AMOUNT
@@ -388,17 +402,29 @@ export async function createFuelRequestForUser(
     .values(newRequest)
     .returning({ id: fuelRequests.id });
 
-  if (resolvedStoreItems.length > 0) {
-    const newOrderItems: NewOrderItem[] = resolvedStoreItems.map((item) => ({
-      orderId: createdOrder.id,
-      itemType: FuelRequestItemType.STORE_ITEM,
-      storeItemId: item.storeItemId,
-      stationStoreItemId: item.stationStoreItemId,
-      itemName: item.itemName,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      subtotalPrice: item.subtotalPrice
-    }));
+  if (resolvedStoreItems.length > 0 || selectedServiceAddOns.length > 0) {
+    const newOrderItems: NewOrderItem[] = [
+      ...resolvedStoreItems.map((item) => ({
+        orderId: createdOrder.id,
+        itemType: FuelRequestItemType.STORE_ITEM,
+        storeItemId: item.storeItemId,
+        stationStoreItemId: item.stationStoreItemId,
+        itemName: item.itemName,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        subtotalPrice: item.subtotalPrice
+      })),
+      ...selectedServiceAddOns.map((item) => ({
+        orderId: createdOrder.id,
+        itemType: FuelRequestItemType.SERVICE_ADDON,
+        storeItemId: null,
+        stationStoreItemId: null,
+        itemName: item.itemName,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        subtotalPrice: item.subtotalPrice
+      }))
+    ];
 
     await db.insert(orderItems).values(newOrderItems);
   }
@@ -451,7 +477,7 @@ export async function createFuelRequestForUser(
       serviceFee,
       addonTotal,
       totalEstimate: (fuelEstimate ?? 0) + serviceFee + addonTotal,
-      storeItems: resolvedStoreItems.map((item) => ({
+      storeItems: [...resolvedStoreItems, ...selectedServiceAddOns].map((item) => ({
         itemName: item.itemName,
         quantity: item.quantity,
         subtotalPrice: item.subtotalPrice
@@ -587,6 +613,43 @@ function parseSelectedStoreItems(
           Number.isInteger(item.quantity) &&
           item.quantity > 0
       );
+  } catch {
+    return [];
+  }
+}
+
+function parseSelectedServiceAddOns(value: string | undefined) {
+  if (!value) {
+    return [];
+  }
+
+  try {
+    const parsedValue = JSON.parse(value);
+
+    if (!Array.isArray(parsedValue)) {
+      return [];
+    }
+
+    const selectedAddOnIds = new Set<ServiceAddOnId>();
+
+    for (const item of parsedValue) {
+      const id = item?.id;
+
+      if (typeof id === 'string' && id in serviceAddOns) {
+        selectedAddOnIds.add(id as ServiceAddOnId);
+      }
+    }
+
+    return Array.from(selectedAddOnIds).map((id) => {
+      const addOn = serviceAddOns[id];
+
+      return {
+        itemName: addOn.itemName,
+        quantity: 1,
+        unitPrice: addOn.unitPrice,
+        subtotalPrice: addOn.unitPrice
+      };
+    });
   } catch {
     return [];
   }

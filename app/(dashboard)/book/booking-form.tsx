@@ -10,6 +10,7 @@ import {
   Search,
   ShoppingBag,
   ShoppingCart,
+  Sparkles,
   Store
 } from 'lucide-react';
 
@@ -82,6 +83,17 @@ type NearbyGasStation = {
   latitude: number | null;
   longitude: number | null;
 };
+
+const serviceAddOns = [
+  {
+    id: 'window_squeegee',
+    name: 'Window squeegee service',
+    description: 'Front windshield cleaned during your stop.',
+    priceCents: 399
+  }
+] as const;
+
+type ServiceAddOnId = (typeof serviceAddOns)[number]['id'];
 
 type BookingMode = 'fuel_only' | 'fuel_and_store' | 'store_first';
 type CombinedFlowStep = 'fuel' | 'store';
@@ -170,6 +182,11 @@ export function BookingForm({
   const [selectedStoreItems, setSelectedStoreItems] = useState<
     Record<number, number>
   >({});
+  const [selectedServiceAddOns, setSelectedServiceAddOns] = useState<
+    Record<ServiceAddOnId, boolean>
+  >({
+    window_squeegee: false
+  });
   const [isStoreSummaryOpen, setIsStoreSummaryOpen] = useState(false);
   const [nearbyStatus, setNearbyStatus] = useState<
     'idle' | 'loading' | 'ready' | 'error' | 'unconfigured'
@@ -329,10 +346,15 @@ export function BookingForm({
   const storeFirst = bookingMode === 'store_first';
   const showFuelChoices = bookingMode !== 'store_first';
   const serviceFee = getServiceFeeForVehicleClass(effectiveVehicleClass);
-  const addonSubtotal = selectedStationStoreItems.reduce((sum, item) => {
+  const storeAddonSubtotal = selectedStationStoreItems.reduce((sum, item) => {
     const quantity = selectedStoreItems[item.id] ?? 0;
     return sum + item.priceCents * quantity;
   }, 0);
+  const serviceAddOnSubtotal = serviceAddOns.reduce(
+    (sum, addOn) => sum + (selectedServiceAddOns[addOn.id] ? addOn.priceCents : 0),
+    0
+  );
+  const addonSubtotal = storeAddonSubtotal + serviceAddOnSubtotal;
   const estimatedFuelCost =
     requestType === 'gallons' &&
     selectedFuelPrice &&
@@ -535,6 +557,13 @@ export function BookingForm({
     });
   }
 
+  function toggleServiceAddOn(addOnId: ServiceAddOnId) {
+    setSelectedServiceAddOns((currentAddOns) => ({
+      ...currentAddOns,
+      [addOnId]: !currentAddOns[addOnId]
+    }));
+  }
+
   const selectedStoreItemsPayload = JSON.stringify(
     Object.entries(selectedStoreItems)
       .map(([stationStoreItemId, quantity]) => ({
@@ -542,6 +571,11 @@ export function BookingForm({
         quantity
       }))
       .filter((item) => item.quantity > 0)
+  );
+  const selectedServiceAddOnsPayload = JSON.stringify(
+    serviceAddOns
+      .filter((addOn) => selectedServiceAddOns[addOn.id])
+      .map((addOn) => ({ id: addOn.id }))
   );
 
   if (stations.length === 0) {
@@ -636,6 +670,9 @@ export function BookingForm({
     setPickupWindowEnd('');
     setCustomerNotes('');
     setSelectedStoreItems({});
+    setSelectedServiceAddOns({
+      window_squeegee: false
+    });
     setIsStoreSummaryOpen(false);
     setNearbyStatus('idle');
   }
@@ -896,6 +933,11 @@ export function BookingForm({
         type="hidden"
         name="selectedStoreItems"
         value={selectedStoreItemsPayload}
+      />
+      <input
+        type="hidden"
+        name="selectedServiceAddOns"
+        value={selectedServiceAddOnsPayload}
       />
       {storeFirst ? (
         <input type="hidden" name="pickupMode" value={pickupMode} />
@@ -1568,6 +1610,37 @@ export function BookingForm({
             />
           </Field>
         </div>
+        <div className="rounded-[1.25rem] border border-orange-100 bg-orange-50/50 p-4">
+          {serviceAddOns.map((addOn) => (
+            <label
+              key={addOn.id}
+              htmlFor={`serviceAddOn-${addOn.id}`}
+              className="flex cursor-pointer items-start gap-3"
+            >
+              <input
+                id={`serviceAddOn-${addOn.id}`}
+                type="checkbox"
+                checked={selectedServiceAddOns[addOn.id]}
+                onChange={() => toggleServiceAddOn(addOn.id)}
+                className="mt-1 h-5 w-5 rounded border-orange-300 text-orange-600 focus:ring-orange-500"
+              />
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-2 font-semibold text-slate-950">
+                    <Sparkles className="h-4 w-4 text-orange-600" />
+                    {addOn.name}
+                  </span>
+                  <span className="font-semibold text-slate-950">
+                    {formatCurrency(addOn.priceCents)}
+                  </span>
+                </span>
+                <span className="mt-1 text-sm leading-6 text-slate-600">
+                  {addOn.description}
+                </span>
+              </span>
+            </label>
+          ))}
+        </div>
         </section>
         ) : isCombinedStoreStep ? (
         <CollapsedFlowSection
@@ -1826,11 +1899,9 @@ export function BookingForm({
               </span>
             </div>
             <div className="mt-2 flex items-center justify-between gap-4">
-              <span className="text-slate-600">
-                {showStoreSection ? 'Snacks & essentials' : 'Add-ons'}
-              </span>
+              <span className="text-slate-600">Add-ons</span>
               <span className="font-semibold text-slate-950">
-                {showStoreSection ? formatCurrency(addonSubtotal) : 'Not included'}
+                {addonSubtotal > 0 ? formatCurrency(addonSubtotal) : 'Not included'}
               </span>
             </div>
             <div className="mt-2 flex items-center justify-between gap-4">
@@ -1874,6 +1945,26 @@ export function BookingForm({
                       </div>
                     );
                   })}
+              </div>
+            </div>
+          ) : null}
+          {serviceAddOnSubtotal > 0 ? (
+            <div className="mt-4 rounded-2xl border border-white/70 bg-white/80 p-4">
+              <p className="text-sm font-semibold text-slate-950">Service add-ons</p>
+              <div className="mt-3 space-y-2">
+                {serviceAddOns
+                  .filter((addOn) => selectedServiceAddOns[addOn.id])
+                  .map((addOn) => (
+                    <div
+                      key={addOn.id}
+                      className="flex items-center justify-between gap-4 text-sm"
+                    >
+                      <span className="text-slate-600">{addOn.name}</span>
+                      <span className="font-medium text-slate-950">
+                        {formatCurrency(addOn.priceCents)}
+                      </span>
+                    </div>
+                  ))}
               </div>
             </div>
           ) : null}

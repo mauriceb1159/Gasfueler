@@ -779,6 +779,7 @@ export enum VehicleClass {
 
 export enum FuelRequestItemType {
   STORE_ITEM = 'store_item',
+  SERVICE_ADDON = 'service_addon',
   FUEL = 'fuel',
   SERVICE_FEE = 'service_fee',
   DISCOUNT = 'discount',
