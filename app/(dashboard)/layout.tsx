@@ -293,7 +293,7 @@ function Header() {
     <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white px-3 py-3 sm:px-4 lg:px-6">
       <div className="mx-auto flex h-[62px] max-w-7xl items-center justify-between bg-white sm:h-[74px]">
         <div className="min-w-0 flex-1">
-          <Link href="/" className="-ml-3 flex w-fit shrink-0 items-center sm:-ml-4 lg:-ml-6">
+          <Link href="/" className="-ml-3 flex w-fit shrink-0 items-center sm:-ml-4 lg:ml-4">
             <div className="relative h-[58px] w-[360px] max-w-[80vw] shrink-0 overflow-hidden sm:h-[70px] sm:w-[420px] sm:max-w-none lg:h-[76px] lg:w-[590px]">
               <Image
                 src="/logos/gasbite-logo-shared.jpg"
