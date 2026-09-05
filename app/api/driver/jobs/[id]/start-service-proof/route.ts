@@ -8,11 +8,8 @@ import {
   dispatchJobs,
   DispatchAssignmentStatus,
   DispatchJobStatus,
-  DriverAvailabilityStatus,
   drivers,
-  FuelRequestStatus,
   fuelRequests,
-  orders,
 } from '@/lib/db/schema';
 import { notifyDriverStatusUpdated } from '@/lib/notifications/dispatch-notifications';
 
@@ -81,132 +78,44 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const formData = await request.formData();
-  const actualGallons = parseDecimalFormValue(formData.get('actualGallons'));
-  const actualPricePerGallon = parseDecimalFormValue(formData.get('actualPricePerGallon'));
-  const actualFuelTotal = parseDecimalFormValue(formData.get('actualFuelTotal'));
   const gasCapBeforePhoto = formData.get('gasCapBeforePhoto');
-  const gasCapAfterPhoto = formData.get('gasCapAfterPhoto');
-  const pumpPhoto = formData.get('pumpPhoto');
-  const receiptPhoto = formData.get('receiptPhoto');
-
-  if (!Number.isFinite(actualGallons) || actualGallons <= 0) {
-    return Response.json({ error: 'Enter actual gallons pumped.' }, { status: 400 });
-  }
-
-  if (!Number.isFinite(actualPricePerGallon) || actualPricePerGallon <= 0) {
-    return Response.json({ error: 'Enter the actual price per gallon.' }, { status: 400 });
-  }
-
-  if (!Number.isFinite(actualFuelTotal) || actualFuelTotal <= 0) {
-    return Response.json({ error: 'Enter the actual pump total.' }, { status: 400 });
-  }
-
-  if (!(pumpPhoto instanceof File) || pumpPhoto.size === 0) {
-    return Response.json({ error: 'Take a pump display photo.' }, { status: 400 });
-  }
-
-  if (receiptPhoto !== null && (!(receiptPhoto instanceof File) || receiptPhoto.size === 0)) {
-    return Response.json({ error: 'Receipt proof must be a photo.' }, { status: 400 });
-  }
-
-  const [fuelRequest] = await db
-    .select({
-      id: fuelRequests.id,
-      orderId: fuelRequests.orderId,
-      serviceFee: fuelRequests.serviceFee,
-      addonTotal: fuelRequests.addonTotal,
-    })
-    .from(fuelRequests)
-    .where(eq(fuelRequests.id, job.fuelRequestId))
-    .limit(1);
-
-  if (!fuelRequest) {
-    return Response.json({ error: 'Fuel request could not be found.' }, { status: 404 });
-  }
 
   try {
-    const [gasCapBeforePhotoPath, gasCapAfterPhotoPath, pumpPhotoPath, receiptPhotoPath] =
-      await Promise.all([
-        gasCapBeforePhoto instanceof File && gasCapBeforePhoto.size > 0
-          ? uploadProofPhoto(fuelRequest.id, 'gas-cap-before', gasCapBeforePhoto)
-          : Promise.resolve(null),
-        gasCapAfterPhoto instanceof File && gasCapAfterPhoto.size > 0
-          ? uploadProofPhoto(fuelRequest.id, 'gas-cap-secured', gasCapAfterPhoto)
-          : Promise.resolve(null),
-        uploadProofPhoto(fuelRequest.id, 'pump-screen', pumpPhoto),
-        receiptPhoto instanceof File
-          ? uploadProofPhoto(fuelRequest.id, 'receipt', receiptPhoto)
-          : Promise.resolve(null),
-      ]);
-
-    const actualFuelTotalCents = Math.round(actualFuelTotal * 100);
+    const gasCapBeforePhotoPath =
+      gasCapBeforePhoto instanceof File && gasCapBeforePhoto.size > 0
+        ? await uploadProofPhoto(job.fuelRequestId, 'gas-cap-before', gasCapBeforePhoto)
+        : null;
 
     await db
       .update(fuelRequests)
       .set({
-        actualGallons: Math.round(actualGallons * 1000),
-        actualPricePerGallon: Math.round(actualPricePerGallon * 100),
-        actualFuelTotal: actualFuelTotalCents,
-        fuelEstimate: actualFuelTotalCents,
-        totalEstimate: actualFuelTotalCents + fuelRequest.serviceFee + fuelRequest.addonTotal,
-        ...(gasCapBeforePhotoPath
-          ? { gasCapBeforePhotoUrl: gasCapBeforePhotoPath }
-          : {}),
-        gasCapAfterPhotoUrl: gasCapAfterPhotoPath,
-        gasCapPhotoUrl: gasCapAfterPhotoPath,
-        pumpPhotoUrl: pumpPhotoPath,
-        receiptPhotoUrl: receiptPhotoPath,
-        completedAt: new Date(),
-        status: FuelRequestStatus.COMPLETED,
+        gasCapBeforePhotoUrl: gasCapBeforePhotoPath,
         updatedAt: new Date(),
       })
-      .where(eq(fuelRequests.id, fuelRequest.id));
-
-    if (fuelRequest.orderId) {
-      await db
-        .update(orders)
-        .set({
-          status: FuelRequestStatus.COMPLETED,
-          fuelSubtotal: actualFuelTotalCents,
-          storeSubtotal: fuelRequest.addonTotal,
-          serviceFee: fuelRequest.serviceFee,
-          taxTotal: 0,
-          totalAmount: actualFuelTotalCents + fuelRequest.serviceFee + fuelRequest.addonTotal,
-          updatedAt: new Date(),
-        })
-        .where(eq(orders.id, fuelRequest.orderId));
-    }
+      .where(eq(fuelRequests.id, job.fuelRequestId));
 
     await db
       .update(dispatchJobs)
       .set({
-        status: DispatchJobStatus.COMPLETED,
+        status: DispatchJobStatus.SERVICING,
         updatedAt: new Date(),
       })
       .where(eq(dispatchJobs.id, jobId));
 
-    await db
-      .update(drivers)
-      .set({
-        availabilityStatus: DriverAvailabilityStatus.AVAILABLE,
-        updatedAt: new Date(),
-      })
-      .where(eq(drivers.id, driver.id));
-
     await db.insert(dispatchEvents).values({
       dispatchJobId: jobId,
       actorUserId: user.id,
-      eventType: 'driver_proof_completed',
+      eventType: 'driver_started_service',
       payload: {
         driverId: driver.id,
-        fuelRequestId: fuelRequest.id,
-        hasReceiptPhoto: Boolean(receiptPhotoPath),
+        fuelRequestId: job.fuelRequestId,
+        hasGasCapBeforePhoto: Boolean(gasCapBeforePhotoPath),
       },
     });
 
-    await notifyDriverStatusUpdated(jobId, DispatchJobStatus.COMPLETED);
+    await notifyDriverStatusUpdated(jobId, DispatchJobStatus.SERVICING);
 
-    const completedJob = await db.query.dispatchJobs.findFirst({
+    const updatedJob = await db.query.dispatchJobs.findFirst({
       where: eq(dispatchJobs.id, jobId),
       with: {
         customerUser: {
@@ -249,14 +158,14 @@ export async function POST(request: Request, context: RouteContext) {
       },
     });
 
-    return Response.json(completedJob);
+    return Response.json(updatedJob);
   } catch (error) {
     return Response.json(
       {
         error:
           error instanceof Error
             ? error.message
-            : 'Unable to save driver proof right now.',
+            : 'Unable to start service proof right now.',
       },
       { status: 500 }
     );
@@ -322,18 +231,4 @@ function getSafeFileExtension(file: File) {
   if (file.type === 'image/jpeg') return 'jpg';
 
   return null;
-}
-
-function parseDecimalFormValue(value: FormDataEntryValue | null) {
-  if (typeof value !== 'string') {
-    return Number.NaN;
-  }
-
-  const normalizedValue = value.trim().replace(/[$,]/g, '');
-
-  if (!normalizedValue) {
-    return Number.NaN;
-  }
-
-  return Number(normalizedValue);
 }
