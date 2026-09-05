@@ -126,11 +126,11 @@ export function Login({
               alt="GasBite"
               fill
               priority
-              className="object-contain object-left mix-blend-multiply scale-[2.1]"
+              className="object-contain mix-blend-multiply scale-[2.1]"
               sizes="224px"
               style={{
-                objectPosition: 'left center',
-                transformOrigin: 'left center'
+                objectPosition: 'center',
+                transformOrigin: 'center'
               }}
             />
           </div>
