@@ -1,12 +1,13 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CircleIcon, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { getPostAuthRedirectForRole, type UserRole } from '@/lib/auth/roles';
 
 export function Login({
@@ -119,7 +120,14 @@ export function Login({
     <div className="min-h-[100dvh] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <CircleIcon className="h-12 w-12 text-orange-500" />
+          <Image
+            src="/logos/gasbite-logo-header-transparent.png"
+            alt="GasBite"
+            width={156}
+            height={64}
+            priority
+            className="h-16 w-auto object-contain"
+          />
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
           {mode === 'signin'
