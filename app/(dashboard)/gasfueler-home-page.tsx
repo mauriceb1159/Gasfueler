@@ -183,13 +183,13 @@ export function GasFuelerHomePage({
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </a>
-              <a href="/pricing" className="w-full sm:w-auto">
+              <a href="/contact" className="w-full sm:w-auto">
                 <Button
                   size="lg"
                   variant="outline"
                   className="h-12 w-full rounded-lg border-[#f68b1f] bg-white px-7 text-base text-[#d96f12] shadow-sm hover:bg-[#fff6ec] sm:w-auto"
                 >
-                  View Pricing
+                  Request a Demo
                 </Button>
               </a>
             </div>
