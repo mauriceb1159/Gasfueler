@@ -153,7 +153,7 @@ export function BookingForm({
   const [combinedFlowStep, setCombinedFlowStep] =
     useState<CombinedFlowStep>('fuel');
   const [fuelGrade, setFuelGrade] = useState('regular');
-  const [requestType, setRequestType] = useState('fill_tank');
+  const [requestType, setRequestType] = useState('dollar_amount');
   const [requestedGallons, setRequestedGallons] = useState('');
   const [requestedDollarAmount, setRequestedDollarAmount] = useState('');
   const [selectedVehicleId, setSelectedVehicleId] = useState('');
@@ -623,7 +623,7 @@ export function BookingForm({
     setBookingMode('fuel_only');
     setCombinedFlowStep('fuel');
     setFuelGrade('regular');
-    setRequestType('fill_tank');
+    setRequestType('dollar_amount');
     setRequestedGallons('');
     setRequestedDollarAmount('');
     setSelectedVehicleId('');
