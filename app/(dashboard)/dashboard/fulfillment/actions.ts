@@ -58,10 +58,6 @@ export async function completeFuelRequestWithProof(
     return { error: 'Upload a pump screen photo.' };
   }
 
-  if (!(gasCapPhoto instanceof File) || gasCapPhoto.size === 0) {
-    return { error: 'Upload a gas cap door secured photo.' };
-  }
-
   const [request] = await db
     .select({
       id: fuelRequests.id,
@@ -80,7 +76,9 @@ export async function completeFuelRequestWithProof(
   try {
     const [pumpPhotoPath, gasCapPhotoPath] = await Promise.all([
       uploadProofPhoto(requestId, 'pump-screen', pumpPhoto),
-      uploadProofPhoto(requestId, 'gas-cap-secured', gasCapPhoto)
+      gasCapPhoto instanceof File && gasCapPhoto.size > 0
+        ? uploadProofPhoto(requestId, 'gas-cap-secured', gasCapPhoto)
+        : Promise.resolve(null)
     ]);
 
     const actualFuelTotalCents = Math.round(actualFuelTotal * 100);
@@ -121,13 +119,15 @@ export async function completeFuelRequestWithProof(
     await db.insert(requestStatusEvents).values({
       fuelRequestId: requestId,
       status: FuelRequestStatus.COMPLETED,
-      note: 'Fueling completed with pump screen and gas cap proof photos.',
+      note: gasCapPhotoPath
+        ? 'Fueling completed with pump screen and gas cap proof photos.'
+        : 'Fueling completed with pump screen proof photo.',
       createdBy: user.id
     });
 
     revalidatePath('/dashboard/fulfillment');
 
-    return { success: 'Fuel request completed and proof photos saved.' };
+    return { success: 'Fuel request completed and proof saved.' };
   } catch (error) {
     return {
       error:

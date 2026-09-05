@@ -87,7 +87,7 @@ export function FulfillmentProofForm({ requestId }: { requestId: number }) {
         </div>
         <div>
           <Label htmlFor={`gasCapPhoto-${requestId}`} className="mb-2">
-            Gas cap door secured photo
+            Gas cap door secured photo (optional during testing)
           </Label>
           <Input
             id={`gasCapPhoto-${requestId}`}
@@ -95,7 +95,6 @@ export function FulfillmentProofForm({ requestId }: { requestId: number }) {
             type="file"
             accept="image/*"
             capture="environment"
-            required
           />
         </div>
       </div>

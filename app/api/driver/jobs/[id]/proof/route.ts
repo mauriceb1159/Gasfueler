@@ -101,14 +101,6 @@ export async function POST(request: Request, context: RouteContext) {
     return Response.json({ error: 'Enter the actual pump total.' }, { status: 400 });
   }
 
-  if (!(gasCapBeforePhoto instanceof File) || gasCapBeforePhoto.size === 0) {
-    return Response.json({ error: 'Take a before gas cap photo.' }, { status: 400 });
-  }
-
-  if (!(gasCapAfterPhoto instanceof File) || gasCapAfterPhoto.size === 0) {
-    return Response.json({ error: 'Take an after gas cap secured photo.' }, { status: 400 });
-  }
-
   if (!(pumpPhoto instanceof File) || pumpPhoto.size === 0) {
     return Response.json({ error: 'Take a pump display photo.' }, { status: 400 });
   }
@@ -135,8 +127,12 @@ export async function POST(request: Request, context: RouteContext) {
   try {
     const [gasCapBeforePhotoPath, gasCapAfterPhotoPath, pumpPhotoPath, receiptPhotoPath] =
       await Promise.all([
-        uploadProofPhoto(fuelRequest.id, 'gas-cap-before', gasCapBeforePhoto),
-        uploadProofPhoto(fuelRequest.id, 'gas-cap-secured', gasCapAfterPhoto),
+        gasCapBeforePhoto instanceof File && gasCapBeforePhoto.size > 0
+          ? uploadProofPhoto(fuelRequest.id, 'gas-cap-before', gasCapBeforePhoto)
+          : Promise.resolve(null),
+        gasCapAfterPhoto instanceof File && gasCapAfterPhoto.size > 0
+          ? uploadProofPhoto(fuelRequest.id, 'gas-cap-secured', gasCapAfterPhoto)
+          : Promise.resolve(null),
         uploadProofPhoto(fuelRequest.id, 'pump-screen', pumpPhoto),
         receiptPhoto instanceof File
           ? uploadProofPhoto(fuelRequest.id, 'receipt', receiptPhoto)
