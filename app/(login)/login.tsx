@@ -120,14 +120,20 @@ export function Login({
     <div className="min-h-[100dvh] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <Image
-            src="/logos/gasbite-logo-header-transparent.png"
-            alt="GasBite"
-            width={156}
-            height={64}
-            priority
-            className="h-16 w-auto object-contain"
-          />
+          <div className="relative h-16 w-56 overflow-hidden">
+            <Image
+              src="/logos/gasbite-logo-shared.jpg"
+              alt="GasBite"
+              fill
+              priority
+              className="object-contain object-left mix-blend-multiply scale-[2.1]"
+              sizes="224px"
+              style={{
+                objectPosition: 'left center',
+                transformOrigin: 'left center'
+              }}
+            />
+          </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
           {mode === 'signin'
