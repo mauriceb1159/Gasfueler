@@ -165,7 +165,7 @@ export function GasFuelerHomePage({
 
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.18fr_0.82fr] lg:items-start lg:gap-12">
           <div className="max-w-2xl lg:max-w-3xl">
-            <h1 className="text-[2.4rem] font-[550] leading-[1.1] tracking-normal text-black sm:text-[2.85rem] sm:font-medium lg:text-[2.35rem] lg:leading-[1.12] xl:text-[2.75rem]">
+            <h1 className="text-center text-[2.4rem] font-[550] leading-[1.1] tracking-normal text-black sm:text-[2.85rem] sm:font-medium lg:text-left lg:text-[2.35rem] lg:leading-[1.12] xl:text-[2.75rem]">
               Full service touchless
               <span className="block">gas station fueling</span>
               <span className="block text-[#f68b1f]">
