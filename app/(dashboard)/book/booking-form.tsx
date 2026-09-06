@@ -11,7 +11,8 @@ import {
   ShoppingBag,
   ShoppingCart,
   Sparkles,
-  Store
+  Store,
+  Trash2
 } from 'lucide-react';
 
 import { submitFuelRequest, submitStoreFirstOrder } from './actions';
@@ -169,6 +170,11 @@ export function BookingForm({
   const [requestedGallons, setRequestedGallons] = useState('');
   const [requestedDollarAmount, setRequestedDollarAmount] = useState('');
   const [selectedVehicleId, setSelectedVehicleId] = useState('');
+  const [deletedVehicleIds, setDeletedVehicleIds] = useState<number[]>([]);
+  const [vehicleActionMessage, setVehicleActionMessage] = useState<string | null>(
+    null
+  );
+  const [deletingVehicleId, setDeletingVehicleId] = useState<number | null>(null);
   const [selectedSlotId, setSelectedSlotId] = useState('');
   const [isStationPickerOpen, setIsStationPickerOpen] = useState(true);
   const [fuelStepError, setFuelStepError] = useState<string | null>(null);
@@ -191,6 +197,11 @@ export function BookingForm({
   const [nearbyStatus, setNearbyStatus] = useState<
     'idle' | 'loading' | 'ready' | 'error' | 'unconfigured'
   >('idle');
+
+  const visibleVehicles = useMemo(
+    () => vehicles.filter((vehicle) => !deletedVehicleIds.includes(vehicle.id)),
+    [deletedVehicleIds, vehicles]
+  );
 
   const visibleStations = useMemo(() => {
     const baseStations = stations
@@ -316,14 +327,14 @@ export function BookingForm({
       return;
     }
 
-    const vehicle = vehicles.find(
+    const vehicle = visibleVehicles.find(
       (currentVehicle) => String(currentVehicle.id) === selectedVehicleId
     );
 
     if (vehicle?.vehicleClass) {
       setVehicleClass(vehicle.vehicleClass);
     }
-  }, [selectedVehicleId, vehicles]);
+  }, [selectedVehicleId, visibleVehicles]);
 
   const selectedStation =
     visibleStations.find((station) => station.id === selectedStationId) ?? null;
@@ -336,7 +347,7 @@ export function BookingForm({
   const requestedGallonsNumber = Number(requestedGallons);
   const requestedDollarAmountNumber = Number(requestedDollarAmount);
   const selectedVehicleRecord =
-    vehicles.find((vehicle) => String(vehicle.id) === selectedVehicleId) ?? null;
+    visibleVehicles.find((vehicle) => String(vehicle.id) === selectedVehicleId) ?? null;
   const effectiveVehicleClass = vehicleClass || 'suv';
   const isCommercialVehicle = effectiveVehicleClass === 'commercial';
   const isCombinedFlow = bookingMode === 'fuel_and_store';
@@ -429,7 +440,7 @@ export function BookingForm({
   const vehicleSummary = selectedVehicleRecord
     ? selectedVehicleRecord.nickname || selectedVehicleRecord.licensePlate
     : selectedVehicleId
-    ? 'Saved vehicle selected'
+    ? 'Vehicle selected'
     : 'Add or choose a vehicle';
   const selectedStationHasStoreCatalog = selectedStationStoreItems.length > 0;
 
@@ -564,6 +575,55 @@ export function BookingForm({
     }));
   }
 
+  async function handleDeleteSelectedVehicle() {
+    if (!selectedVehicleRecord || deletingVehicleId) {
+      return;
+    }
+
+    const vehicleLabel =
+      selectedVehicleRecord.nickname || selectedVehicleRecord.licensePlate;
+    const shouldDelete = window.confirm(
+      `Remove ${vehicleLabel} from your garage?`
+    );
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    setDeletingVehicleId(selectedVehicleRecord.id);
+    setVehicleActionMessage(null);
+
+    try {
+      const response = await fetch(`/api/vehicles/${selectedVehicleRecord.id}`, {
+        method: 'DELETE'
+      });
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        setVehicleActionMessage(
+          (payload &&
+            typeof payload === 'object' &&
+            'error' in payload &&
+            typeof payload.error === 'string' &&
+            payload.error) ||
+            'Unable to remove that vehicle right now.'
+        );
+        return;
+      }
+
+      setDeletedVehicleIds((currentIds) => [
+        ...currentIds,
+        selectedVehicleRecord.id
+      ]);
+      setSelectedVehicleId('');
+      setVehicleActionMessage('Vehicle removed from your garage.');
+    } catch {
+      setVehicleActionMessage('Unable to remove that vehicle right now.');
+    } finally {
+      setDeletingVehicleId(null);
+    }
+  }
+
   const selectedStoreItemsPayload = JSON.stringify(
     Object.entries(selectedStoreItems)
       .map(([stationStoreItemId, quantity]) => ({
@@ -661,6 +721,9 @@ export function BookingForm({
     setRequestedGallons('');
     setRequestedDollarAmount('');
     setSelectedVehicleId('');
+    setDeletedVehicleIds([]);
+    setVehicleActionMessage(null);
+    setDeletingVehicleId(null);
     setSelectedSlotId('');
     setIsStationPickerOpen(true);
     setFuelStepError(null);
@@ -1656,16 +1719,19 @@ export function BookingForm({
         {!storeFirst && (!isCombinedFlow || isCombinedFuelStep) ? (
         <section className="space-y-4">
         <SectionTitle icon={Navigation} title="Vehicle details" />
-        <Field label="Saved vehicle" htmlFor="vehicleId">
+        <Field label="Select or add vehicle" htmlFor="vehicleId">
           <select
             id="vehicleId"
             name="vehicleId"
             value={selectedVehicleId}
-            onChange={(event) => setSelectedVehicleId(event.target.value)}
+            onChange={(event) => {
+              setSelectedVehicleId(event.target.value);
+              setVehicleActionMessage(null);
+            }}
             className="flex h-12 w-full rounded-full border border-input bg-white px-4 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
           >
-            <option value="">Add a new vehicle below</option>
-            {vehicles.map((vehicle) => (
+            <option value="">Add a new vehicle</option>
+            {visibleVehicles.map((vehicle) => (
               <option key={vehicle.id} value={vehicle.id}>
                 {vehicle.nickname || vehicle.licensePlate}
                 {vehicle.vehicleClass
@@ -1675,15 +1741,48 @@ export function BookingForm({
             ))}
           </select>
         </Field>
+        {selectedVehicleRecord ? (
+          <div className="flex flex-col gap-2 rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-slate-950">
+                {selectedVehicleRecord.nickname || selectedVehicleRecord.licensePlate}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-slate-500">
+                Selected for this booking. You can remove it from your garage if
+                it has not been used on a previous order.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleDeleteSelectedVehicle}
+              disabled={deletingVehicleId === selectedVehicleRecord.id}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-red-200 bg-white px-4 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Trash2 className="h-4 w-4" />
+              {deletingVehicleId === selectedVehicleRecord.id
+                ? 'Removing...'
+                : 'Remove from garage'}
+            </button>
+          </div>
+        ) : null}
+        {vehicleActionMessage ? (
+          <p className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+            {vehicleActionMessage}
+          </p>
+        ) : null}
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Vehicle nickname" htmlFor="nickname">
-            <Input id="nickname" name="nickname" placeholder="Family SUV" />
+          <Field label="Vehicle label (optional)" htmlFor="nickname">
+            <Input
+              id="nickname"
+              name="nickname"
+              placeholder="Family SUV, work truck, mom's car"
+            />
           </Field>
           <Field label="License plate" htmlFor="licensePlate">
             <Input
               id="licensePlate"
               name="licensePlate"
-              placeholder="Required for new vehicles"
+              placeholder="Required when adding a vehicle"
             />
           </Field>
           <Field label="Vehicle type" htmlFor="vehicleClass">

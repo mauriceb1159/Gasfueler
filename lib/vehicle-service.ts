@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import { db } from '@/lib/db/drizzle';
 import {
+  fuelRequests,
   type NewVehicle,
   type User,
   vehicles,
@@ -117,4 +118,34 @@ export async function updateVehicleForUser(
     .returning();
 
   return updatedVehicle;
+}
+
+export async function deleteVehicleForUser(vehicleId: number, user: User) {
+  const existingVehicle = await db.query.vehicles.findFirst({
+    where: and(eq(vehicles.id, vehicleId), eq(vehicles.userId, user.id))
+  });
+
+  if (!existingVehicle) {
+    return { error: 'Vehicle not found.' as const, status: 404 as const };
+  }
+
+  const [linkedRequest] = await db
+    .select({ id: fuelRequests.id })
+    .from(fuelRequests)
+    .where(eq(fuelRequests.vehicleId, vehicleId))
+    .limit(1);
+
+  if (linkedRequest) {
+    return {
+      error:
+        'This vehicle is tied to a previous booking, so it is kept for service records.' as const,
+      status: 409 as const
+    };
+  }
+
+  await db
+    .delete(vehicles)
+    .where(and(eq(vehicles.id, vehicleId), eq(vehicles.userId, user.id)));
+
+  return { success: true as const };
 }

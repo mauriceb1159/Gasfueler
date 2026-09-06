@@ -1,5 +1,9 @@
 import { getUser } from '@/lib/db/queries';
-import { updateVehicleForUser, updateVehicleInputSchema } from '@/lib/vehicle-service';
+import {
+  deleteVehicleForUser,
+  updateVehicleForUser,
+  updateVehicleInputSchema
+} from '@/lib/vehicle-service';
 
 type RouteContext = {
   params: Promise<{
@@ -45,4 +49,27 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   return Response.json(vehicle);
+}
+
+export async function DELETE(_: Request, context: RouteContext) {
+  const user = await getUser();
+
+  if (!user) {
+    return Response.json({ error: 'User is not authenticated.' }, { status: 401 });
+  }
+
+  const { id } = await context.params;
+  const vehicleId = Number(id);
+
+  if (!Number.isInteger(vehicleId) || vehicleId <= 0) {
+    return Response.json({ error: 'Invalid vehicle id.' }, { status: 400 });
+  }
+
+  const result = await deleteVehicleForUser(vehicleId, user);
+
+  if ('error' in result) {
+    return Response.json({ error: result.error }, { status: result.status });
+  }
+
+  return Response.json({ success: true });
 }
