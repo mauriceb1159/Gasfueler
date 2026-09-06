@@ -581,16 +581,9 @@ export function BookingForm({
     }
 
     const vehicleLabel = vehicle.nickname || vehicle.licensePlate;
-    const shouldDelete = window.confirm(
-      `Remove ${vehicleLabel} from your garage?`
-    );
-
-    if (!shouldDelete) {
-      return;
-    }
 
     setDeletingVehicleId(vehicle.id);
-    setVehicleActionMessage(null);
+    setVehicleActionMessage(`Removing ${vehicleLabel}...`);
 
     try {
       const response = await fetch(`/api/vehicles/${vehicle.id}`, {
@@ -1784,7 +1777,11 @@ export function BookingForm({
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDeleteVehicle(vehicle)}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        void handleDeleteVehicle(vehicle);
+                      }}
                       disabled={deletingVehicleId === vehicle.id}
                       className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-full border border-red-200 bg-white px-4 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                     >
@@ -1801,7 +1798,10 @@ export function BookingForm({
           </div>
         ) : null}
         {vehicleActionMessage ? (
-          <p className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+          <p
+            aria-live="polite"
+            className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-medium text-orange-900"
+          >
             {vehicleActionMessage}
           </p>
         ) : null}
