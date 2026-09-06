@@ -6,7 +6,10 @@ import {
   Camera,
   CheckCircle2,
   CreditCard,
+  Download,
+  FileText,
   Fuel,
+  Mail,
   MapPinned
 } from 'lucide-react';
 
@@ -51,6 +54,18 @@ export default async function RequestDetailsPage({
   const canManageRequestFulfillment = canManageFulfillment(user.role);
   const isRequestOwner = request.userId === user.id;
   const needsPayment = request.status === FuelRequestStatus.PENDING_PAYMENT;
+  const hasTireVisualCheck = Boolean(
+    request.order?.orderItems.some(
+      (item) => item.itemName.toLowerCase() === 'tire visual check'
+    )
+  );
+  const tirePhotoCount = [
+    request.tireFrontLeftPhotoUrl,
+    request.tireFrontRightPhotoUrl,
+    request.tireRearLeftPhotoUrl,
+    request.tireRearRightPhotoUrl
+  ].filter(Boolean).length;
+  const tireReportReady = Boolean(request.tireReportUrl);
   const canCancelRequest =
     request.status !== FuelRequestStatus.COMPLETED &&
     request.status !== FuelRequestStatus.CANCELED &&
@@ -193,6 +208,83 @@ export default async function RequestDetailsPage({
                 )}
               </CardContent>
             </Card>
+
+            {hasTireVisualCheck ? (
+              <Card className="rounded-[1.5rem] border-orange-100 sm:rounded-[2rem]">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl text-slate-950 sm:text-2xl">
+                    <FileText className="h-5 w-5 text-orange-600" />
+                    Tire Visual Check Report
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div
+                    className={`rounded-2xl border p-4 text-sm ${
+                      tireReportReady
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                        : tirePhotoCount > 0
+                          ? 'border-orange-200 bg-orange-50 text-orange-900'
+                          : 'border-slate-200 bg-slate-50 text-slate-700'
+                    }`}
+                  >
+                    <p className="font-semibold">
+                      {tireReportReady
+                        ? 'Report ready'
+                        : tirePhotoCount > 0
+                          ? 'Photos received'
+                          : 'Waiting on tire photos'}
+                    </p>
+                    <p className="mt-2 leading-6">
+                      {tireReportReady
+                        ? 'Your tire visual check report is available for download.'
+                        : tirePhotoCount > 0
+                          ? `${tirePhotoCount} tire photo${
+                              tirePhotoCount === 1 ? '' : 's'
+                            } saved. The report can be generated from the submitted photos.`
+                          : 'The attendant will capture tire condition and tread photos during service if this add-on is completed.'}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+                    Generated from attendant-submitted photos. This is a visual
+                    snapshot only and is not a certified safety inspection.
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    {tireReportReady && request.tireReportUrl ? (
+                      <Button
+                        asChild
+                        className="rounded-full bg-slate-950 text-white hover:bg-slate-800"
+                      >
+                        <a href={request.tireReportUrl}>
+                          <Download className="h-4 w-4" />
+                          Download report
+                        </a>
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled
+                        className="rounded-full"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download report
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled
+                      className="rounded-full"
+                    >
+                      <Mail className="h-4 w-4" />
+                      Email me this report
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : null}
           </div>
 
           <div className="space-y-6">
