@@ -175,6 +175,7 @@ export function BookingForm({
     null
   );
   const [deletingVehicleId, setDeletingVehicleId] = useState<number | null>(null);
+  const [isVehicleManagerOpen, setIsVehicleManagerOpen] = useState(false);
   const [selectedSlotId, setSelectedSlotId] = useState('');
   const [isStationPickerOpen, setIsStationPickerOpen] = useState(true);
   const [fuelStepError, setFuelStepError] = useState<string | null>(null);
@@ -715,6 +716,7 @@ export function BookingForm({
     setDeletedVehicleIds([]);
     setVehicleActionMessage(null);
     setDeletingVehicleId(null);
+    setIsVehicleManagerOpen(false);
     setSelectedSlotId('');
     setIsStationPickerOpen(true);
     setFuelStepError(null);
@@ -1733,68 +1735,92 @@ export function BookingForm({
           </select>
         </Field>
         {visibleVehicles.length > 0 ? (
-          <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-slate-950">
-                Saved vehicles
-              </p>
-              <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-500">
-                {visibleVehicles.length} saved
+          <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3">
+            <button
+              type="button"
+              onClick={() => setIsVehicleManagerOpen((isOpen) => !isOpen)}
+              className="flex w-full items-center justify-between gap-3 text-left"
+              aria-expanded={isVehicleManagerOpen}
+            >
+              <span>
+                <span className="block text-sm font-semibold text-slate-950">
+                  Manage saved vehicles
+                </span>
+                <span className="mt-1 block text-xs text-slate-500">
+                  {visibleVehicles.length} saved
+                  {selectedVehicleRecord
+                    ? ` - using ${
+                        selectedVehicleRecord.nickname ||
+                        selectedVehicleRecord.licensePlate
+                      }`
+                    : ''}
+                </span>
               </span>
-            </div>
-            <div className="mt-3 grid gap-2">
-              {visibleVehicles.map((vehicle) => {
-                const vehicleLabel = vehicle.nickname || vehicle.licensePlate;
-                const isSelected = String(vehicle.id) === selectedVehicleId;
+              <span className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600">
+                {isVehicleManagerOpen ? 'Hide' : 'Show'}
+              </span>
+            </button>
+            {isVehicleManagerOpen ? (
+              <>
+                <div className="mt-3 grid gap-2">
+                  {visibleVehicles.map((vehicle) => {
+                    const vehicleLabel =
+                      vehicle.nickname || vehicle.licensePlate;
+                    const isSelected = String(vehicle.id) === selectedVehicleId;
 
-                return (
-                  <div
-                    key={vehicle.id}
-                    className={`flex flex-col gap-3 rounded-2xl border bg-white p-3 transition sm:flex-row sm:items-center sm:justify-between ${
-                      isSelected
-                        ? 'border-orange-200 ring-2 ring-orange-100'
-                        : 'border-slate-200'
-                    }`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedVehicleId(String(vehicle.id));
-                        setVehicleActionMessage(null);
-                      }}
-                      className="min-w-0 text-left"
-                    >
-                      <span className="block text-sm font-semibold text-slate-950">
-                        {vehicleLabel}
-                      </span>
-                      <span className="mt-1 block text-xs text-slate-500">
-                        {vehicle.licensePlate}
-                        {vehicle.vehicleClass
-                          ? ` - ${formatVehicleClass(vehicle.vehicleClass)}`
-                          : ''}
-                        {isSelected ? ' - selected' : ''}
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        void handleDeleteVehicle(vehicle);
-                      }}
-                      disabled={deletingVehicleId === vehicle.id}
-                      className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-full border border-red-200 bg-white px-4 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      {deletingVehicleId === vehicle.id ? 'Removing...' : 'Remove'}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-            <p className="mt-3 text-xs leading-5 text-slate-500">
-              Vehicles already used on bookings stay saved for service records.
-            </p>
+                    return (
+                      <div
+                        key={vehicle.id}
+                        className={`flex flex-col gap-3 rounded-2xl border bg-white p-3 transition sm:flex-row sm:items-center sm:justify-between ${
+                          isSelected
+                            ? 'border-orange-200 ring-2 ring-orange-100'
+                            : 'border-slate-200'
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedVehicleId(String(vehicle.id));
+                            setVehicleActionMessage(null);
+                          }}
+                          className="min-w-0 text-left"
+                        >
+                          <span className="block text-sm font-semibold text-slate-950">
+                            {vehicleLabel}
+                          </span>
+                          <span className="mt-1 block text-xs text-slate-500">
+                            {vehicle.licensePlate}
+                            {vehicle.vehicleClass
+                              ? ` - ${formatVehicleClass(vehicle.vehicleClass)}`
+                              : ''}
+                            {isSelected ? ' - selected' : ''}
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            void handleDeleteVehicle(vehicle);
+                          }}
+                          disabled={deletingVehicleId === vehicle.id}
+                          className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-full border border-red-200 bg-white px-4 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          {deletingVehicleId === vehicle.id
+                            ? 'Removing...'
+                            : 'Remove'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="mt-3 text-xs leading-5 text-slate-500">
+                  Vehicles already used on bookings stay saved for service
+                  records.
+                </p>
+              </>
+            ) : null}
           </div>
         ) : null}
         {vehicleActionMessage ? (
