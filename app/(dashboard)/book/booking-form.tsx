@@ -575,13 +575,12 @@ export function BookingForm({
     }));
   }
 
-  async function handleDeleteSelectedVehicle() {
-    if (!selectedVehicleRecord || deletingVehicleId) {
+  async function handleDeleteVehicle(vehicle: VehicleRecord) {
+    if (deletingVehicleId) {
       return;
     }
 
-    const vehicleLabel =
-      selectedVehicleRecord.nickname || selectedVehicleRecord.licensePlate;
+    const vehicleLabel = vehicle.nickname || vehicle.licensePlate;
     const shouldDelete = window.confirm(
       `Remove ${vehicleLabel} from your garage?`
     );
@@ -590,11 +589,11 @@ export function BookingForm({
       return;
     }
 
-    setDeletingVehicleId(selectedVehicleRecord.id);
+    setDeletingVehicleId(vehicle.id);
     setVehicleActionMessage(null);
 
     try {
-      const response = await fetch(`/api/vehicles/${selectedVehicleRecord.id}`, {
+      const response = await fetch(`/api/vehicles/${vehicle.id}`, {
         method: 'DELETE'
       });
       const payload = await response.json().catch(() => null);
@@ -611,11 +610,10 @@ export function BookingForm({
         return;
       }
 
-      setDeletedVehicleIds((currentIds) => [
-        ...currentIds,
-        selectedVehicleRecord.id
-      ]);
-      setSelectedVehicleId('');
+      setDeletedVehicleIds((currentIds) => [...currentIds, vehicle.id]);
+      setSelectedVehicleId((currentVehicleId) =>
+        currentVehicleId === String(vehicle.id) ? '' : currentVehicleId
+      );
       setVehicleActionMessage('Vehicle removed from your garage.');
     } catch {
       setVehicleActionMessage('Unable to remove that vehicle right now.');
@@ -1741,28 +1739,65 @@ export function BookingForm({
             ))}
           </select>
         </Field>
-        {selectedVehicleRecord ? (
-          <div className="flex flex-col gap-2 rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
+        {visibleVehicles.length > 0 ? (
+          <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4">
+            <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-semibold text-slate-950">
-                {selectedVehicleRecord.nickname || selectedVehicleRecord.licensePlate}
+                Saved vehicles
               </p>
-              <p className="mt-1 text-xs leading-5 text-slate-500">
-                Selected for this booking. You can remove it from your garage if
-                it has not been used on a previous order.
-              </p>
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-500">
+                {visibleVehicles.length} saved
+              </span>
             </div>
-            <button
-              type="button"
-              onClick={handleDeleteSelectedVehicle}
-              disabled={deletingVehicleId === selectedVehicleRecord.id}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-red-200 bg-white px-4 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <Trash2 className="h-4 w-4" />
-              {deletingVehicleId === selectedVehicleRecord.id
-                ? 'Removing...'
-                : 'Remove from garage'}
-            </button>
+            <div className="mt-3 grid gap-2">
+              {visibleVehicles.map((vehicle) => {
+                const vehicleLabel = vehicle.nickname || vehicle.licensePlate;
+                const isSelected = String(vehicle.id) === selectedVehicleId;
+
+                return (
+                  <div
+                    key={vehicle.id}
+                    className={`flex flex-col gap-3 rounded-2xl border bg-white p-3 transition sm:flex-row sm:items-center sm:justify-between ${
+                      isSelected
+                        ? 'border-orange-200 ring-2 ring-orange-100'
+                        : 'border-slate-200'
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedVehicleId(String(vehicle.id));
+                        setVehicleActionMessage(null);
+                      }}
+                      className="min-w-0 text-left"
+                    >
+                      <span className="block text-sm font-semibold text-slate-950">
+                        {vehicleLabel}
+                      </span>
+                      <span className="mt-1 block text-xs text-slate-500">
+                        {vehicle.licensePlate}
+                        {vehicle.vehicleClass
+                          ? ` - ${formatVehicleClass(vehicle.vehicleClass)}`
+                          : ''}
+                        {isSelected ? ' - selected' : ''}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteVehicle(vehicle)}
+                      disabled={deletingVehicleId === vehicle.id}
+                      className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-full border border-red-200 bg-white px-4 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      {deletingVehicleId === vehicle.id ? 'Removing...' : 'Remove'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-3 text-xs leading-5 text-slate-500">
+              Vehicles already used on bookings stay saved for service records.
+            </p>
           </div>
         ) : null}
         {vehicleActionMessage ? (
