@@ -214,7 +214,7 @@ function RequestCard({
                 variant="outline"
                 className="rounded-full border-red-300 bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800"
               >
-                Delete test booking
+                Remove record
               </Button>
             </form>
           </div>

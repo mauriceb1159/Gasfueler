@@ -55,7 +55,7 @@ export default async function RequestDetailsPage({
     request.status !== FuelRequestStatus.COMPLETED &&
     request.status !== FuelRequestStatus.CANCELED &&
     (canManageRequestFulfillment || isRequestOwner);
-  const canDeleteTestRequest = canManageRequestFulfillment || isRequestOwner;
+  const canRemoveRequestRecord = canManageRequestFulfillment;
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#fff8f1_0%,#ffffff_60%)] px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
@@ -105,7 +105,7 @@ export default async function RequestDetailsPage({
                         </Button>
                       </form>
                     ) : null}
-                    {canDeleteTestRequest ? (
+                    {canRemoveRequestRecord ? (
                       <form action={deleteTestFuelRequest}>
                         <input type="hidden" name="requestId" value={request.id} />
                         <Button
@@ -113,7 +113,7 @@ export default async function RequestDetailsPage({
                           variant="outline"
                           className="rounded-full border-red-300 bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800"
                         >
-                          Delete test booking
+                          Remove record
                         </Button>
                       </form>
                     ) : null}
