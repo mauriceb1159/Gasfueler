@@ -1,6 +1,6 @@
 'use server';
 
-import { eq, inArray } from 'drizzle-orm';
+import { eq, inArray, or } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
@@ -165,7 +165,14 @@ export async function deleteTestFuelRequest(formData: FormData) {
     const relatedDispatchJobs = await tx
       .select({ id: dispatchJobs.id })
       .from(dispatchJobs)
-      .where(eq(dispatchJobs.fuelRequestId, requestId));
+      .where(
+        request.orderId
+          ? or(
+              eq(dispatchJobs.fuelRequestId, requestId),
+              eq(dispatchJobs.orderId, request.orderId)
+            )
+          : eq(dispatchJobs.fuelRequestId, requestId)
+      );
     const relatedDispatchJobIds = relatedDispatchJobs.map((job) => job.id);
 
     if (relatedDispatchJobIds.length > 0) {
