@@ -1785,14 +1785,14 @@ export function BookingForm({
                           }}
                           className="min-w-0 text-left"
                         >
-                          <span className="block text-sm font-semibold text-slate-950">
-                            {vehicleLabel}
-                          </span>
-                          <span className="mt-1 block text-xs text-slate-500">
-                            {vehicle.licensePlate}
-                            {vehicle.vehicleClass
-                              ? ` - ${formatVehicleClass(vehicle.vehicleClass)}`
-                              : ''}
+                      <span className="block text-sm font-semibold text-slate-950">
+                        {vehicleLabel}
+                      </span>
+                      <span className="mt-1 block text-xs text-slate-500">
+                        Vehicle ID #{vehicle.id} - {vehicle.licensePlate}
+                        {vehicle.vehicleClass
+                          ? ` - ${formatVehicleClass(vehicle.vehicleClass)}`
+                          : ''}
                             {isSelected ? ' - selected' : ''}
                           </span>
                         </button>

@@ -140,7 +140,9 @@ export default async function RequestDetailsPage({
                   <InfoCard
                     icon={CreditCard}
                     label="Vehicle"
-                    value={`${request.vehicle.nickname || request.vehicle.licensePlate} (${request.vehicle.licensePlate})`}
+                    value={`Vehicle ID #${request.vehicle.id} - ${
+                      request.vehicle.nickname || request.vehicle.licensePlate
+                    } (${request.vehicle.licensePlate})`}
                   />
                 </div>
 

@@ -137,8 +137,7 @@ export async function deleteVehicleForUser(vehicleId: number, user: User) {
 
   if (linkedRequest) {
     return {
-      error:
-        'This vehicle is tied to a previous booking, so it is kept for service records.' as const,
+      error: `This vehicle is tied to booking #${linkedRequest.id}. Delete that test booking first, then remove the vehicle.` as const,
       status: 409 as const
     };
   }

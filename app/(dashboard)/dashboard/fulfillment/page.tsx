@@ -172,7 +172,9 @@ function RequestCard({
             />
             <InfoRow
               label="Vehicle"
-              value={`${request.vehicle.nickname || request.vehicle.licensePlate} (${request.vehicle.licensePlate})`}
+              value={`Vehicle ID #${request.vehicle.id} - ${
+                request.vehicle.nickname || request.vehicle.licensePlate
+              } (${request.vehicle.licensePlate})`}
             />
             <InfoRow label="Fuel grade" value={formatFuelGrade(request.fuelGrade)} />
             <InfoRow label="Requested type" value={formatFuelGrade(request.requestType)} />
