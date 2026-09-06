@@ -493,6 +493,12 @@ export const createPartnerStation = validatedActionWithUser(
         fuelGrade: 'premium',
         priceCents: 519,
         source: 'manual'
+      },
+      {
+        stationId: station.id,
+        fuelGrade: 'diesel',
+        priceCents: 559,
+        source: 'manual'
       }
     ]);
 

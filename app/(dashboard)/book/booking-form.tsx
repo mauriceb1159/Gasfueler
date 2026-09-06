@@ -74,6 +74,11 @@ type VehicleRecord = {
   nickname: string | null;
   licensePlate: string;
   vehicleClass: string | null;
+  make: string | null;
+  model: string | null;
+  color: string | null;
+  fuelType: string | null;
+  notes: string | null;
 };
 
 type NearbyGasStation = {
@@ -151,6 +156,7 @@ export function BookingForm({
   initialError?: string;
   successOrderId?: string;
 }) {
+  const initialVehicle = vehicles[0] ?? null;
   const [locationStatus, setLocationStatus] = useState<
     'idle' | 'locating' | 'granted' | 'denied' | 'unsupported'
   >('idle');
@@ -169,7 +175,9 @@ export function BookingForm({
   const [requestType, setRequestType] = useState('dollar_amount');
   const [requestedGallons, setRequestedGallons] = useState('');
   const [requestedDollarAmount, setRequestedDollarAmount] = useState('');
-  const [selectedVehicleId, setSelectedVehicleId] = useState('');
+  const [selectedVehicleId, setSelectedVehicleId] = useState(
+    initialVehicle ? String(initialVehicle.id) : ''
+  );
   const [deletedVehicleIds, setDeletedVehicleIds] = useState<number[]>([]);
   const [vehicleActionMessage, setVehicleActionMessage] = useState<string | null>(
     null
@@ -179,7 +187,9 @@ export function BookingForm({
   const [selectedSlotId, setSelectedSlotId] = useState('');
   const [isStationPickerOpen, setIsStationPickerOpen] = useState(true);
   const [fuelStepError, setFuelStepError] = useState<string | null>(null);
-  const [vehicleClass, setVehicleClass] = useState('suv');
+  const [vehicleClass, setVehicleClass] = useState(
+    initialVehicle?.vehicleClass || 'suv'
+  );
   const [pickupMode, setPickupMode] = useState<'asap' | 'scheduled' | 'on_arrival'>(
     'asap'
   );
@@ -712,7 +722,7 @@ export function BookingForm({
     setRequestType('dollar_amount');
     setRequestedGallons('');
     setRequestedDollarAmount('');
-    setSelectedVehicleId('');
+    setSelectedVehicleId(initialVehicle ? String(initialVehicle.id) : '');
     setDeletedVehicleIds([]);
     setVehicleActionMessage(null);
     setDeletingVehicleId(null);
@@ -720,7 +730,7 @@ export function BookingForm({
     setSelectedSlotId('');
     setIsStationPickerOpen(true);
     setFuelStepError(null);
-    setVehicleClass('suv');
+    setVehicleClass(initialVehicle?.vehicleClass || 'suv');
     setPickupMode('asap');
     setPickupWindowStart('');
     setPickupWindowEnd('');
@@ -1834,15 +1844,19 @@ export function BookingForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Vehicle label (optional)" htmlFor="nickname">
             <Input
+              key={`nickname-${selectedVehicleId || 'new'}`}
               id="nickname"
               name="nickname"
+              defaultValue={selectedVehicleRecord?.nickname ?? ''}
               placeholder="Family SUV, work truck, mom's car"
             />
           </Field>
           <Field label="License plate" htmlFor="licensePlate">
             <Input
+              key={`license-${selectedVehicleId || 'new'}`}
               id="licensePlate"
               name="licensePlate"
+              defaultValue={selectedVehicleRecord?.licensePlate ?? ''}
               placeholder="Required when adding a vehicle"
             />
           </Field>
@@ -1870,27 +1884,49 @@ export function BookingForm({
         ) : null}
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Make" htmlFor="make">
-            <Input id="make" name="make" placeholder="Toyota" />
+            <Input
+              key={`make-${selectedVehicleId || 'new'}`}
+              id="make"
+              name="make"
+              defaultValue={selectedVehicleRecord?.make ?? ''}
+              placeholder="Toyota"
+            />
           </Field>
           <Field label="Model" htmlFor="model">
-            <Input id="model" name="model" placeholder="Highlander" />
+            <Input
+              key={`model-${selectedVehicleId || 'new'}`}
+              id="model"
+              name="model"
+              defaultValue={selectedVehicleRecord?.model ?? ''}
+              placeholder="Highlander"
+            />
           </Field>
           <Field label="Color" htmlFor="color">
-            <Input id="color" name="color" placeholder="Gray" />
+            <Input
+              key={`color-${selectedVehicleId || 'new'}`}
+              id="color"
+              name="color"
+              defaultValue={selectedVehicleRecord?.color ?? ''}
+              placeholder="Gray"
+            />
           </Field>
         </div>
         <Field label="Fuel type" htmlFor="fuelType">
           <Input
+            key={`fuel-type-${selectedVehicleId || 'new'}`}
             id="fuelType"
             name="fuelType"
+            defaultValue={selectedVehicleRecord?.fuelType ?? ''}
             placeholder="Gasoline, hybrid, diesel, etc."
           />
         </Field>
         <Field label="Vehicle notes" htmlFor="vehicleNotes">
           <textarea
+            key={`vehicle-notes-${selectedVehicleId || 'new'}`}
             id="vehicleNotes"
             name="vehicleNotes"
             rows={3}
+            defaultValue={selectedVehicleRecord?.notes ?? ''}
             className="flex w-full rounded-3xl border border-input bg-transparent px-4 py-3 text-base shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
             placeholder="Anything that helps the attendant find or identify your vehicle"
           />

@@ -131,7 +131,8 @@ async function ensureDemoStation({
   const fuelGrades = [
     { fuelGrade: 'regular', priceCents: 459 },
     { fuelGrade: 'midgrade', priceCents: 489 },
-    { fuelGrade: 'premium', priceCents: 519 }
+    { fuelGrade: 'premium', priceCents: 519 },
+    { fuelGrade: 'diesel', priceCents: 559 }
   ];
 
   for (const fuelGrade of fuelGrades) {

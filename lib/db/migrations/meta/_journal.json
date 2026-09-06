@@ -127,6 +127,20 @@
       "when": 1776462000000,
       "tag": "0017_dispatch_realtime_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1776463000000,
+      "tag": "0018_fuel_request_expanded_proof_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1776464000000,
+      "tag": "0019_default_station_diesel_prices",
+      "breakpoints": true
     }
   ]
 }
