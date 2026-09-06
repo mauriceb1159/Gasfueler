@@ -99,6 +99,64 @@ export function FulfillmentProofForm({ requestId }: { requestId: number }) {
         </div>
       </div>
 
+      <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4">
+        <p className="font-semibold text-slate-950">Tire visual check</p>
+        <p className="mt-1 text-sm leading-6 text-slate-600">
+          Optional tire condition and tread photos for a later customer report.
+          Visual snapshot only, not a certified safety inspection.
+        </p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <Label htmlFor={`tireFrontLeftPhoto-${requestId}`} className="mb-2">
+              Front left tire
+            </Label>
+            <Input
+              id={`tireFrontLeftPhoto-${requestId}`}
+              name="tireFrontLeftPhoto"
+              type="file"
+              accept="image/*"
+              capture="environment"
+            />
+          </div>
+          <div>
+            <Label htmlFor={`tireFrontRightPhoto-${requestId}`} className="mb-2">
+              Front right tire
+            </Label>
+            <Input
+              id={`tireFrontRightPhoto-${requestId}`}
+              name="tireFrontRightPhoto"
+              type="file"
+              accept="image/*"
+              capture="environment"
+            />
+          </div>
+          <div>
+            <Label htmlFor={`tireRearLeftPhoto-${requestId}`} className="mb-2">
+              Rear left tire
+            </Label>
+            <Input
+              id={`tireRearLeftPhoto-${requestId}`}
+              name="tireRearLeftPhoto"
+              type="file"
+              accept="image/*"
+              capture="environment"
+            />
+          </div>
+          <div>
+            <Label htmlFor={`tireRearRightPhoto-${requestId}`} className="mb-2">
+              Rear right tire
+            </Label>
+            <Input
+              id={`tireRearRightPhoto-${requestId}`}
+              name="tireRearRightPhoto"
+              type="file"
+              accept="image/*"
+              capture="environment"
+            />
+          </div>
+        </div>
+      </div>
+
       {state.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
       {state.success ? (
         <p className="text-sm text-emerald-700">{state.success}</p>

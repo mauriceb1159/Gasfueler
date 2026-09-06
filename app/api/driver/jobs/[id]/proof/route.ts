@@ -88,6 +88,10 @@ export async function POST(request: Request, context: RouteContext) {
   const gasCapAfterPhoto = formData.get('gasCapAfterPhoto');
   const pumpPhoto = formData.get('pumpPhoto');
   const receiptPhoto = formData.get('receiptPhoto');
+  const tireFrontLeftPhoto = formData.get('tireFrontLeftPhoto');
+  const tireFrontRightPhoto = formData.get('tireFrontRightPhoto');
+  const tireRearLeftPhoto = formData.get('tireRearLeftPhoto');
+  const tireRearRightPhoto = formData.get('tireRearRightPhoto');
 
   if (!Number.isFinite(actualGallons) || actualGallons <= 0) {
     return Response.json({ error: 'Enter actual gallons pumped.' }, { status: 400 });
@@ -125,8 +129,16 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   try {
-    const [gasCapBeforePhotoPath, gasCapAfterPhotoPath, pumpPhotoPath, receiptPhotoPath] =
-      await Promise.all([
+    const [
+      gasCapBeforePhotoPath,
+      gasCapAfterPhotoPath,
+      pumpPhotoPath,
+      receiptPhotoPath,
+      tireFrontLeftPhotoPath,
+      tireFrontRightPhotoPath,
+      tireRearLeftPhotoPath,
+      tireRearRightPhotoPath,
+    ] = await Promise.all([
         gasCapBeforePhoto instanceof File && gasCapBeforePhoto.size > 0
           ? uploadProofPhoto(fuelRequest.id, 'gas-cap-before', gasCapBeforePhoto)
           : Promise.resolve(null),
@@ -136,6 +148,18 @@ export async function POST(request: Request, context: RouteContext) {
         uploadProofPhoto(fuelRequest.id, 'pump-screen', pumpPhoto),
         receiptPhoto instanceof File
           ? uploadProofPhoto(fuelRequest.id, 'receipt', receiptPhoto)
+          : Promise.resolve(null),
+        tireFrontLeftPhoto instanceof File && tireFrontLeftPhoto.size > 0
+          ? uploadProofPhoto(fuelRequest.id, 'tire-front-left', tireFrontLeftPhoto)
+          : Promise.resolve(null),
+        tireFrontRightPhoto instanceof File && tireFrontRightPhoto.size > 0
+          ? uploadProofPhoto(fuelRequest.id, 'tire-front-right', tireFrontRightPhoto)
+          : Promise.resolve(null),
+        tireRearLeftPhoto instanceof File && tireRearLeftPhoto.size > 0
+          ? uploadProofPhoto(fuelRequest.id, 'tire-rear-left', tireRearLeftPhoto)
+          : Promise.resolve(null),
+        tireRearRightPhoto instanceof File && tireRearRightPhoto.size > 0
+          ? uploadProofPhoto(fuelRequest.id, 'tire-rear-right', tireRearRightPhoto)
           : Promise.resolve(null),
       ]);
 
@@ -156,6 +180,10 @@ export async function POST(request: Request, context: RouteContext) {
         gasCapPhotoUrl: gasCapAfterPhotoPath,
         pumpPhotoUrl: pumpPhotoPath,
         receiptPhotoUrl: receiptPhotoPath,
+        tireFrontLeftPhotoUrl: tireFrontLeftPhotoPath,
+        tireFrontRightPhotoUrl: tireFrontRightPhotoPath,
+        tireRearLeftPhotoUrl: tireRearLeftPhotoPath,
+        tireRearRightPhotoUrl: tireRearRightPhotoPath,
         completedAt: new Date(),
         status: FuelRequestStatus.COMPLETED,
         updatedAt: new Date(),
@@ -201,6 +229,12 @@ export async function POST(request: Request, context: RouteContext) {
         driverId: driver.id,
         fuelRequestId: fuelRequest.id,
         hasReceiptPhoto: Boolean(receiptPhotoPath),
+        hasTireVisualCheckPhotos: Boolean(
+          tireFrontLeftPhotoPath ||
+            tireFrontRightPhotoPath ||
+            tireRearLeftPhotoPath ||
+            tireRearRightPhotoPath
+        ),
       },
     });
 

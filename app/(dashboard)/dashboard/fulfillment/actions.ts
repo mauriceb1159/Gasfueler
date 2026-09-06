@@ -37,6 +37,10 @@ export async function completeFuelRequestWithProof(
   const actualFuelTotal = parseDecimalFormValue(formData.get('actualFuelTotal'));
   const pumpPhoto = formData.get('pumpPhoto');
   const gasCapPhoto = formData.get('gasCapPhoto');
+  const tireFrontLeftPhoto = formData.get('tireFrontLeftPhoto');
+  const tireFrontRightPhoto = formData.get('tireFrontRightPhoto');
+  const tireRearLeftPhoto = formData.get('tireRearLeftPhoto');
+  const tireRearRightPhoto = formData.get('tireRearRightPhoto');
 
   if (!Number.isInteger(requestId) || requestId <= 0) {
     return { error: 'Choose a valid fuel request.' };
@@ -74,10 +78,29 @@ export async function completeFuelRequestWithProof(
   }
 
   try {
-    const [pumpPhotoPath, gasCapPhotoPath] = await Promise.all([
+    const [
+      pumpPhotoPath,
+      gasCapPhotoPath,
+      tireFrontLeftPhotoPath,
+      tireFrontRightPhotoPath,
+      tireRearLeftPhotoPath,
+      tireRearRightPhotoPath,
+    ] = await Promise.all([
       uploadProofPhoto(requestId, 'pump-screen', pumpPhoto),
       gasCapPhoto instanceof File && gasCapPhoto.size > 0
         ? uploadProofPhoto(requestId, 'gas-cap-secured', gasCapPhoto)
+        : Promise.resolve(null),
+      tireFrontLeftPhoto instanceof File && tireFrontLeftPhoto.size > 0
+        ? uploadProofPhoto(requestId, 'tire-front-left', tireFrontLeftPhoto)
+        : Promise.resolve(null),
+      tireFrontRightPhoto instanceof File && tireFrontRightPhoto.size > 0
+        ? uploadProofPhoto(requestId, 'tire-front-right', tireFrontRightPhoto)
+        : Promise.resolve(null),
+      tireRearLeftPhoto instanceof File && tireRearLeftPhoto.size > 0
+        ? uploadProofPhoto(requestId, 'tire-rear-left', tireRearLeftPhoto)
+        : Promise.resolve(null),
+      tireRearRightPhoto instanceof File && tireRearRightPhoto.size > 0
+        ? uploadProofPhoto(requestId, 'tire-rear-right', tireRearRightPhoto)
         : Promise.resolve(null)
     ]);
 
@@ -94,6 +117,10 @@ export async function completeFuelRequestWithProof(
           actualFuelTotalCents + request.serviceFee + request.addonTotal,
         pumpPhotoUrl: pumpPhotoPath,
         gasCapPhotoUrl: gasCapPhotoPath,
+        tireFrontLeftPhotoUrl: tireFrontLeftPhotoPath,
+        tireFrontRightPhotoUrl: tireFrontRightPhotoPath,
+        tireRearLeftPhotoUrl: tireRearLeftPhotoPath,
+        tireRearRightPhotoUrl: tireRearRightPhotoPath,
         completedAt: new Date(),
         status: FuelRequestStatus.COMPLETED,
         updatedAt: new Date()
@@ -140,7 +167,13 @@ export async function completeFuelRequestWithProof(
 
 async function uploadProofPhoto(
   requestId: number,
-  photoType: 'pump-screen' | 'gas-cap-secured',
+  photoType:
+    | 'pump-screen'
+    | 'gas-cap-secured'
+    | 'tire-front-left'
+    | 'tire-front-right'
+    | 'tire-rear-left'
+    | 'tire-rear-right',
   file: File
 ) {
   const supabaseUrl = process.env.SUPABASE_URL;

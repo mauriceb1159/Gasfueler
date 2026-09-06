@@ -59,6 +59,11 @@ const serviceAddOns = {
     id: 'window_squeegee',
     itemName: 'Window squeegee service',
     unitPrice: 399
+  },
+  tire_visual_check: {
+    id: 'tire_visual_check',
+    itemName: 'Tire visual check',
+    unitPrice: 799
   }
 } as const;
 

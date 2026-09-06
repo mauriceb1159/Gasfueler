@@ -96,6 +96,13 @@ const serviceAddOns = [
     name: 'Window squeegee service',
     description: 'Front windshield cleaned during your stop.',
     priceCents: 399
+  },
+  {
+    id: 'tire_visual_check',
+    name: 'Tire visual check',
+    description:
+      'Attendant captures tire condition and tread photos for a later customer report. Visual snapshot only, not a certified safety inspection.',
+    priceCents: 799
   }
 ] as const;
 
@@ -202,7 +209,8 @@ export function BookingForm({
   const [selectedServiceAddOns, setSelectedServiceAddOns] = useState<
     Record<ServiceAddOnId, boolean>
   >({
-    window_squeegee: false
+    window_squeegee: false,
+    tire_visual_check: false
   });
   const [isStoreSummaryOpen, setIsStoreSummaryOpen] = useState(false);
   const [nearbyStatus, setNearbyStatus] = useState<
@@ -736,9 +744,10 @@ export function BookingForm({
     setPickupWindowEnd('');
     setCustomerNotes('');
     setSelectedStoreItems({});
-    setSelectedServiceAddOns({
-      window_squeegee: false
-    });
+      setSelectedServiceAddOns({
+        window_squeegee: false,
+        tire_visual_check: false
+      });
     setIsStoreSummaryOpen(false);
     setNearbyStatus('idle');
   }
