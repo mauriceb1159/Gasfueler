@@ -1,6 +1,6 @@
 'use server';
 
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
@@ -9,8 +9,13 @@ import { completeDemoFuelPaymentForUser } from '@/lib/demo-fuel-payment';
 import { getUser } from '@/lib/db/queries';
 import { db } from '@/lib/db/drizzle';
 import {
+  dispatchAssignments,
+  dispatchEvents,
+  dispatchJobs,
+  fuelRequestItems,
   fuelRequests,
   FuelRequestStatus,
+  orderItems,
   orders,
   requestStatusEvents
 } from '@/lib/db/schema';
@@ -120,6 +125,77 @@ export async function cancelFuelRequest(formData: FormData) {
   });
 
   revalidatePath(`/requests/${requestId}`);
+  revalidatePath('/dashboard/fulfillment');
+
+  redirect('/dashboard/fulfillment');
+}
+
+export async function deleteTestFuelRequest(formData: FormData) {
+  const user = await getUser();
+
+  if (!user) {
+    redirect('/sign-in');
+  }
+
+  const requestId = Number(formData.get('requestId'));
+
+  if (!Number.isInteger(requestId) || requestId <= 0) {
+    redirect('/dashboard/fulfillment');
+  }
+
+  const [request] = await db
+    .select({
+      id: fuelRequests.id,
+      orderId: fuelRequests.orderId,
+      userId: fuelRequests.userId
+    })
+    .from(fuelRequests)
+    .where(eq(fuelRequests.id, requestId))
+    .limit(1);
+
+  if (!request) {
+    redirect('/dashboard/fulfillment');
+  }
+
+  if (!canManageFulfillment(user.role) && request.userId !== user.id) {
+    redirect(`/requests/${requestId}`);
+  }
+
+  await db.transaction(async (tx) => {
+    const relatedDispatchJobs = await tx
+      .select({ id: dispatchJobs.id })
+      .from(dispatchJobs)
+      .where(eq(dispatchJobs.fuelRequestId, requestId));
+    const relatedDispatchJobIds = relatedDispatchJobs.map((job) => job.id);
+
+    if (relatedDispatchJobIds.length > 0) {
+      await tx
+        .delete(dispatchEvents)
+        .where(inArray(dispatchEvents.dispatchJobId, relatedDispatchJobIds));
+      await tx
+        .delete(dispatchAssignments)
+        .where(inArray(dispatchAssignments.dispatchJobId, relatedDispatchJobIds));
+      await tx
+        .delete(dispatchJobs)
+        .where(inArray(dispatchJobs.id, relatedDispatchJobIds));
+    }
+
+    await tx
+      .delete(requestStatusEvents)
+      .where(eq(requestStatusEvents.fuelRequestId, requestId));
+    await tx
+      .delete(fuelRequestItems)
+      .where(eq(fuelRequestItems.fuelRequestId, requestId));
+    await tx.delete(fuelRequests).where(eq(fuelRequests.id, requestId));
+
+    if (request.orderId) {
+      await tx.delete(orderItems).where(eq(orderItems.orderId, request.orderId));
+      await tx.delete(orders).where(eq(orders.id, request.orderId));
+    }
+  });
+
+  revalidatePath(`/requests/${requestId}`);
+  revalidatePath('/book');
   revalidatePath('/dashboard/fulfillment');
 
   redirect('/dashboard/fulfillment');

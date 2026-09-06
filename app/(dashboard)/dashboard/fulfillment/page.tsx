@@ -2,7 +2,10 @@ import { redirect } from 'next/navigation';
 import { Camera, CheckCircle2, Fuel } from 'lucide-react';
 
 import { FulfillmentProofForm } from './fulfillment-form';
-import { cancelFuelRequest } from '@/app/(dashboard)/requests/actions';
+import {
+  cancelFuelRequest,
+  deleteTestFuelRequest
+} from '@/app/(dashboard)/requests/actions';
 import { Button } from '@/components/ui/button';
 import {
   getFuelRequestsForFulfillment,
@@ -188,19 +191,31 @@ function RequestCard({
             />
           </div>
 
-          {request.status !== FuelRequestStatus.CANCELED &&
-          request.status !== FuelRequestStatus.COMPLETED ? (
-            <form action={cancelFuelRequest} className="mt-5">
+          <div className="mt-5 flex flex-wrap gap-3">
+            {request.status !== FuelRequestStatus.CANCELED &&
+            request.status !== FuelRequestStatus.COMPLETED ? (
+              <form action={cancelFuelRequest}>
+                <input type="hidden" name="requestId" value={request.id} />
+                <Button
+                  type="submit"
+                  variant="outline"
+                  className="rounded-full border-red-200 bg-white text-red-600 hover:bg-red-50 hover:text-red-700"
+                >
+                  Cancel request
+                </Button>
+              </form>
+            ) : null}
+            <form action={deleteTestFuelRequest}>
               <input type="hidden" name="requestId" value={request.id} />
               <Button
                 type="submit"
                 variant="outline"
-                className="rounded-full border-red-200 bg-white text-red-600 hover:bg-red-50 hover:text-red-700"
+                className="rounded-full border-red-300 bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800"
               >
-                Delete pending request
+                Delete test booking
               </Button>
             </form>
-          ) : null}
+          </div>
 
           {request.completedAt ? (
             <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
