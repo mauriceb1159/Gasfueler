@@ -194,9 +194,9 @@ export function GasFuelerHomePage({
             </div>
 
             <p className="mt-5 max-w-xl text-base leading-7 text-neutral-600 sm:mt-6 sm:text-xl sm:leading-8">
-              GasBite brings back the ease of full-service gas with booking,
-              in-app snack ordering, and a polished drive-through experience
-              that keeps customers in motion.
+              GasBite brings back the ease of retro-style gas station service
+              with booking, in-app snack ordering, and a polished touchless
+              drive-through experience that keeps customers in motion.
             </p>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
