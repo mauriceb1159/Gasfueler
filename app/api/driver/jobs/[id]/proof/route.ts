@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 
 import { db } from '@/lib/db/drizzle';
 import { getUser } from '@/lib/db/queries';
@@ -9,6 +9,7 @@ import {
   DispatchAssignmentStatus,
   DispatchJobStatus,
   DriverAvailabilityStatus,
+  driverLocations,
   drivers,
   FuelRequestStatus,
   fuelRequests,
@@ -119,6 +120,7 @@ export async function POST(request: Request, context: RouteContext) {
       orderId: fuelRequests.orderId,
       serviceFee: fuelRequests.serviceFee,
       addonTotal: fuelRequests.addonTotal,
+      proofPhotoMetadata: fuelRequests.proofPhotoMetadata,
     })
     .from(fuelRequests)
     .where(eq(fuelRequests.id, job.fuelRequestId))
@@ -162,6 +164,122 @@ export async function POST(request: Request, context: RouteContext) {
           ? uploadProofPhoto(fuelRequest.id, 'tire-rear-right', tireRearRightPhoto)
           : Promise.resolve(null),
       ]);
+    const latestDriverLocation = await getLatestDriverLocation(driver.id);
+    const proofPhotoMetadata = mergeProofPhotoMetadata(
+      fuelRequest.proofPhotoMetadata,
+      [
+        gasCapBeforePhotoPath && gasCapBeforePhoto instanceof File
+          ? buildProofPhotoMetadata({
+              file: gasCapBeforePhoto,
+              photoType: 'gas-cap-before',
+              storagePath: gasCapBeforePhotoPath,
+              requestId: fuelRequest.id,
+              dispatchJobId: jobId,
+              uploadedByUserId: user.id,
+              uploadedByEmail: user.email,
+              driverId: driver.id,
+              source: 'driver_app',
+              latestDriverLocation,
+            })
+          : null,
+        gasCapAfterPhotoPath && gasCapAfterPhoto instanceof File
+          ? buildProofPhotoMetadata({
+              file: gasCapAfterPhoto,
+              photoType: 'gas-cap-secured',
+              storagePath: gasCapAfterPhotoPath,
+              requestId: fuelRequest.id,
+              dispatchJobId: jobId,
+              uploadedByUserId: user.id,
+              uploadedByEmail: user.email,
+              driverId: driver.id,
+              source: 'driver_app',
+              latestDriverLocation,
+            })
+          : null,
+        buildProofPhotoMetadata({
+          file: pumpPhoto,
+          photoType: 'pump-screen',
+          storagePath: pumpPhotoPath,
+          requestId: fuelRequest.id,
+          dispatchJobId: jobId,
+          uploadedByUserId: user.id,
+          uploadedByEmail: user.email,
+          driverId: driver.id,
+          source: 'driver_app',
+          latestDriverLocation,
+        }),
+        receiptPhotoPath && receiptPhoto instanceof File
+          ? buildProofPhotoMetadata({
+              file: receiptPhoto,
+              photoType: 'receipt',
+              storagePath: receiptPhotoPath,
+              requestId: fuelRequest.id,
+              dispatchJobId: jobId,
+              uploadedByUserId: user.id,
+              uploadedByEmail: user.email,
+              driverId: driver.id,
+              source: 'driver_app',
+              latestDriverLocation,
+            })
+          : null,
+        tireFrontLeftPhotoPath && tireFrontLeftPhoto instanceof File
+          ? buildProofPhotoMetadata({
+              file: tireFrontLeftPhoto,
+              photoType: 'tire-front-left',
+              storagePath: tireFrontLeftPhotoPath,
+              requestId: fuelRequest.id,
+              dispatchJobId: jobId,
+              uploadedByUserId: user.id,
+              uploadedByEmail: user.email,
+              driverId: driver.id,
+              source: 'driver_app',
+              latestDriverLocation,
+            })
+          : null,
+        tireFrontRightPhotoPath && tireFrontRightPhoto instanceof File
+          ? buildProofPhotoMetadata({
+              file: tireFrontRightPhoto,
+              photoType: 'tire-front-right',
+              storagePath: tireFrontRightPhotoPath,
+              requestId: fuelRequest.id,
+              dispatchJobId: jobId,
+              uploadedByUserId: user.id,
+              uploadedByEmail: user.email,
+              driverId: driver.id,
+              source: 'driver_app',
+              latestDriverLocation,
+            })
+          : null,
+        tireRearLeftPhotoPath && tireRearLeftPhoto instanceof File
+          ? buildProofPhotoMetadata({
+              file: tireRearLeftPhoto,
+              photoType: 'tire-rear-left',
+              storagePath: tireRearLeftPhotoPath,
+              requestId: fuelRequest.id,
+              dispatchJobId: jobId,
+              uploadedByUserId: user.id,
+              uploadedByEmail: user.email,
+              driverId: driver.id,
+              source: 'driver_app',
+              latestDriverLocation,
+            })
+          : null,
+        tireRearRightPhotoPath && tireRearRightPhoto instanceof File
+          ? buildProofPhotoMetadata({
+              file: tireRearRightPhoto,
+              photoType: 'tire-rear-right',
+              storagePath: tireRearRightPhotoPath,
+              requestId: fuelRequest.id,
+              dispatchJobId: jobId,
+              uploadedByUserId: user.id,
+              uploadedByEmail: user.email,
+              driverId: driver.id,
+              source: 'driver_app',
+              latestDriverLocation,
+            })
+          : null,
+      ]
+    );
 
     const actualFuelTotalCents = Math.round(actualFuelTotal * 100);
 
@@ -184,6 +302,7 @@ export async function POST(request: Request, context: RouteContext) {
         tireFrontRightPhotoUrl: tireFrontRightPhotoPath,
         tireRearLeftPhotoUrl: tireRearLeftPhotoPath,
         tireRearRightPhotoUrl: tireRearRightPhotoPath,
+        proofPhotoMetadata,
         completedAt: new Date(),
         status: FuelRequestStatus.COMPLETED,
         updatedAt: new Date(),
@@ -295,6 +414,91 @@ export async function POST(request: Request, context: RouteContext) {
       { status: 500 }
     );
   }
+}
+
+async function getLatestDriverLocation(driverId: number) {
+  const [location] = await db
+    .select({
+      latitude: driverLocations.latitude,
+      longitude: driverLocations.longitude,
+      heading: driverLocations.heading,
+      speed: driverLocations.speed,
+      capturedAt: driverLocations.capturedAt,
+    })
+    .from(driverLocations)
+    .where(eq(driverLocations.driverId, driverId))
+    .orderBy(desc(driverLocations.capturedAt))
+    .limit(1);
+
+  return location ?? null;
+}
+
+function mergeProofPhotoMetadata(
+  existingMetadata: unknown,
+  metadataEntries: (ReturnType<typeof buildProofPhotoMetadata> | null)[]
+) {
+  const merged =
+    existingMetadata &&
+    typeof existingMetadata === 'object' &&
+    !Array.isArray(existingMetadata)
+      ? { ...(existingMetadata as Record<string, unknown>) }
+      : {};
+
+  for (const metadata of metadataEntries) {
+    if (metadata) {
+      merged[metadata.photoType] = metadata;
+    }
+  }
+
+  return merged;
+}
+
+function buildProofPhotoMetadata({
+  file,
+  photoType,
+  storagePath,
+  requestId,
+  dispatchJobId,
+  uploadedByUserId,
+  uploadedByEmail,
+  driverId,
+  source,
+  latestDriverLocation,
+}: {
+  file: File;
+  photoType: string;
+  storagePath: string;
+  requestId: number;
+  dispatchJobId: number;
+  uploadedByUserId: number;
+  uploadedByEmail: string;
+  driverId: number;
+  source: 'driver_app';
+  latestDriverLocation: Awaited<ReturnType<typeof getLatestDriverLocation>>;
+}) {
+  return {
+    photoType,
+    storagePath,
+    uploadedAt: new Date().toISOString(),
+    uploadedByUserId,
+    uploadedByEmail,
+    driverId,
+    dispatchJobId,
+    fuelRequestId: requestId,
+    source,
+    originalFilename: file.name || null,
+    contentType: file.type || null,
+    sizeBytes: file.size,
+    latestDriverLocation: latestDriverLocation
+      ? {
+          latitude: latestDriverLocation.latitude,
+          longitude: latestDriverLocation.longitude,
+          heading: latestDriverLocation.heading,
+          speed: latestDriverLocation.speed,
+          capturedAt: latestDriverLocation.capturedAt.toISOString(),
+        }
+      : null,
+  };
 }
 
 async function uploadProofPhoto(requestId: number, photoType: string, file: File) {

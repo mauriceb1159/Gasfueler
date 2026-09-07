@@ -67,7 +67,8 @@ export async function completeFuelRequestWithProof(
       id: fuelRequests.id,
       orderId: fuelRequests.orderId,
       serviceFee: fuelRequests.serviceFee,
-      addonTotal: fuelRequests.addonTotal
+      addonTotal: fuelRequests.addonTotal,
+      proofPhotoMetadata: fuelRequests.proofPhotoMetadata
     })
     .from(fuelRequests)
     .where(eq(fuelRequests.id, requestId))
@@ -103,6 +104,75 @@ export async function completeFuelRequestWithProof(
         ? uploadProofPhoto(requestId, 'tire-rear-right', tireRearRightPhoto)
         : Promise.resolve(null)
     ]);
+    const proofPhotoMetadata = mergeProofPhotoMetadata(
+      request.proofPhotoMetadata,
+      [
+        buildProofPhotoMetadata({
+          file: pumpPhoto,
+          photoType: 'pump-screen',
+          storagePath: pumpPhotoPath,
+          requestId,
+          uploadedByUserId: user.id,
+          uploadedByEmail: user.email,
+          source: 'fulfillment_dashboard'
+        }),
+        gasCapPhotoPath && gasCapPhoto instanceof File
+          ? buildProofPhotoMetadata({
+              file: gasCapPhoto,
+              photoType: 'gas-cap-secured',
+              storagePath: gasCapPhotoPath,
+              requestId,
+              uploadedByUserId: user.id,
+              uploadedByEmail: user.email,
+              source: 'fulfillment_dashboard'
+            })
+          : null,
+        tireFrontLeftPhotoPath && tireFrontLeftPhoto instanceof File
+          ? buildProofPhotoMetadata({
+              file: tireFrontLeftPhoto,
+              photoType: 'tire-front-left',
+              storagePath: tireFrontLeftPhotoPath,
+              requestId,
+              uploadedByUserId: user.id,
+              uploadedByEmail: user.email,
+              source: 'fulfillment_dashboard'
+            })
+          : null,
+        tireFrontRightPhotoPath && tireFrontRightPhoto instanceof File
+          ? buildProofPhotoMetadata({
+              file: tireFrontRightPhoto,
+              photoType: 'tire-front-right',
+              storagePath: tireFrontRightPhotoPath,
+              requestId,
+              uploadedByUserId: user.id,
+              uploadedByEmail: user.email,
+              source: 'fulfillment_dashboard'
+            })
+          : null,
+        tireRearLeftPhotoPath && tireRearLeftPhoto instanceof File
+          ? buildProofPhotoMetadata({
+              file: tireRearLeftPhoto,
+              photoType: 'tire-rear-left',
+              storagePath: tireRearLeftPhotoPath,
+              requestId,
+              uploadedByUserId: user.id,
+              uploadedByEmail: user.email,
+              source: 'fulfillment_dashboard'
+            })
+          : null,
+        tireRearRightPhotoPath && tireRearRightPhoto instanceof File
+          ? buildProofPhotoMetadata({
+              file: tireRearRightPhoto,
+              photoType: 'tire-rear-right',
+              storagePath: tireRearRightPhotoPath,
+              requestId,
+              uploadedByUserId: user.id,
+              uploadedByEmail: user.email,
+              source: 'fulfillment_dashboard'
+            })
+          : null
+      ]
+    );
 
     const actualFuelTotalCents = Math.round(actualFuelTotal * 100);
 
@@ -121,6 +191,7 @@ export async function completeFuelRequestWithProof(
         tireFrontRightPhotoUrl: tireFrontRightPhotoPath,
         tireRearLeftPhotoUrl: tireRearLeftPhotoPath,
         tireRearRightPhotoUrl: tireRearRightPhotoPath,
+        proofPhotoMetadata,
         completedAt: new Date(),
         status: FuelRequestStatus.COMPLETED,
         updatedAt: new Date()
@@ -163,6 +234,57 @@ export async function completeFuelRequestWithProof(
           : 'Unable to save fulfillment proof right now.'
     };
   }
+}
+
+function mergeProofPhotoMetadata(
+  existingMetadata: unknown,
+  metadataEntries: (ReturnType<typeof buildProofPhotoMetadata> | null)[]
+) {
+  const merged =
+    existingMetadata &&
+    typeof existingMetadata === 'object' &&
+    !Array.isArray(existingMetadata)
+      ? { ...(existingMetadata as Record<string, unknown>) }
+      : {};
+
+  for (const metadata of metadataEntries) {
+    if (metadata) {
+      merged[metadata.photoType] = metadata;
+    }
+  }
+
+  return merged;
+}
+
+function buildProofPhotoMetadata({
+  file,
+  photoType,
+  storagePath,
+  requestId,
+  uploadedByUserId,
+  uploadedByEmail,
+  source
+}: {
+  file: File;
+  photoType: string;
+  storagePath: string;
+  requestId: number;
+  uploadedByUserId: number;
+  uploadedByEmail: string;
+  source: 'fulfillment_dashboard';
+}) {
+  return {
+    photoType,
+    storagePath,
+    uploadedAt: new Date().toISOString(),
+    uploadedByUserId,
+    uploadedByEmail,
+    fuelRequestId: requestId,
+    source,
+    originalFilename: file.name || null,
+    contentType: file.type || null,
+    sizeBytes: file.size
+  };
 }
 
 async function uploadProofPhoto(

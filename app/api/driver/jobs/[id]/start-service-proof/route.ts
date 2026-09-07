@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 
 import { db } from '@/lib/db/drizzle';
 import { getUser } from '@/lib/db/queries';
@@ -8,6 +8,7 @@ import {
   dispatchJobs,
   DispatchAssignmentStatus,
   DispatchJobStatus,
+  driverLocations,
   drivers,
   fuelRequests,
 } from '@/lib/db/schema';
@@ -85,11 +86,29 @@ export async function POST(request: Request, context: RouteContext) {
       gasCapBeforePhoto instanceof File && gasCapBeforePhoto.size > 0
         ? await uploadProofPhoto(job.fuelRequestId, 'gas-cap-before', gasCapBeforePhoto)
         : null;
+    const latestDriverLocation = await getLatestDriverLocation(driver.id);
+    const proofPhotoMetadata = gasCapBeforePhotoPath
+      ? {
+          'gas-cap-before': buildProofPhotoMetadata({
+            file: gasCapBeforePhoto as File,
+            photoType: 'gas-cap-before',
+            storagePath: gasCapBeforePhotoPath,
+            requestId: job.fuelRequestId,
+            dispatchJobId: jobId,
+            uploadedByUserId: user.id,
+            uploadedByEmail: user.email,
+            driverId: driver.id,
+            source: 'driver_app',
+            latestDriverLocation,
+          }),
+        }
+      : null;
 
     await db
       .update(fuelRequests)
       .set({
         gasCapBeforePhotoUrl: gasCapBeforePhotoPath,
+        proofPhotoMetadata,
         updatedAt: new Date(),
       })
       .where(eq(fuelRequests.id, job.fuelRequestId));
@@ -170,6 +189,71 @@ export async function POST(request: Request, context: RouteContext) {
       { status: 500 }
     );
   }
+}
+
+async function getLatestDriverLocation(driverId: number) {
+  const [location] = await db
+    .select({
+      latitude: driverLocations.latitude,
+      longitude: driverLocations.longitude,
+      heading: driverLocations.heading,
+      speed: driverLocations.speed,
+      capturedAt: driverLocations.capturedAt,
+    })
+    .from(driverLocations)
+    .where(eq(driverLocations.driverId, driverId))
+    .orderBy(desc(driverLocations.capturedAt))
+    .limit(1);
+
+  return location ?? null;
+}
+
+function buildProofPhotoMetadata({
+  file,
+  photoType,
+  storagePath,
+  requestId,
+  dispatchJobId,
+  uploadedByUserId,
+  uploadedByEmail,
+  driverId,
+  source,
+  latestDriverLocation,
+}: {
+  file: File;
+  photoType: string;
+  storagePath: string;
+  requestId: number;
+  dispatchJobId: number;
+  uploadedByUserId: number;
+  uploadedByEmail: string;
+  driverId: number;
+  source: 'driver_app';
+  latestDriverLocation: Awaited<ReturnType<typeof getLatestDriverLocation>>;
+}) {
+  return {
+    photoType,
+    storagePath,
+    uploadedAt: new Date().toISOString(),
+    uploadedByUserId,
+    uploadedByEmail,
+    driverId,
+    dispatchJobId,
+    fuelRequestId: requestId,
+    source,
+    originalFilename: file.name || null,
+    contentType: file.type || null,
+    sizeBytes: file.size,
+    latestDriverLocation: latestDriverLocation
+      ? {
+          latitude: latestDriverLocation.latitude,
+          longitude: latestDriverLocation.longitude,
+          heading: latestDriverLocation.heading,
+          speed: latestDriverLocation.speed,
+          capturedAt: latestDriverLocation.capturedAt.toISOString(),
+        }
+      : null,
+  };
 }
 
 async function uploadProofPhoto(requestId: number, photoType: string, file: File) {

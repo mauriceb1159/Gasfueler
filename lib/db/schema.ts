@@ -286,6 +286,7 @@ export const fuelRequests = pgTable('fuel_requests', {
   tireReportUrl: text('tire_report_url'),
   tireReportGeneratedAt: timestamp('tire_report_generated_at'),
   tireReportEmailedAt: timestamp('tire_report_emailed_at'),
+  proofPhotoMetadata: jsonb('proof_photo_metadata'),
   completedAt: timestamp('completed_at'),
   status: varchar('status', { length: 30 }).notNull().default('draft'),
   specialInstructions: text('special_instructions'),

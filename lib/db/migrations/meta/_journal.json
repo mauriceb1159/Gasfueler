@@ -155,6 +155,13 @@
       "when": 1776466000000,
       "tag": "0021_fuel_request_tire_report_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1776467000000,
+      "tag": "0022_fuel_request_proof_photo_metadata",
+      "breakpoints": true
     }
   ]
 }
