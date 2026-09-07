@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -321,12 +320,10 @@ function ProductPreview({
   if (imageUrl) {
     return (
       <div className={dimensions}>
-        <Image
+        <img
           src={imageUrl}
           alt={name}
-          fill
-          className="object-contain p-2"
-          sizes={size === 'sm' ? '48px' : '80px'}
+          className="h-full w-full object-contain p-2"
         />
       </div>
     );

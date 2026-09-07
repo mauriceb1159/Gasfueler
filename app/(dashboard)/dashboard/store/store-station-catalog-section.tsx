@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { asc } from 'drizzle-orm';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -172,12 +171,10 @@ function ProductPreview({
   if (imageUrl) {
     return (
       <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-        <Image
+        <img
           src={imageUrl}
           alt={name}
-          fill
-          className="object-contain p-2"
-          sizes="48px"
+          className="h-full w-full object-contain p-2"
         />
       </div>
     );
