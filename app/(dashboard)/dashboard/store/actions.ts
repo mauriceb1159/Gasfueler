@@ -182,7 +182,7 @@ async function saveStoreImage(file: File, slugSeed: string) {
     );
   }
 
-  return `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/public/${storeImagesBucketName}/${objectPath}`;
+  return `/api/store-images/${objectPath}`;
 }
 
 async function requireOwner() {

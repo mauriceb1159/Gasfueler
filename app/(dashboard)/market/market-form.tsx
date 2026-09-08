@@ -1,7 +1,6 @@
 'use client';
 
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Clock3, Search, ShoppingCart, Sparkles, Store, Tag } from 'lucide-react';
 
@@ -9,6 +8,7 @@ import { submitStoreOrder } from './actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { getStoreImageSource } from '@/lib/store-image-source';
 
 type StoreStation = {
   id: number;
@@ -807,8 +807,9 @@ function ProductVisual({
 }) {
   const theme = getProductVisualTheme(item);
   const isFeatured = size === 'featured';
-  const imageUrl = item.storeItem.imageUrl || getCatalogImageFallback(item.storeItem.slug);
-  const isSvg = Boolean(imageUrl && imageUrl.endsWith('.svg'));
+  const imageUrl = getStoreImageSource(
+    item.storeItem.imageUrl || getCatalogImageFallback(item.storeItem.slug)
+  );
 
   if (imageUrl) {
     return (
@@ -819,27 +820,13 @@ function ProductVisual({
             <div className="absolute left-0 bottom-0 h-16 w-16 rounded-full bg-amber-100 blur-2xl" />
           </div>
           <div className="relative h-full overflow-hidden">
-            {isSvg ? (
-              <img
-                src={imageUrl}
-                alt={item.storeItem.name}
-                loading="lazy"
-                decoding="async"
-                className={isFeatured ? 'h-full w-full object-contain p-1' : 'h-full w-full object-contain p-2'}
-              />
-            ) : (
-              <Image
-                src={imageUrl}
-                alt={item.storeItem.name}
-                fill
-                sizes={
-                  isFeatured
-                    ? '(min-width: 1536px) 220px, (min-width: 768px) 30vw, 45vw'
-                    : '96px'
-                }
-                className={isFeatured ? 'object-contain p-1' : 'object-contain p-2'}
-              />
-            )}
+            <img
+              src={imageUrl}
+              alt={item.storeItem.name}
+              loading="lazy"
+              decoding="async"
+              className={isFeatured ? 'h-full w-full object-contain p-1' : 'h-full w-full object-contain p-2'}
+            />
           </div>
         </div>
       </div>

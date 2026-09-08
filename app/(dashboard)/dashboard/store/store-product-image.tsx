@@ -2,17 +2,7 @@
 
 import { useState } from 'react';
 
-function isSafeImageSource(imageUrl: string | null) {
-  if (!imageUrl) return false;
-
-  const trimmedUrl = imageUrl.trim();
-
-  return (
-    trimmedUrl.startsWith('/') ||
-    trimmedUrl.startsWith('https://') ||
-    trimmedUrl.startsWith('http://')
-  );
-}
+import { getStoreImageSource } from '@/lib/store-image-source';
 
 export function StoreProductImage({
   imageUrl,
@@ -29,12 +19,13 @@ export function StoreProductImage({
       ? 'h-12 w-12 rounded-2xl'
       : 'h-20 w-20 rounded-3xl';
   const wrapperClassName = `relative ${dimensions} overflow-hidden border border-slate-200 bg-white`;
+  const safeImageUrl = getStoreImageSource(imageUrl);
 
-  if (isSafeImageSource(imageUrl) && !hasImageError) {
+  if (safeImageUrl && !hasImageError) {
     return (
       <div className={wrapperClassName}>
         <img
-          src={imageUrl!.trim()}
+          src={safeImageUrl}
           alt={name}
           className="h-full w-full object-contain p-2"
           onError={() => setHasImageError(true)}
