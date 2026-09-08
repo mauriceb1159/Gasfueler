@@ -242,10 +242,10 @@ export function StoreProductsSection({
                     id={`product-image-file-${product.id}`}
                     name="imageFile"
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,.jpg,.jpeg"
                   />
                   <p className="mt-2 text-xs text-slate-500">
-                    Optional. A new desktop upload will replace the current image with a
+                    Optional. Upload a JPG/JPEG file to replace the current image with a
                     Supabase-hosted version.
                   </p>
                 </div>

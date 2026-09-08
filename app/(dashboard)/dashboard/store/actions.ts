@@ -118,22 +118,14 @@ function stripWrappedQuotes(value: string | undefined) {
   return trimmed;
 }
 
-function getSafeFileExtension(file: File) {
+function isJpegImage(file: File) {
   const extensionFromName = file.name.split('.').pop()?.toLowerCase();
 
-  if (
-    extensionFromName &&
-    ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(extensionFromName)
-  ) {
-    return extensionFromName === 'jpeg' ? 'jpg' : extensionFromName;
-  }
-
-  if (file.type === 'image/png') return 'png';
-  if (file.type === 'image/webp') return 'webp';
-  if (file.type === 'image/gif') return 'gif';
-  if (file.type === 'image/svg+xml') return 'svg';
-
-  return 'jpg';
+  return (
+    file.type === 'image/jpeg' ||
+    extensionFromName === 'jpg' ||
+    extensionFromName === 'jpeg'
+  );
 }
 
 async function saveStoreImage(file: File, slugSeed: string) {
@@ -147,16 +139,18 @@ async function saveStoreImage(file: File, slugSeed: string) {
     );
   }
 
-  if (!file.type.startsWith('image/')) {
-    redirectWithMessage('Store uploads must be image files.', 'error');
+  if (!isJpegImage(file)) {
+    redirectWithMessage(
+      'Store product uploads currently accept JPG/JPEG images only. Convert PNG images to JPG before uploading.',
+      'error'
+    );
   }
 
   if (file.size > 8 * 1024 * 1024) {
     redirectWithMessage('Store images must be smaller than 8 MB.', 'error');
   }
 
-  const extension = getSafeFileExtension(file);
-  const objectPath = `catalog/${toSlug(slugSeed) || 'store-item'}-${Date.now()}.${extension}`;
+  const objectPath = `catalog/${toSlug(slugSeed) || 'store-item'}-${Date.now()}.jpg`;
   const uploadUrl = `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/${storeImagesBucketName}/${objectPath}`;
 
   const response = await fetch(uploadUrl, {

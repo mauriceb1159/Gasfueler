@@ -333,12 +333,14 @@ export default async function StoreBackOfficePage({
                         id="products-image-files"
                         name="imageFiles"
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg,.jpg,.jpeg"
                         multiple
                       />
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-xs text-slate-600">
                       Match files to existing products by filename.
+                      <br />
+                      JPG/JPEG files are supported for the cleanest catalog display.
                       <br />
                       Example: <span className="font-mono">smart-water.jpg</span> matches the
                       product slug <span className="font-mono">smart-water</span>.
@@ -408,11 +410,11 @@ export default async function StoreBackOfficePage({
                         id="product-image-file"
                         name="imageFile"
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg,.jpg,.jpeg"
                       />
                       <p className="mt-2 text-xs text-slate-500">
-                        Optional. If you choose a file here, it will be uploaded to the
-                        public Supabase `store-images` bucket and used instead of the URL above.
+                        Optional. Upload a JPG/JPEG file to the public Supabase
+                        `store-images` bucket and use it instead of the URL above.
                       </p>
                     </div>
                     <div className="md:col-span-2">
