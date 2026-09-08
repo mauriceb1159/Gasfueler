@@ -9,6 +9,7 @@ import {
   bulkUpdateStationCatalogStatus,
   updateStationCatalogItem
 } from './actions';
+import { StoreProductImage } from './store-product-image';
 
 export async function StoreStationCatalogSection() {
   const stations = await db.query.stations.findMany({
@@ -102,9 +103,10 @@ export async function StoreStationCatalogSection() {
                         <input type="hidden" name="stationStoreItemId" value={item.id} />
                         <div className="xl:col-span-2">
                           <div className="flex items-center gap-3">
-                            <ProductPreview
+                            <StoreProductImage
                               imageUrl={item.storeItem.imageUrl}
                               name={item.storeItem.name}
+                              size="sm"
                             />
                             <div>
                               <p className="font-semibold text-slate-950">
@@ -157,32 +159,6 @@ export async function StoreStationCatalogSection() {
           </CardContent>
         </Card>
       ))}
-    </div>
-  );
-}
-
-function ProductPreview({
-  imageUrl,
-  name
-}: {
-  imageUrl: string | null;
-  name: string;
-}) {
-  if (imageUrl) {
-    return (
-      <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-        <img
-          src={imageUrl}
-          alt={name}
-          className="h-full w-full object-contain p-2"
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 text-sm font-semibold uppercase text-slate-500">
-      {name.charAt(0)}
     </div>
   );
 }

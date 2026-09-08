@@ -172,8 +172,12 @@ async function saveStoreImage(file: File, slugSeed: string) {
 
   if (!response.ok) {
     const errorText = await response.text();
+    const uploadError =
+      errorText.length > 180
+        ? `${errorText.slice(0, 180)}...`
+        : errorText;
     redirectWithMessage(
-      `Supabase Storage upload failed for store image: ${errorText}`,
+      `Store image upload failed. Check that the store-images Supabase bucket exists and is public. ${uploadError}`,
       'error'
     );
   }

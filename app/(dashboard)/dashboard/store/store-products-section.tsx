@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { bulkUpdateStoreProductsStatus, updateStoreProduct } from './actions';
 import { ProductSearchInput, useProductSearch } from './product-search';
+import { StoreProductImage } from './store-product-image';
 
 type ProductRecord = {
   id: number;
@@ -172,7 +173,7 @@ export function StoreProductsSection({
                 />
               </div>
               <div className="flex min-w-0 items-center gap-3">
-                <ProductPreview imageUrl={product.imageUrl} name={product.name} size="sm" />
+                <StoreProductImage imageUrl={product.imageUrl} name={product.name} size="sm" />
                 <div className="min-w-0">
                   <p className="truncate font-semibold text-slate-950">{product.name}</p>
                   <p className="truncate text-sm text-slate-500">{product.slug}</p>
@@ -299,41 +300,6 @@ export function StoreProductsSection({
           </div>
         ) : null}
       </div>
-    </div>
-  );
-}
-
-function ProductPreview({
-  imageUrl,
-  name,
-  size = 'lg'
-}: {
-  imageUrl: string | null;
-  name: string;
-  size?: 'sm' | 'lg';
-}) {
-  const dimensions =
-    size === 'sm'
-      ? 'relative h-12 w-12 overflow-hidden rounded-2xl border border-slate-200 bg-white'
-      : 'relative h-20 w-20 overflow-hidden rounded-3xl border border-slate-200 bg-white';
-
-  if (imageUrl) {
-    return (
-      <div className={dimensions}>
-        <img
-          src={imageUrl}
-          alt={name}
-          className="h-full w-full object-contain p-2"
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={`${dimensions} flex items-center justify-center bg-slate-100 text-sm font-semibold uppercase text-slate-500`}
-    >
-      {name.charAt(0)}
     </div>
   );
 }
